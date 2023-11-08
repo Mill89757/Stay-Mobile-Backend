@@ -12,7 +12,7 @@ class ToDo(Base):
     completed = Column(Boolean, default=False)
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "User"
 
     id = Column(Integer, primary_key=True, index=True)
     firebase_uid = Column(String, nullable=False)
