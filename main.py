@@ -6,6 +6,7 @@ from fastapi.responses import PlainTextResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+import schemas
 
 app = FastAPI()
 
@@ -42,6 +43,11 @@ def get_db():
 def get_user_data(db: Session = Depends(get_db)):
     user_data = crud.read_user(db)
     return user_data
+
+@app.post("/user", status_code=status.HTTP_201_CREATED)
+def create_users(user: schemas.UsersRequest, db: Session = Depends(get_db)):
+    user = crud.create_user(db, user)
+    return user
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request, exc):
