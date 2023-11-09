@@ -4,13 +4,6 @@ from sqlalchemy.orm import relationship
 from database import Base
 
 
-class ToDo(Base):
-    __tablename__ = "todos"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    completed = Column(Boolean, default=False)
-
 class User(Base):
     __tablename__ = "User"
 
@@ -19,7 +12,7 @@ class User(Base):
     name = Column(String, nullable=False)
     username = Column(String, nullable=False, unique=True)
     email_address = Column(String)
-    created_time = Column(String)
+    created_time = Column(DateTime)
     avatar_location = Column(String)
     is_completed = Column(Boolean, default=False)
 
@@ -58,9 +51,9 @@ class Post(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(ForeignKey("User.id"), nullable=False)
     challenge_id = Column(ForeignKey("challenge.id"), nullable=False)
-    created_time = Column(String)
-    start_time = Column(String)
-    end_time = Column(String)
+    created_time = Column(DateTime)
+    start_time = Column(DateTime)
+    end_time = Column(DateTime)
     written_text = Column(String(1000))
 
 class PostContent(Base):
