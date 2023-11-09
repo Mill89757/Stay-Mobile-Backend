@@ -38,3 +38,6 @@ def create_user(db: Session, user: schemas.UsersRequest):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+def read_course(db: Session):
+    return db.query(models.Course).all()

@@ -57,3 +57,8 @@ async def http_exception_handler(request, exc):
 @app.get("/")
 def read_root():
     return "Welcome to Stay - Mobile API"
+
+@app.get("/course")
+def get_course_data(db: Session = Depends(get_db)):
+    course_data = crud.read_course(db)
+    return course_data

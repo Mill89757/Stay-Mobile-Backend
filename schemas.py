@@ -24,3 +24,13 @@ class UsersResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class CourseResponse(BaseModel):
+    id:int
+    course_name:str
+    category:int
+    description:str
+
+    class Config:
+        orm_mode = True
