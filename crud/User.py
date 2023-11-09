@@ -27,7 +27,7 @@ def create_user(db: Session, user: schemas.UsersRequest):
         email_address=user.email_address,
         created_time=convert_datetime(user.created_time),
         avatar_location=user.avatar_location,
-        iscompleted = user.iscompleted,
+        is_completed = user.is_completed,
     )
     db.add(db_user)
     db.commit()
@@ -55,7 +55,7 @@ def update_user(db: Session, id: int, user: schemas.UsersRequest):
             "email_address": user.email_address,
             "created_time": convert_datetime(user.created_time),
             "avatar_location_location": user.avatar_location,
-            "iscompleted": user.iscompleted,
+            "is_completed": user.is_completed,
         }
     )
     db.commit()

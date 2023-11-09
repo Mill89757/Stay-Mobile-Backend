@@ -21,7 +21,7 @@ class User(Base):
     email_address = Column(String)
     created_time = Column(String)
     avatar_location = Column(String)
-    iscompleted = Column(Boolean, default=False)
+    is_completed = Column(Boolean, default=False)
 
 class Tracking(Base):
     __tablename__ = "trackings"

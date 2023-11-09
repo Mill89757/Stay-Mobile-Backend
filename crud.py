@@ -5,5 +5,3 @@ import models
 
 def read_user(db: Session):
     return db.query(models.User).all()
-
-   

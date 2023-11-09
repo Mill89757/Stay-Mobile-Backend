@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 import schemas
-import crud.User as crud
+import crud.user as crud
 from database import SessionLocal
 from typing import List
 

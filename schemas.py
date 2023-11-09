@@ -9,7 +9,7 @@ class UsersRequest(BaseModel):
     email_address: str
     created_time: str
     avatar_location: str
-    iscompleted: bool
+    is_completed: bool
 
 
 class UsersResponse(BaseModel):
@@ -20,7 +20,7 @@ class UsersResponse(BaseModel):
     email_address: str
     created_time: datetime
     avatar_location: str
-    iscompleted: bool
+    is_completed: bool
 
     class Config:
         orm_mode = True
