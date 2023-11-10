@@ -28,7 +28,7 @@ class ChallengeBase(BaseModel):
     duration: Optional[int] = None
     breaking_days: Optional[int] = None
     is_public: bool = False
-    category: Optional[str] = None
+    category: Optional[int] = None
     cover_location: Optional[str] = None
     days_left: Optional[int] = None
     breaking_days_left: Optional[int] = None
