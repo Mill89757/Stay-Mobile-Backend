@@ -28,6 +28,8 @@ class ChallengeBase(BaseModel):
     duration: Optional[int] = None
     breaking_days: Optional[int] = None
     is_public: bool = False
+    is_finished: Optional[bool] = False
+    created_time:Optional[datetime] =None
     category: Optional[int] = None
     cover_location: Optional[str] = None
     days_left: Optional[int] = None
@@ -40,6 +42,7 @@ class ChallengeCreate(ChallengeBase):
 class ChallengeRead(ChallengeBase):
     id: int
     created_time: datetime
+    finished_time: Optional[datetime] = None
     is_finished: bool
     user_id: int
     course_id: Optional[int] = None
