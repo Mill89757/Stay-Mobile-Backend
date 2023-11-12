@@ -42,13 +42,6 @@ def get_db():
         db.close()
 
 
-# @app.get("/user")
-# def get_user_data(db: Session = Depends(get_db)):
-#     user_data = crud.read_user(db)
-#     return user_data
-
-
-
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request, exc):
     print(f"{repr(exc)}")

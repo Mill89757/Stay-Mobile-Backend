@@ -38,6 +38,7 @@ class Challenge(Base):
     is_public = Column(Boolean, default=False)
     category = Column(String)
     created_time = Column(DateTime)
+    finished_time = Column(DateTime)
     cover_location = Column(String)
     user_id = Column(ForeignKey("User.id"), nullable=False)
     course_id = Column(ForeignKey("course.id"))
