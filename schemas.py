@@ -29,15 +29,30 @@ class ChallengeBase(BaseModel):
     breaking_days: Optional[int] = None
     is_public: bool = False
     is_finished: Optional[bool] = False
-    created_time:Optional[datetime] =None
+    created_time:Optional[datetime] = None
     category: Optional[int] = None
     cover_location: Optional[str] = None
     days_left: Optional[int] = None
     breaking_days_left: Optional[int] = None
 
-class ChallengeCreate(ChallengeBase):
+# class ChallengeCreate(ChallengeBase):
+#     user_id: int
+#     course_id: Optional[int] = None
+
+
+class ChallengeCreate(BaseModel):
+    title: str
+    description: str
+    duration: Optional[int] = None
+    breaking_days: Optional[int] = None
+    is_public: bool = False
+    category: Optional[int] = None
+    cover_location: Optional[str] = None
+    days_left: Optional[int] = None
+    breaking_days_left: Optional[int] = None
     user_id: int
     course_id: Optional[int] = None
+
 
 class ChallengeRead(ChallengeBase):
     id: int

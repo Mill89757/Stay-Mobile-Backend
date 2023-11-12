@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 from database import Base
 
@@ -37,12 +38,13 @@ class Challenge(Base):
     breaking_days =  Column(Integer)
     is_public = Column(Boolean, default=False)
     category = Column(String)
-    created_time = Column(DateTime)
+    # created_time = Column(DateTime)
+    created_time = Column(DateTime, default = func.now(), nullable=False)
     finished_time = Column(DateTime, nullable=True)
     cover_location = Column(String)
     user_id = Column(ForeignKey("User.id"), nullable=False)
     course_id = Column(ForeignKey("course.id"), nullable=True)
-    is_finished = Column(Boolean, nullable=False)
+    is_finished = Column(Boolean, default= False ,nullable=False)
     days_left = Column(Integer)
     breaking_days_left = Column(Integer)
 
