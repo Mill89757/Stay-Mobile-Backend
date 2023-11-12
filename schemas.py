@@ -35,9 +35,6 @@ class ChallengeBase(BaseModel):
     days_left: Optional[int] = None
     breaking_days_left: Optional[int] = None
 
-# class ChallengeCreate(ChallengeBase):
-#     user_id: int
-#     course_id: Optional[int] = None
 
 
 class ChallengeCreate(BaseModel):

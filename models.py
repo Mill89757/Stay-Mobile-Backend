@@ -38,7 +38,6 @@ class Challenge(Base):
     breaking_days =  Column(Integer)
     is_public = Column(Boolean, default=False)
     category = Column(String)
-    # created_time = Column(DateTime)
     created_time = Column(DateTime, default = func.now(), nullable=False)
     finished_time = Column(DateTime, nullable=True)
     cover_location = Column(String)
