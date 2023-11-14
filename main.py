@@ -6,6 +6,7 @@ from fastapi.responses import PlainTextResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+import schemas
 
 app = FastAPI()
 
@@ -26,9 +27,13 @@ app.add_middleware(
 from typing import List
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, status
-import crud
+# import crud
 from database import SessionLocal
+# from CRUD import challenge
+from Router.challenge import router as challenge_router 
 
+app = FastAPI()
+app.include_router(challenge_router)
 
 def get_db():
     db = SessionLocal()
@@ -36,13 +41,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-@app.get("/user")
-def get_user_data(db: Session = Depends(get_db)):
-    user_data = crud.read_user(db)
-    return user_data
-
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -53,3 +51,8 @@ async def http_exception_handler(request, exc):
 @app.get("/")
 def read_root():
     return "Welcome to Stay - Mobile API"
+
+@app.get("/course")
+def get_course_data(db: Session = Depends(get_db)):
+    course_data = crud.read_course(db)
+    return course_data
