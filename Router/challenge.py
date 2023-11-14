@@ -18,7 +18,7 @@ async def get_challenge_route(challenge_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
 
-@router.get("/", response_model=list[schemas.ChallengeRead])
+@router.get("/GetAllChallenges", response_model=list[schemas.ChallengeRead])
 async def get_challenges_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_challenges(db=db, skip=skip, limit=limit)
 
