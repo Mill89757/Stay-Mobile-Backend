@@ -39,15 +39,15 @@ def get_db():
         db.close()
 
 
-@app.get("/user")
-def get_user_data(db: Session = Depends(get_db)):
-    user_data = crud.read_user(db)
-    return user_data
+# @app.get("/user")
+# def get_user_data(db: Session = Depends(get_db)):
+#     user_data = crud.read_user(db)
+#     return user_data
 
-@app.post("/user", status_code=status.HTTP_201_CREATED)
-def create_users(user: schemas.UsersRequest, db: Session = Depends(get_db)):
-    user = crud.create_user(db, user)
-    return user
+# @app.post("/user", status_code=status.HTTP_201_CREATED)
+# def create_users(user: schemas.UsersRequest, db: Session = Depends(get_db)):
+#     user = crud.create_user(db, user)
+#     return user
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request, exc):
@@ -58,7 +58,7 @@ async def http_exception_handler(request, exc):
 def read_root():
     return "Welcome to Stay - Mobile API"
 
-@app.get("/course")
-def get_course_data(db: Session = Depends(get_db)):
-    course_data = crud.read_course(db)
-    return course_data
+# @app.get("/course")
+# def get_course_data(db: Session = Depends(get_db)):
+#     course_data = crud.read_course(db)
+#     return course_data
