@@ -64,14 +64,17 @@ class ChallengeRead(ChallengeBase):
 
 # Post 模型
 class PostBase(BaseModel):
-    created_time: datetime
+    created_time: Optional[datetime] = None
     start_time: datetime
     end_time: datetime
     written_text: str
 
-class PostCreate(PostBase):
+class PostCreate(BaseModel):
     user_id: int
     challenge_id: int
+    start_time: datetime
+    end_time: datetime
+    written_text: str
 
 class PostRead(PostBase):
     id: int

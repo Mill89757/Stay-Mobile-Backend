@@ -11,7 +11,7 @@ router = APIRouter()
 async def create_challenge_route(challenge: schemas.ChallengeCreate, db: Session = Depends(get_db)):
     return challenge_crud.create_challenge(db=db, challenge=challenge)
 
-@router.get("/{challenge_id}", response_model=schemas.ChallengeRead)
+@router.get("/GetChallenge/{challenge_id}", response_model=schemas.ChallengeRead)
 async def get_challenge_route(challenge_id: int, db: Session = Depends(get_db)):
     challenge = challenge_crud.get_challenge(db=db, challenge_id=challenge_id)
     if challenge is None:

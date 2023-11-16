@@ -31,9 +31,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from database import SessionLocal
 # from CRUD import challenge
 from Router.challenge import router as challenge_router 
+from Router.post import router as post_router
 
 app = FastAPI()
 app.include_router(challenge_router)
+app.include_router(post_router)
 
 def get_db():
     db = SessionLocal()
@@ -52,7 +54,3 @@ async def http_exception_handler(request, exc):
 def read_root():
     return "Welcome to Stay - Mobile API"
 
-@app.get("/course")
-def get_course_data(db: Session = Depends(get_db)):
-    course_data = crud.read_course(db)
-    return course_data
