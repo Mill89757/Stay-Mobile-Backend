@@ -84,14 +84,17 @@ class PostRead(PostBase):
 
 # Tracking 模型
 class TrackingBase(BaseModel):
-    created_time: Optional[datetime]
+    created_time:Optional[datetime] = None
     terminated_time: Optional[datetime]
     is_terminated: Optional[bool]
 
-class TrackingCreate(TrackingBase):
+class TrackingCreate(BaseModel):
     owner_id: int
     follower_id: int
     challenge_id: int
+    terminated_time: Optional[datetime] = None
+    created_time:Optional[datetime] = None
+    is_terminated: Optional[bool] = False
 
 class TrackingUpdate(TrackingBase):
     owner_id: int

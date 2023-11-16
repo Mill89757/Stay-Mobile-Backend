@@ -21,7 +21,7 @@ class Tracking(Base):
     __tablename__ = "tracking"
 
     id = Column(Integer, primary_key=True, index=True)
-    created_time = Column(DateTime)
+    created_time = Column(DateTime, default = func.now(), nullable=False)
     terminated_time = Column(DateTime)
     is_terminated = Column(Boolean)
     owner_id = Column(ForeignKey("User.id"), nullable=False)
