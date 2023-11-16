@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 import schemas  
 from database import get_db  
 import CRUD.challenge as challenge_crud
+from typing import List
 
 
 router = APIRouter()
@@ -18,6 +19,13 @@ async def get_challenge_route(challenge_id: int, db: Session = Depends(get_db)):
     if challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
+
+@router.get("/GetUserChallenges/{user_id}", response_model=List[List[schemas.ChallengeRead]])
+async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db)):
+    active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
+    finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
+    return [active_challenges, finished_challenges]
+
 
 @router.get("/GetAllChallenges/", response_model=list[schemas.ChallengeRead])
 async def get_challenges_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
