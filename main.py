@@ -32,8 +32,10 @@ from database import SessionLocal
 # from CRUD import challenge
 from Router.challenge import router as challenge_router 
 from Router.post import router as post_router
+from Router.tracking import router as tracking_router
 
 app = FastAPI()
+app.include_router(tracking_router)
 app.include_router(challenge_router)
 app.include_router(post_router)
 

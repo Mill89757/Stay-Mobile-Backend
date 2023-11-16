@@ -93,6 +93,11 @@ class TrackingCreate(TrackingBase):
     follower_id: int
     challenge_id: int
 
+class TrackingUpdate(TrackingBase):
+    owner_id: int
+    follower_id: int
+    challenge_id: int
+
 class TrackingRead(TrackingBase):
     id: int
 
