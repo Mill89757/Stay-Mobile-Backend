@@ -8,21 +8,21 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 
-# convert string to datetime
-def convert_datetime(string):
-    split_list = re.split("-|:| ", string)
-    temp_list = []
-    for i in split_list:
-        temp_list.append(int(i))
-    result = datetime(
-        temp_list[0],
-        temp_list[1],
-        temp_list[2],
-        temp_list[3],
-        temp_list[4],
-        temp_list[5],
-    )
-    return result
+# convert string to datetime (keep it here for now)
+# def convert_datetime(string):
+#     split_list = re.split("-|:| ", string)
+#     temp_list = []
+#     for i in split_list:
+#         temp_list.append(int(i))
+#     result = datetime(
+#         temp_list[0],
+#         temp_list[1],
+#         temp_list[2],
+#         temp_list[3],
+#         temp_list[4],
+#         temp_list[5],
+#     )
+#     return result
 
 #create user
 def create_user(db: Session, user: schemas.UsersRequest):
@@ -31,7 +31,8 @@ def create_user(db: Session, user: schemas.UsersRequest):
         name=user.name,
         username=user.username,
         email_address=user.email_address,
-        created_time=convert_datetime(user.created_time),
+        # created_time=convert_datetime(user.created_time),
+        created_time = user.created_time,
         avatar_location=user.avatar_location,
         is_completed=user.is_completed
     )
@@ -59,7 +60,7 @@ def update_user(db: Session, id: int, user: schemas.UsersRequest):
             "name": user.name,
             "username": user.username,
             "email_address": user.email_address,
-            "created_time": convert_datetime(user.created_time),
+            "created_time": user.created_time,
             "avatar_location": user.avatar_location,
             "is_completed": user.is_completed,
         }

@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 
 
 class UsersRequest(BaseModel):
@@ -7,7 +8,7 @@ class UsersRequest(BaseModel):
     name: str
     username: str
     email_address: str
-    created_time: str
+    created_time:Optional[datetime] = None
     avatar_location: str
     is_completed: bool
 

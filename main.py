@@ -1,14 +1,23 @@
 from functools import lru_cache
 from typing import Union
-
 from fastapi import FastAPI, Depends
 from fastapi.responses import PlainTextResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-import schemas
-
+#connect to router
+from Router.user import router as user_router 
+from Router.course import router as course_router
 app = FastAPI()
+app.include_router(user_router)
+app.include_router(course_router)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 origins = [
@@ -23,13 +32,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 from typing import List
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, status
-import crud
 from database import SessionLocal
-
 
 def get_db():
     db = SessionLocal()
@@ -37,17 +43,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-# @app.get("/user")
-# def get_user_data(db: Session = Depends(get_db)):
-#     user_data = crud.read_user(db)
-#     return user_data
-
-# @app.post("/user", status_code=status.HTTP_201_CREATED)
-# def create_users(user: schemas.UsersRequest, db: Session = Depends(get_db)):
-#     user = crud.create_user(db, user)
-#     return user
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request, exc):
@@ -57,8 +52,3 @@ async def http_exception_handler(request, exc):
 @app.get("/")
 def read_root():
     return "Welcome to Stay - Mobile API"
-
-# @app.get("/course")
-# def get_course_data(db: Session = Depends(get_db)):
-#     course_data = crud.read_course(db)
-#     return course_data
