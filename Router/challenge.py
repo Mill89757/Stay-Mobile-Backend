@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 import schemas  
 from database import get_db  
@@ -33,4 +34,4 @@ async def update_challenge_route(challenge_id: int, challenge: schemas.Challenge
 async def delete_challenge_route(challenge_id: int, db: Session = Depends(get_db)):
     if not challenge_crud.delete_challenge(db=db, challenge_id=challenge_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
-    return {"detail": "Challenge deleted successfully"}
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Challenge deleted successfully"})
