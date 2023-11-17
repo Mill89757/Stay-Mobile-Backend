@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -17,6 +18,28 @@ async def get_post_route(post_id: int, db: Session = Depends(get_db)):
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
     return post
+
+@router.get("/GetPostByUserID/{user_id}", response_model=List[schemas.PostRead])
+async def get_post_route_user_id(user_id: int, db: Session = Depends(get_db)):
+    post = post_crud.get_posts_by_user_id(db=db, user_id = user_id)
+    if post is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
+    return post
+
+@router.get("/GetPostByChallengeID/{challenge_id}", response_model=List[schemas.PostRead])
+async def get_post_route_challnege_id(challenge_id: int, db: Session = Depends(get_db)):
+    post = post_crud.get_posts_by_challenge_id(db=db, challenge_id = challenge_id)
+    if post is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
+    return post
+
+@router.get("/GetPost/{post_id}", response_model=schemas.PostRead)
+async def get_post_route(post_id: int, db: Session = Depends(get_db)):
+    post = post_crud.get_post(db=db, post_id=post_id)
+    if post is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
+    return post
+
 
 @router.get("/GetAllposts/", response_model=list[schemas.PostRead])
 async def get_posts_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):

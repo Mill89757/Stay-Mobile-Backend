@@ -1,3 +1,4 @@
+from typing import List
 from sqlalchemy.orm import Session
 import models, schemas  
 from fastapi import HTTPException, status
@@ -20,6 +21,22 @@ def get_post(db:Session, post_id: int):
 
 def get_posts(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Post).offset(skip).limit(limit).all()
+
+def get_posts_by_user_id(db: Session, user_id: int) -> List[models.Post]:
+    user_id_posts = (
+        db.query(models.Post)
+        .filter(models.Post.user_id == user_id)
+        .all()
+    )
+    return user_id_posts
+
+def get_posts_by_challenge_id(db: Session, challenge_id: int) -> List[models.Post]:
+    challenge_id_posts = (
+        db.query(models.Post)
+        .filter(models.Post.challenge_id == challenge_id)
+        .all()
+    )
+    return challenge_id_posts
 
 def update_post(db: Session, post_id: int, post: schemas.PostCreate):
     db_post = db.query(models.Post).filter(models.Post.id == post_id).first()

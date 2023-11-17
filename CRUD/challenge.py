@@ -39,6 +39,14 @@ def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[models
     )
     return finished_challenges
 
+def get_challenges_by_course_id(db: Session, course_id: int) -> List[models.Challenge]:
+    challenges_with_course_id = (
+        db.query(models.Challenge)
+        .filter(models.Challenge.course_id == course_id)
+        .all()
+    )
+    return challenges_with_course_id
+
 def get_user_challenges(db: Session, user_id: int):
     active_challenges = get_active_challenges_by_user_id(db, user_id)
     finished_challenges = get_finished_challenges_by_user_id(db, user_id)
