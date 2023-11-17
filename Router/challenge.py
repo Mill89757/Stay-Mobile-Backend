@@ -31,6 +31,11 @@ async def get_user_active_challenges_route(user_id: int, db: Session = Depends(g
     active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
     return active_challenges
 
+@router.get("/GetChallengesWithCourseID/{course_id}", response_model=List[schemas.ChallengeRead])
+async def get_challenge_courseTD(course_id: int, db: Session = Depends(get_db)):
+    CourseID_related_challenges = challenge_crud.get_challenges_by_course_id(db, course_id)
+    return CourseID_related_challenges
+
 @router.get("/GetUserFinishedChallenges/{user_id}", response_model=List[schemas.ChallengeRead])
 async def get_user_finished_challenges_route(user_id: int, db: Session = Depends(get_db)):
     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
