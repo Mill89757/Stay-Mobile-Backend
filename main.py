@@ -32,14 +32,16 @@ from database import SessionLocal
 # from CRUD import challenge
 from Router.challenge import router as challenge_router 
 from Router.post import router as post_router
-from Router.user import router as user_router 
-from Router.course import router as course_router
+from Router.post_content import router as post_content_router
+# from Router.user import router as user_router 
+# from Router.course import router as course_router
 
 app = FastAPI()
 app.include_router(challenge_router)
 app.include_router(post_router)
-app.include_router(user_router)
-app.include_router(course_router)
+app.include_router(post_content_router)
+# app.include_router(user_router)
+# app.include_router(course_router)
 
 def get_db():
     db = SessionLocal()

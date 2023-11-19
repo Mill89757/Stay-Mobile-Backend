@@ -62,7 +62,7 @@ class PostContent(Base):
     __tablename__ = "post_content"
 
     id = Column(Integer, primary_key=True, index=True)
-    post_id = Column(ForeignKey("post.id"), nullable=False, primary_key=True)
+    post_id = Column(ForeignKey("post.id"), nullable=False)
     video_location = Column(String)
     image_location = Column(String)
     voice_location = Column(String)
