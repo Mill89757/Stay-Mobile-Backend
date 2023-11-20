@@ -22,6 +22,8 @@ app.include_router(challenge_router)
 app.include_router(post_router)
 app.include_router(post_content_router)
 
+# Testing
+
 def get_db():
     db = SessionLocal()
     try:
