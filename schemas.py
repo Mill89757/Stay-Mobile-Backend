@@ -146,6 +146,7 @@ class CourseResponse(BaseModel):
     course_name:str
     category:int
     description:str
+    cover_location:str
 
     class Config:
         orm_mode = True
