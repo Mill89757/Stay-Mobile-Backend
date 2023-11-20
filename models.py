@@ -39,11 +39,12 @@ class Challenge(Base):
     breaking_days =  Column(Integer)
     is_public = Column(Boolean, default=False)
     category = Column(String)
-    created_time = Column(DateTime)
+    created_time = Column(DateTime, default = func.now(), nullable=False)
+    finished_time = Column(DateTime, nullable=True)
     cover_location = Column(String)
     user_id = Column(ForeignKey("User.id"), nullable=False)
-    course_id = Column(ForeignKey("course.id"))
-    is_finished = Column(Boolean)
+    course_id = Column(ForeignKey("course.id"), nullable=True)
+    is_finished = Column(Boolean, default= False ,nullable=False)
     days_left = Column(Integer)
     breaking_days_left = Column(Integer)
 
@@ -53,7 +54,7 @@ class Post(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(ForeignKey("User.id"), nullable=False)
     challenge_id = Column(ForeignKey("challenge.id"), nullable=False)
-    created_time = Column(DateTime)
+    created_time = Column(DateTime, default = func.now(), nullable=False)
     start_time = Column(DateTime)
     end_time = Column(DateTime)
     written_text = Column(String(1000))
@@ -62,7 +63,7 @@ class PostContent(Base):
     __tablename__ = "post_content"
 
     id = Column(Integer, primary_key=True, index=True)
-    post_id = Column(ForeignKey("post.id"), nullable=False, primary_key=True)
+    post_id = Column(ForeignKey("post.id"), nullable=False)
     video_location = Column(String)
     image_location = Column(String)
     voice_location = Column(String)
