@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 
 from database import Base
 
-
+#user
 class User(Base):
     __tablename__ = "User"
 
@@ -13,7 +13,8 @@ class User(Base):
     name = Column(String, nullable=False)
     username = Column(String, nullable=False, unique=True)
     email_address = Column(String)
-    created_time = Column(DateTime)
+    # created_time = Column(DateTime)
+    created_time = Column(DateTime, default = func.now(), nullable=False)
     avatar_location = Column(String)
     is_completed = Column(Boolean, default=False)
 
