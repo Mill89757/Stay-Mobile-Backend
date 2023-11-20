@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 
 from database import Base
 
-
+#user
 class User(Base):
     __tablename__ = "User"
 
