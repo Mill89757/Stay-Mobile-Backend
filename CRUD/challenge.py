@@ -4,6 +4,7 @@ import models, schemas
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 import models, schemas
+from typing import List
 
 def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
     db_challenge = models.Challenge(**challenge.dict())
@@ -20,6 +21,37 @@ def get_challenge(db: Session, challenge_id: int):
 
 def get_challenges(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Challenge).offset(skip).limit(limit).all()
+
+
+def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[models.Challenge]:
+    active_challenges = (
+        db.query(models.Challenge)
+        .filter(models.Challenge.user_id == user_id, models.Challenge.is_finished == False)
+        .all()
+    )
+    return active_challenges
+
+def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[models.Challenge]:
+    finished_challenges = (
+        db.query(models.Challenge)
+        .filter(models.Challenge.user_id == user_id, models.Challenge.is_finished == True)
+        .all()
+    )
+    return finished_challenges
+
+def get_challenges_by_course_id(db: Session, course_id: int) -> List[models.Challenge]:
+    challenges_with_course_id = (
+        db.query(models.Challenge)
+        .filter(models.Challenge.course_id == course_id)
+        .all()
+    )
+    return challenges_with_course_id
+
+def get_user_challenges(db: Session, user_id: int):
+    active_challenges = get_active_challenges_by_user_id(db, user_id)
+    finished_challenges = get_finished_challenges_by_user_id(db, user_id)
+    return [active_challenges, finished_challenges]
+
 
 def update_challenge(db: Session, challenge_id: int, challenge: schemas.ChallengeCreate):
     db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()

@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 
 from database import Base
 
-
+#user
 class User(Base):
     __tablename__ = "User"
 
@@ -13,7 +13,8 @@ class User(Base):
     name = Column(String, nullable=False)
     username = Column(String, nullable=False, unique=True)
     email_address = Column(String)
-    created_time = Column(DateTime)
+    # created_time = Column(DateTime)
+    created_time = Column(DateTime, default = func.now(), nullable=False)
     avatar_location = Column(String)
     is_completed = Column(Boolean, default=False)
 
@@ -53,7 +54,7 @@ class Post(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(ForeignKey("User.id"), nullable=False)
     challenge_id = Column(ForeignKey("challenge.id"), nullable=False)
-    created_time = Column(DateTime)
+    created_time = Column(DateTime, default = func.now(), nullable=False)
     start_time = Column(DateTime)
     end_time = Column(DateTime)
     written_text = Column(String(1000))
@@ -62,7 +63,7 @@ class PostContent(Base):
     __tablename__ = "post_content"
 
     id = Column(Integer, primary_key=True, index=True)
-    post_id = Column(ForeignKey("post.id"), nullable=False, primary_key=True)
+    post_id = Column(ForeignKey("post.id"), nullable=False)
     video_location = Column(String)
     image_location = Column(String)
     voice_location = Column(String)

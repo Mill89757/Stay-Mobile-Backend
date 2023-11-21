@@ -3,23 +3,28 @@ from pydantic import BaseModel
 from datetime import datetime
 
 # User 模型
-class UserBase(BaseModel):
+class UsersRequest(BaseModel):
     firebase_uid: str
     name: str
     username: str
-    email_address: Optional[str] = None
+    email_address: str
+    created_time:Optional[datetime] = None
     avatar_location: Optional[str] = None
+    is_completed: bool
 
-class UserCreate(UserBase):
-    pass
-
-class UserRead(UserBase):
+class UsersResponse(BaseModel):
     id: int
+    firebase_uid: str
+    name: str
+    username: str
+    email_address: str
     created_time: datetime
+    avatar_location: str
     is_completed: bool
 
     class Config:
         orm_mode = True
+
 
 # Challenge 模型
 class ChallengeBase(BaseModel):
@@ -48,12 +53,17 @@ class ChallengeCreate(BaseModel):
     days_left: Optional[int] = None
     breaking_days_left: Optional[int] = None
     user_id: int
-    course_id: Optional[int] = None
+    # course_id: Optional[int] = None
 
 
 class ChallengeRead(ChallengeBase):
     id: int
-    created_time: datetime
+    title: str
+    category: int
+    duration: int
+    days_left: int
+    breaking_days_left: int
+    cover_location: str
     finished_time: Optional[datetime] = None
     is_finished: bool
     user_id: int
@@ -64,14 +74,17 @@ class ChallengeRead(ChallengeBase):
 
 # Post 模型
 class PostBase(BaseModel):
-    created_time: datetime
+    created_time: Optional[datetime] = None
     start_time: datetime
     end_time: datetime
     written_text: str
 
-class PostCreate(PostBase):
+class PostCreate(BaseModel):
     user_id: int
     challenge_id: int
+    start_time: datetime
+    end_time: datetime
+    written_text: str
 
 class PostRead(PostBase):
     id: int
@@ -128,16 +141,11 @@ class ReactionRead(ReactionBase):
         orm_mode = True
 
 # Course 模型
-class CourseBase(BaseModel):
-    course_name: str
-    category: int
-    description: str
-
-class CourseCreate(CourseBase):
-    pass
-
-class CourseRead(CourseBase):
-    id: int
+class CourseResponse(BaseModel):
+    id:int
+    course_name:str
+    category:int
+    description:str
 
     class Config:
         orm_mode = True
