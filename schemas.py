@@ -3,23 +3,28 @@ from pydantic import BaseModel
 from datetime import datetime
 
 # User 模型
-class UserBase(BaseModel):
+class UsersRequest(BaseModel):
     firebase_uid: str
     name: str
     username: str
-    email_address: Optional[str] = None
+    email_address: str
+    created_time:Optional[datetime] = None
     avatar_location: Optional[str] = None
+    is_completed: bool
 
-class UserCreate(UserBase):
-    pass
-
-class UserRead(UserBase):
+class UsersResponse(BaseModel):
     id: int
+    firebase_uid: str
+    name: str
+    username: str
+    email_address: str
     created_time: datetime
+    avatar_location: str
     is_completed: bool
 
     class Config:
         orm_mode = True
+
 
 # Challenge 模型
 class ChallengeBase(BaseModel):
@@ -136,16 +141,11 @@ class ReactionRead(ReactionBase):
         orm_mode = True
 
 # Course 模型
-class CourseBase(BaseModel):
-    course_name: str
-    category: int
-    description: str
-
-class CourseCreate(CourseBase):
-    pass
-
-class CourseRead(CourseBase):
-    id: int
+class CourseResponse(BaseModel):
+    id:int
+    course_name:str
+    category:int
+    description:str
 
     class Config:
         orm_mode = True
