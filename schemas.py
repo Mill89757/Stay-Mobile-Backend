@@ -10,7 +10,7 @@ class UsersRequest(BaseModel):
     email_address: str
     created_time:Optional[datetime] = None
     avatar_location: Optional[str] = None
-    is_completed: bool
+    is_completed: Optional[bool] = False#默认false
 
 class UsersResponse(BaseModel):
     id: int
@@ -146,6 +146,7 @@ class CourseResponse(BaseModel):
     course_name:str
     category:int
     description:str
+    cover_location:str
 
     class Config:
         orm_mode = True
