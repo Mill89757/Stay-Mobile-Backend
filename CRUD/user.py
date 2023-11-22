@@ -49,7 +49,7 @@ def read_users(db: Session):
 def read_user_by_id(db: Session, id: int):
     return db.query(models.User).filter(models.User.id == id).first()
 
-#read user by firebase_uid
+#read user by firebase_uid (for login)
 def read_user_by_firebase_uid(db: Session, firebase_uid: str):
     return db.query(models.User).filter(models.User.firebase_uid == firebase_uid).first()
 
