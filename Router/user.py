@@ -51,7 +51,7 @@ def update_user(id: int, user: schemas.UsersRequest, db: Session = Depends(get_d
     return user
 
 #update user is_completed to true when user complete the profile by firebase_uid
-@router.put("/is_comlete/{firebase_uid}")
+@router.put("/is_completed/{firebase_uid}")
 def update_user_is_complete(firebase_uid: str, user: schemas.UsersRequest, db: Session = Depends(get_db)):
     user = crud.update_user_is_complete(db, firebase_uid, user)
     if user is None:
