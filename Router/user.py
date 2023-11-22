@@ -34,10 +34,26 @@ def get_user_by_id(id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="user not found")
     return user
 
+#read user by firebase_uid
+@router.get("/firebase_uid/{firebase_uid}")
+def get_user_by_firebase_uid(firebase_uid: str, db: Session = Depends(get_db)):
+    user = crud.read_user_by_firebase_uid(db, firebase_uid)
+    if user is None:
+        raise HTTPException(status_code=404, detail="user not found")
+    return user
+
 #update user
 @router.put("/{id}")
 def update_user(id: int, user: schemas.UsersRequest, db: Session = Depends(get_db)):
     user = crud.update_user(db, id, user)
+    if user is None:
+        raise HTTPException(status_code=404, detail="user not found")
+    return user
+
+#update user is_completed to true when user complete the profile by firebase_uid
+@router.put("/is_comlete/{firebase_uid}")
+def update_user_is_complete(firebase_uid: str, user: schemas.UsersRequest, db: Session = Depends(get_db)):
+    user = crud.update_user_is_complete(db, firebase_uid, user)
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
     return user

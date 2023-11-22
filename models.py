@@ -16,7 +16,7 @@ class User(Base):
     # created_time = Column(DateTime)
     created_time = Column(DateTime, default = func.now(), nullable=False)
     avatar_location = Column(String)
-    is_completed = Column(Boolean, default=False)
+    is_completed = Column(Boolean, default=False)#默认 false
 
 class Tracking(Base):
     __tablename__ = "tracking"
