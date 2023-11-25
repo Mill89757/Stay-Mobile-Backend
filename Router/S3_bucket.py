@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, status
 import CRUD.post as post_crud
 from database import SessionLocal
-# import CRUD.users as user_crud
+import CRUD.user as user_crud
 import os
 
 router = APIRouter()
@@ -21,25 +21,25 @@ def get_db():
     finally:
         db.close()
 
-# read user by user id from AWS database
+# read user from AWS database by user id 
 @router.get("/avatar/{user_id}")
 def get_user_avatar(user_id: int, db: Session = Depends(get_db)):
-    user = user_crud.read_user(db, user_id)
-    file_url = user.avatar_location
-    return file_url
+    user = user_crud.read_user_by_id(db, user_id)
+    if user and user.avatar_location:
+        return user.avatar_location
+    raise HTTPException(status_code=404, detail="User or avatar not found")
 
-# upload files by user id to AWS database
-@router.post("/avatar/{user_id}")
+# upload files into AWS database by user id
+@router.post("/UploadAvatar/{user_id}")
 def upload_user_avatar(user_id: int, file: UploadFile):
 
     # get the service resources
     s3 = boto3.resource("s3")
-
     user_id_as_file_name = "avatars/" + str(user_id) + "/" + file.filename
-
+    
     bucket = s3.Bucket(S3_BUCKET_NAME)
     bucket.upload_fileobj(
-        file.file, user_id_as_file_name, ExtraArgs={"ACL": "public-read"}
+        file.file, user_id_as_file_name
     )
     upload_file_url = (
         f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{user_id_as_file_name}"
@@ -54,8 +54,7 @@ def upload_photos(file: UploadFile):
     s3 = boto3.resource("s3")
     bucket = s3.Bucket(S3_BUCKET_NAME)
     new_file_name = "avatars/" + file.filename
-    bucket.upload_fileobj(file.file, new_file_name, ExtraArgs={"ACL": "public-read"})
-
+    bucket.upload_fileobj(file.file, new_file_name)
     upload_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{new_file_name}"
 
     return upload_file_url
@@ -69,7 +68,7 @@ def upload_challenger_cover(challenge_id: int, file: UploadFile):
 
     bucket = s3.Bucket(S3_BUCKET_NAME)
     bucket.upload_fileobj(
-        file.file, user_id_as_file_name, ExtraArgs={"ACL": "public-read"}
+        file.file, user_id_as_file_name
     )
     upload_file_url = (
         f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{user_id_as_file_name}"
