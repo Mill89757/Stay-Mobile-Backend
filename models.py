@@ -4,10 +4,12 @@ from sqlalchemy.sql import func
 
 from database import Base
 
-#user
+# create User class inherited from Base class 
 class User(Base):
+    # name of the table used in database
     __tablename__ = "User"
 
+    # create attributes
     id = Column(Integer, primary_key=True, index=True)
     firebase_uid = Column(String, nullable=False)
     name = Column(String, nullable=False)
@@ -16,8 +18,9 @@ class User(Base):
     # created_time = Column(DateTime)
     created_time = Column(DateTime, default = func.now(), nullable=False)
     avatar_location = Column(String)
-    is_completed = Column(Boolean, default=False)
+    is_completed = Column(Boolean, default=False)#默认 false
 
+# create Tracking class inherited from Base class
 class Tracking(Base):
     __tablename__ = "tracking"
 
@@ -29,6 +32,7 @@ class Tracking(Base):
     follower_id = Column(ForeignKey("User.id"), nullable=False)
     challenge_id = Column(ForeignKey('challenge.id'), nullable=False)
 
+# create Challeng class inherited from Base class
 class Challenge(Base):
     __tablename__ = "challenge"
 
@@ -48,6 +52,7 @@ class Challenge(Base):
     days_left = Column(Integer)
     breaking_days_left = Column(Integer)
 
+# create Post class inherited from Base class
 class Post(Base):
     __tablename__ = "post"
 
@@ -59,6 +64,7 @@ class Post(Base):
     end_time = Column(DateTime)
     written_text = Column(String(1000))
 
+# create PostContent class inherited from Base class
 class PostContent(Base):
     __tablename__ = "post_content"
 
@@ -68,6 +74,7 @@ class PostContent(Base):
     image_location = Column(String)
     voice_location = Column(String)
 
+# create Reaction class inherited from Base class
 class Reaction(Base):
     __tablename__ = "reaction"
 
@@ -77,6 +84,7 @@ class Reaction(Base):
     post_id = Column(ForeignKey("post.id"), nullable=False)
     user_id = Column(ForeignKey("User.id"), nullable=False)
 
+# create Course class inherited from Base class
 class Course(Base):
     __tablename__ = "course"
 
@@ -84,3 +92,4 @@ class Course(Base):
     course_name = Column(String, nullable= False)
     category = Column(Integer, nullable= False)
     description = Column(String, nullable=False)
+    cover_location = Column(String, nullable=False)

@@ -2,6 +2,9 @@ from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
 
+# schemas.py is used to buld pydantic models, which controls data validation, conversion, documentation classes and instances
+# define and validate whether the incoming data structure matches as expected
+
 # User 模型
 class UsersRequest(BaseModel):
     firebase_uid: str
@@ -10,7 +13,7 @@ class UsersRequest(BaseModel):
     email_address: str
     created_time:Optional[datetime] = None
     avatar_location: Optional[str] = None
-    is_completed: bool
+    is_completed: Optional[bool] = False#默认false
 
 class UsersResponse(BaseModel):
     id: int
@@ -40,8 +43,6 @@ class ChallengeBase(BaseModel):
     days_left: Optional[int] = None
     breaking_days_left: Optional[int] = None
 
-
-
 class ChallengeCreate(BaseModel):
     title: str
     description: str
@@ -54,7 +55,6 @@ class ChallengeCreate(BaseModel):
     breaking_days_left: Optional[int] = None
     user_id: int
     # course_id: Optional[int] = None
-
 
 class ChallengeRead(ChallengeBase):
     id: int
@@ -146,6 +146,7 @@ class CourseResponse(BaseModel):
     course_name:str
     category:int
     description:str
+    cover_location:str
 
     class Config:
         orm_mode = True
