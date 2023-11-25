@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
+
+# boto3 is not in requirements
 import boto3
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -19,16 +21,18 @@ def get_db():
     finally:
         db.close()
 
-
+# read user by user id from AWS database
 @router.get("/avatar/{user_id}")
 def get_user_avatar(user_id: int, db: Session = Depends(get_db)):
     user = user_crud.read_user(db, user_id)
     file_url = user.avatar_location
     return file_url
 
-
+# upload files by user id to AWS database
 @router.post("/avatar/{user_id}")
 def upload_user_avatar(user_id: int, file: UploadFile):
+
+    # get the service resources
     s3 = boto3.resource("s3")
 
     user_id_as_file_name = "avatars/" + str(user_id) + "/" + file.filename
@@ -43,7 +47,7 @@ def upload_user_avatar(user_id: int, file: UploadFile):
 
     return upload_file_url
 
-
+# upload files to AWS database
 @router.post("/default_avatars")
 def upload_photos(file: UploadFile):
 
@@ -56,7 +60,7 @@ def upload_photos(file: UploadFile):
 
     return upload_file_url
 
-
+# upload challenges covers by challenge id to ASW database
 @router.post("/challenge_covers/{challenge_id}")
 def upload_challenger_cover(challenge_id: int, file: UploadFile):
     s3 = boto3.resource("s3")

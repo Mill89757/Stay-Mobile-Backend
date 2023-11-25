@@ -5,6 +5,7 @@ import schemas
 from database import SessionLocal
 import CRUD.course as crud
 
+# create route for courses operation and functions
 router = APIRouter(prefix="/course")
 
 

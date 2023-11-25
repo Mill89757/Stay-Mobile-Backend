@@ -15,6 +15,9 @@ from Router.post_content import router as post_content_router
 #connect to router
 from Router.user import router as user_router 
 from Router.course import router as course_router
+
+# initialize backend application
+# create an instance object from FastAPI 
 app = FastAPI()
 app.include_router(user_router)
 app.include_router(course_router)
@@ -23,13 +26,17 @@ app.include_router(post_router)
 app.include_router(post_content_router)
 
 # Testing 2
-
+# Using dependency to create an independent database connection per request
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+# CORS, communicates with fronend running indifferent ports/orgins
+# configure "http://localhost:3000" as the frontend origins
+# allow all methods and all headers
 origins = [
     "http://localhost:3000",
 ]
@@ -40,12 +47,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+# override the default exception handlers
+# return HTTP responses with error codes to the client in plain text format
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request, exc):
     print(f"{repr(exc)}")
     return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
 
+# define route "/" operation & function
 @app.get("/")
 def read_root():
     return "Welcome to Stay - Mobile API"

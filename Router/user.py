@@ -5,6 +5,7 @@ import schemas
 from database import SessionLocal
 import CRUD.user as crud
 
+# create routes for users' operations and functions
 router = APIRouter(prefix="/user")
 
 def get_db():
