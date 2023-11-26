@@ -7,7 +7,7 @@ from database import SessionLocal
 import CRUD.user as user_crud
 import os
 from dotenv import load_dotenv
-
+# load env file
 load_dotenv()
 
 router = APIRouter()
