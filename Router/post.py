@@ -10,7 +10,12 @@ router = APIRouter()
 
 @router.post("/CreatePost/", response_model=schemas.PostRead, status_code=status.HTTP_201_CREATED)
 async def creat_post_router(post:schemas.PostCreate, db: Session = Depends(get_db)):
-    return post_crud.creat_post(db=db, post = post)
+
+    result = post_crud.creat_post(db=db, post = post)
+    if isinstance(result, str) and "Cannot create post" in result:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result)
+
+    return result
 
 @router.get("/GetPost/{post_id}", response_model=schemas.PostRead)
 async def get_post_route(post_id: int, db: Session = Depends(get_db)):
