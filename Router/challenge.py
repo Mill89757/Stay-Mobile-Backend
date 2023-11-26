@@ -47,15 +47,6 @@ async def get_user_finished_challenges_route(user_id: int, db: Session = Depends
     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
     return finished_challenges
 
-# read all challenges of one user by user id
-# same as line 25
-@router.get("/GetUserChallenges/{user_id}", response_model=List[List[schemas.ChallengeRead]])
-async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db)):
-    active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
-    finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
-    return [active_challenges, finished_challenges]
-
-# read all challenges 
 @router.get("/GetAllChallenges/", response_model=list[schemas.ChallengeRead])
 async def get_challenges_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return challenge_crud.get_challenges(db=db, skip=skip, limit=limit)
