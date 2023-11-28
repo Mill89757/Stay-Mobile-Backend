@@ -29,15 +29,12 @@ async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db))
     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
     return [active_challenges, finished_challenges]
 
-<<<<<<< Updated upstream
-=======
 @router.get("/GetUserLastChallenges{user_id}", response_model=schemas.ChallengeRead)
 async def get_user_last_challnege(user_id: int, db: Session = Depends(get_db)):
     last_challenges = challenge_crud.get_last_challenge_by_user_id(db, user_id)
     return last_challenges
 
 # read active challenges of one user by user id
->>>>>>> Stashed changes
 @router.get("/GetUserActiveChallenges/{user_id}", response_model=List[schemas.ChallengeRead])
 async def get_user_active_challenges_route(user_id: int, db: Session = Depends(get_db)):
     active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
