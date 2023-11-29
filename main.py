@@ -1,11 +1,7 @@
-from functools import lru_cache
-from typing import Union
-from fastapi import FastAPI, Depends
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from Router.challenge import router as challenge_router 
@@ -27,7 +23,6 @@ app.include_router(post_router)
 app.include_router(post_content_router)
 app.include_router(S3_bucket_router)
 
-# Testing 2
 # Using dependency to create an independent database connection per request
 def get_db():
     db = SessionLocal()
@@ -36,7 +31,7 @@ def get_db():
     finally:
         db.close()
 
-# CORS, communicates with fronend running indifferent ports/orgins
+# CORS, communicates with frontend running indifferent ports/origins
 # configure "http://localhost:3000" as the frontend origins
 # allow all methods and all headers
 origins = [
@@ -52,7 +47,7 @@ app.add_middleware(
 # override the default exception handlers
 # return HTTP responses with error codes to the client in plain text format
 @app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request, exc):
+async def http_exception_handler(exc):
     print(f"{repr(exc)}")
     return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
 

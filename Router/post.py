@@ -11,8 +11,13 @@ router = APIRouter()
 
 # create post 
 @router.post("/CreatePost/", response_model=schemas.PostRead, status_code=status.HTTP_201_CREATED)
-async def creat_post_router(post:schemas.PostCreate, db: Session = Depends(get_db)):
-    return post_crud.creat_post(db=db, post = post)
+async def create_post_router(post:schemas.PostCreate, db: Session = Depends(get_db)):
+
+    result = post_crud.create_post(db=db, post = post)
+    if isinstance(result, str) and "Cannot create post" in result:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result)
+
+    return result
 
 # read post by post id
 @router.get("/GetPost/{post_id}", response_model=schemas.PostRead)
@@ -32,7 +37,7 @@ async def get_post_route_user_id(user_id: int, db: Session = Depends(get_db)):
 
 # read posts by challenge id
 @router.get("/GetPostByChallengeID/{challenge_id}", response_model=List[schemas.PostRead])
-async def get_post_route_challnege_id(challenge_id: int, db: Session = Depends(get_db)):
+async def get_post_route_challenge_id(challenge_id: int, db: Session = Depends(get_db)):
     post = post_crud.get_posts_by_challenge_id(db=db, challenge_id = challenge_id)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")

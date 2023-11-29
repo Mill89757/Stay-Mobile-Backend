@@ -1,6 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
-
-# boto3 is not in requirements
 import boto3
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -8,6 +6,9 @@ import CRUD.post as post_crud
 from database import SessionLocal
 import CRUD.user as user_crud
 import os
+from dotenv import load_dotenv
+# load env file
+load_dotenv()
 
 router = APIRouter()
 
@@ -32,9 +33,9 @@ def get_user_avatar(user_id: int, db: Session = Depends(get_db)):
 # upload files into AWS database by user id
 @router.post("/UploadAvatar/{user_id}")
 def upload_user_avatar(user_id: int, file: UploadFile):
+    
+    s3 = boto3.resource("s3", aws_access_key_id=f"{os.environ['AWS_ACCESS_KEY_ID']}", aws_secret_access_key=f"{os.environ['AWS_SECRET_ACCESS_KEY']}")
 
-    # get the service resources
-    s3 = boto3.resource("s3")
     user_id_as_file_name = "avatars/" + str(user_id) + "/" + file.filename
     
     bucket = s3.Bucket(S3_BUCKET_NAME)
@@ -51,7 +52,8 @@ def upload_user_avatar(user_id: int, file: UploadFile):
 @router.post("/default_avatars")
 def upload_photos(file: UploadFile):
 
-    s3 = boto3.resource("s3")
+    s3 = boto3.resource("s3", aws_access_key_id=f"{os.environ['AWS_ACCESS_KEY_ID']}", aws_secret_access_key=f"{os.environ['AWS_SECRET_ACCESS_KEY']}")
+
     bucket = s3.Bucket(S3_BUCKET_NAME)
     new_file_name = "avatars/" + file.filename
     bucket.upload_fileobj(file.file, new_file_name)
@@ -62,7 +64,8 @@ def upload_photos(file: UploadFile):
 # upload challenges covers by challenge id to ASW database
 @router.post("/challenge_covers/{challenge_id}")
 def upload_challenger_cover(challenge_id: int, file: UploadFile):
-    s3 = boto3.resource("s3")
+
+    s3 = boto3.resource("s3", aws_access_key_id=f"{os.environ['AWS_ACCESS_KEY_ID']}", aws_secret_access_key=f"{os.environ['AWS_SECRET_ACCESS_KEY']}")
 
     user_id_as_file_name = "challenge_covers/" + str(challenge_id) + "/" + file.filename
 

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import models, schemas
 
 # crate post content
-def creat_post_content(db: Session, post_content: schemas.PostContentCreate):
+def create_post_content(db: Session, post_content: schemas.PostContentCreate):
     db_post_content = models.PostContent(**post_content.dict())
     db.add(db_post_content)
     db.commit()

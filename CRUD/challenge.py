@@ -1,4 +1,5 @@
 
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 import models, schemas  
 from fastapi import HTTPException, status
@@ -51,6 +52,13 @@ def get_challenges_by_course_id(db: Session, course_id: int) -> List[models.Chal
         .all()
     )
     return challenges_with_course_id
+
+def get_last_challenge_by_user_id(db: Session, user_id: int):
+    last_challenge = (db.query(models.Challenge)
+        .filter(models.Challenge.user_id == user_id)
+        .order_by(desc(models.Challenge.created_time)).first()
+        )
+    return last_challenge
 
 # read all challenges of one user by user id
 # not used in router/challenge.py 
