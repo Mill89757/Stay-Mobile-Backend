@@ -14,7 +14,7 @@ router = APIRouter()
 async def create_challenge_route(challenge: schemas.ChallengeCreate, db: Session = Depends(get_db)):
     return challenge_crud.create_challenge(db=db, challenge=challenge)
 
-# read chanllenge by id
+# read challenge by id
 @router.get("/GetChallenge/{challenge_id}", response_model=schemas.ChallengeRead)
 async def get_challenge_route(challenge_id: int, db: Session = Depends(get_db)):
     challenge = challenge_crud.get_challenge(db=db, challenge_id=challenge_id)
@@ -30,7 +30,7 @@ async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db))
     return [active_challenges, finished_challenges]
 
 @router.get("/GetUserLastChallenges{user_id}", response_model=schemas.ChallengeRead)
-async def get_user_last_challnege(user_id: int, db: Session = Depends(get_db)):
+async def get_user_last_challenge(user_id: int, db: Session = Depends(get_db)):
     last_challenges = challenge_crud.get_last_challenge_by_user_id(db, user_id)
     return last_challenges
 
@@ -42,7 +42,7 @@ async def get_user_active_challenges_route(user_id: int, db: Session = Depends(g
 
 # read challenges list by course id
 @router.get("/GetChallengesWithCourseID/{course_id}", response_model=List[schemas.ChallengeRead])
-async def get_challenge_courseTD(course_id: int, db: Session = Depends(get_db)):
+async def get_challenge_courseID(course_id: int, db: Session = Depends(get_db)):
     CourseID_related_challenges = challenge_crud.get_challenges_by_course_id(db, course_id)
     return CourseID_related_challenges
 

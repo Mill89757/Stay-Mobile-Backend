@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
 
-# schemas.py is used to buld pydantic models, which controls data validation, conversion, documentation classes and instances
+# schemas.py is used to build pydantic models, which controls data validation, conversion, documentation classes and instances
 # define and validate whether the incoming data structure matches as expected
 
 # User 模型

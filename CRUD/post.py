@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 import models, schemas
 
-def creat_post(db: Session, post: schemas.PostCreate):
+def create_post(db: Session, post: schemas.PostCreate):
     
     challenge = db.query(models.Challenge).filter(models.Challenge.id == post.challenge_id).first()
     if not challenge:

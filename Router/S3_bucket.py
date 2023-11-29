@@ -1,6 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
-
-# boto3 is not in requirements
 import boto3
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, status
