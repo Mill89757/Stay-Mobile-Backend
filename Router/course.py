@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 import schemas
 from database import SessionLocal
 import CRUD.course as crud
+import CRUD.challenge as crudch
 
 router = APIRouter(prefix="/course")
 
@@ -28,3 +29,11 @@ def get_course_by_id(id: int, db: Session = Depends(get_db)):
     if course is None:
         raise HTTPException(status_code=404, detail="course not found")
     return course
+
+# read course by id 
+@router.get("/{id}/link_all_challenge")
+def get_challenges_by_course_id(id: int, db: Session = Depends(get_db)):
+    challenges = crudch.get_challenges_by_course_id(db, id)
+    if challenges is None:
+        raise HTTPException(status_code=404, detail="None chanllenge on this course")
+    return challenges
