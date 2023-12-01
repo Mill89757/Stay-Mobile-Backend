@@ -54,7 +54,7 @@ class ChallengeCreate(BaseModel):
     days_left: Optional[int] = None
     breaking_days_left: Optional[int] = None
     user_id: int
-    # course_id: Optional[int] = None
+    course_id: Optional[int] = None
 
 class ChallengeRead(ChallengeBase):
     id: int
