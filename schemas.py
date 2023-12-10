@@ -88,6 +88,11 @@ class PostCreate(BaseModel):
 
 class PostRead(PostBase):
     id: int
+    user_id: int
+    challenge_id: int
+    start_time: datetime
+    end_time: datetime
+    written_text: str
 
     class Config:
         orm_mode = True
