@@ -93,7 +93,7 @@ class UserReactionLog(Base):
     created_time = Column(DateTime, default = func.now(), nullable=False)
     is_cancelled = Column(Boolean, default= False ,nullable=False)
 
-class emoji(Base):
+class Emoji(Base):
     __tablename__ = "emoji"
 
     id = Column(Integer, primary_key=True, index=True)
