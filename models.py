@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 
 from database import Base
 
-#user
+
 class User(Base):
     __tablename__ = "User"
 
@@ -13,8 +13,7 @@ class User(Base):
     name = Column(String, nullable=False)
     username = Column(String, nullable=False, unique=True)
     email_address = Column(String)
-    # created_time = Column(DateTime)
-    created_time = Column(DateTime, default = func.now(), nullable=False)
+    created_time = Column(DateTime)
     avatar_location = Column(String)
     is_completed = Column(Boolean, default=False)
 
@@ -84,3 +83,18 @@ class Course(Base):
     course_name = Column(String, nullable= False)
     category = Column(Integer, nullable= False)
     description = Column(String, nullable=False)
+
+class UserReactionLog(Base):
+    __tablename__ = "user_reaction_log"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(ForeignKey("User.id"), nullable=False)
+    emoji_id = Column(ForeignKey("emoji.id"), nullable=False)
+    created_time = Column(DateTime, default = func.now(), nullable=False)
+    is_cancelled = Column(Boolean, default= False ,nullable=False)
+
+class emoji(Base):
+    __tablename__ = "emoji"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(String)
