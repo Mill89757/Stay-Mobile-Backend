@@ -151,3 +151,7 @@ class CourseResponse(BaseModel):
         orm_mode = True
 
 
+# emoji 模型
+class EmojiBase(BaseModel):
+    content: str
+

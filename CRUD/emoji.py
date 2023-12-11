@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import models, schemas
 
 
-def creat_emoji(db: Session, emoji: schemas.PostCreate):
+def creat_emoji(db: Session, emoji: schemas.EmojiBase):
     db_emoji = models.Emoji(**emoji.dict())
     db.add(db_emoji)
     db.commit()
@@ -30,7 +30,7 @@ def get_s_by_content(db: Session, content: str) -> List[models.Emoji]:
     )
     return content_emojis
 
-def update_emoji(db: Session, emoji_id: int, emoji: schemas.PostCreate):
+def update_emoji(db: Session, emoji_id: int, emoji: schemas.EmojiBase):
     db_emoji = db.query(models.Emoji).filter(models.Emoji.id == emoji_id).first()
     if db_emoji is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Emoji not found")
