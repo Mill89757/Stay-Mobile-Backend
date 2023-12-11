@@ -93,18 +93,22 @@ class PostRead(PostBase):
         orm_mode = True
 
 # Tracking 模型
-class TrackingBase(BaseModel):
-    created_time: Optional[datetime]
-    terminated_time: Optional[datetime]
-    is_terminated: Optional[bool]
-
-class TrackingCreate(TrackingBase):
+class TrackingsRequest(BaseModel):
+    created_time: Optional[datetime] = None
+    terminated_time: Optional[datetime] = None
+    is_terminated: Optional[bool] = False
     owner_id: int
     follower_id: int
     challenge_id: int
 
-class TrackingRead(TrackingBase):
+class TrackingsResponse(BaseModel):
     id: int
+    created_time: datetime
+    terminated_time: Optional[datetime] = None
+    is_terminated: bool
+    owner_id: int
+    follower_id: int
+    challenge_id: int
 
     class Config:
         orm_mode = True
