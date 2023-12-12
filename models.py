@@ -96,5 +96,5 @@ class UserReactionLog(Base):
 class Emoji(Base):
     __tablename__ = "emoji"
 
-    id = Column(Integer, primary_key=True, index=True)
-    content = Column(String)
+    emoji_image = Column(String, primary_key=True, index = False)
+    name = Column(String)

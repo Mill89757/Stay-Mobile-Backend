@@ -153,5 +153,5 @@ class CourseResponse(BaseModel):
 
 # emoji 模型
 class EmojiBase(BaseModel):
-    content: str
+    name: str
 
