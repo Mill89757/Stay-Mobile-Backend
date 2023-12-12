@@ -155,3 +155,11 @@ class CourseResponse(BaseModel):
 class EmojiBase(BaseModel):
     name: str
 
+# post reaction 模型
+class PostReactionBase(BaseModel):
+    count: int
+
+class PostReactionCreate(ReactionBase):
+    post_id: int
+    emoji_image: str
+

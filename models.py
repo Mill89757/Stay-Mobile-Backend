@@ -98,3 +98,10 @@ class Emoji(Base):
 
     emoji_image = Column(String, primary_key=True, index = False)
     name = Column(String)
+
+class PostReaction(Base):
+    __tablename__ = "post_reaction"
+
+    post_id = Column(ForeignKey("post.id"), primary_key=True, index=True)
+    emoji_image = Column(ForeignKey("emoji.emoji_image"), primary_key=True, index=True)
+    count = Column(Integer, nullable= False)
