@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -93,3 +94,14 @@ class Course(Base):
     category = Column(Integer, nullable= False)
     description = Column(String, nullable=False)
     cover_location = Column(String, nullable=False)
+
+# craete User_reaction_log class inherited from Base class
+class User_reaction_log(Base):
+    __tablename__ = "user_reaction_log"
+
+    log_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(ForeignKey("User.id"), nullable=False)
+    post_id = Column(ForeignKey("post_id"), nullable=False)
+    emoji_id = Column(ForeignKey("emoji_id"), nullable=False)
+    created_datetime = Column(datetime,nullable=False)
+    is_cancelled = Column(bool, nullable=False)

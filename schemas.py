@@ -1,4 +1,6 @@
+import string
 from typing import Optional
+from xmlrpc.client import boolean
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -150,3 +152,31 @@ class CourseResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+# User reaction log model
+class UserReactionLogBase(BaseModel):
+    created_datetime: datetime
+    is_cancelled:bool
+
+class UserReactionLogCreate(UserReactionLogBase):
+    user_id:int
+    post_id:int
+    emoji_image:string
+
+class UserReactionLogRead(UserReactionLogBase):
+    log_id:int
+    user_id:int
+    post_id:int
+    emoji_image:string
+    
+    class Config:
+        orm_mode = True
+
+# Post reaction model
+class PostReaction(BaseModel):
+    count: int
+
+class PostReaction(PostReaction):
+    post_id:int
+    emoji_image:string
+
