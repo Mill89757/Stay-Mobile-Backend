@@ -12,12 +12,14 @@ from Router.S3_bucket import router as S3_bucket_router
 #connect to router
 from Router.user import router as user_router 
 from Router.course import router as course_router
+from Router.tracking import router as tracking_router
 
 # initialize backend application
 # create an instance object from FastAPI 
 app = FastAPI()
 app.include_router(user_router)
 app.include_router(course_router)
+app.include_router(tracking_router)
 app.include_router(challenge_router)
 app.include_router(post_router)
 app.include_router(post_content_router)
