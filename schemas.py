@@ -175,10 +175,15 @@ class UserReactionLogRead(UserReactionLogBase):
     class Config:
         orm_mode = True
 
-# Post reaction model
-class PostReaction(BaseModel):
+# emoji 模型
+class EmojiBase(BaseModel):
+    name: str
+
+# post reaction 模型
+class PostReactionBase(BaseModel):
     count: int
 
-class PostReaction(PostReaction):
-    post_id:int
-    emoji_image:str
+class PostReactionCreate(ReactionBase):
+    post_id: int
+    emoji_image: str
+
