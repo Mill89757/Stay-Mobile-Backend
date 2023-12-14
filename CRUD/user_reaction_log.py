@@ -41,7 +41,7 @@ def get_user_reaction_log_by_post_id(db:Session, post_id:int) -> List[models.Use
     return user_reaction_logs
 
 # read user reaction log by emoji id
-def get_user_reaction_log_by_emoji(db:Session, emoji_image:string) -> List[models.User_reaction_log]:
+def get_user_reaction_log_by_emoji(db:Session, emoji_image:str) -> List[models.User_reaction_log]:
     user_reaction_logs = db.query(models.User_reaction_log).filter(models.User_reaction_log.emoji_image == emoji_image).all()
     if user_reaction_logs is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No user reaction log found")

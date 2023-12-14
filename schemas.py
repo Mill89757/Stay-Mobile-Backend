@@ -1,10 +1,8 @@
-import string
 from typing import Optional
-from xmlrpc.client import boolean
 from pydantic import BaseModel
 from datetime import datetime
 
-# schemas.py is used to buld pydantic models, which controls data validation, conversion, documentation classes and instances
+# schemas.py is used to build pydantic models, which controls data validation, conversion, documentation classes and instances
 # define and validate whether the incoming data structure matches as expected
 
 # User 模型
@@ -90,6 +88,11 @@ class PostCreate(BaseModel):
 
 class PostRead(PostBase):
     id: int
+    user_id: int
+    challenge_id: int
+    start_time: datetime
+    end_time: datetime
+    written_text: str
 
     class Config:
         orm_mode = True
@@ -161,13 +164,13 @@ class UserReactionLogBase(BaseModel):
 class UserReactionLogCreate(UserReactionLogBase):
     user_id:int
     post_id:int
-    emoji_image:string
+    emoji_image:str
 
 class UserReactionLogRead(UserReactionLogBase):
     log_id:int
     user_id:int
     post_id:int
-    emoji_image:string
+    emoji_image:str
     
     class Config:
         orm_mode = True
@@ -178,5 +181,4 @@ class PostReaction(BaseModel):
 
 class PostReaction(PostReaction):
     post_id:int
-    emoji_image:string
-
+    emoji_image:str
