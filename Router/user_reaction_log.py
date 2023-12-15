@@ -6,7 +6,7 @@ from database import get_db
 import CRUD.user_reaction_log as crud
 from typing import List
 
-# create routes fro challenges operations and functions
+# create routes for user reaction log operations and functions
 router = APIRouter(prefix="/user_eaction_log")
 
 # create user reaction log 

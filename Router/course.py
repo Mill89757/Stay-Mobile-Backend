@@ -26,7 +26,6 @@ async def get_course_by_id(id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="course not found")
     return course
 
-
 # update course and challenge relationship
 @router.put("/LinkCourseChallenge/{course_id}/{challenge_id}", response_model=schemas.ChallengeRead)
 async def update_challenge_course_id(course_id:int, challenge_id:int, db: Session=Depends(get_db)):
