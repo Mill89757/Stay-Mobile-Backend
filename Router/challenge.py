@@ -56,7 +56,10 @@ async def get_user_finished_challenges_route(user_id: int, db: Session = Depends
 async def get_challenges_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return challenge_crud.get_challenges(db=db, skip=skip, limit=limit)
 
-# update challenges by challenge id
+@router.get("/GetDurationByUserID/{user_id}")
+async def get_challenge_durations_by_category(user_id: int, db: Session = Depends(get_db)):
+    return challenge_crud.get_challenge_durations_by_category(db, user_id)
+
 @router.put("/UpdateChallenge/{challenge_id}", response_model=schemas.ChallengeRead)
 async def update_challenge_route(challenge_id: int, challenge: schemas.ChallengeCreate, db: Session = Depends(get_db)):
     updated_challenge = challenge_crud.update_challenge(db=db, challenge_id=challenge_id, challenge=challenge)
