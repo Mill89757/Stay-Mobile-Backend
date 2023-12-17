@@ -86,8 +86,8 @@ def get_challenge_durations_by_category(db: Session, user_id: int):
         ).all()
 
         for post, challenge in daily_posts:
-            category = models.Challenge.category
-            post_duration = (models.Post.end_time - models.Post.start_time).total_seconds() / 60  # duration in minutes
+            category = challenge.category
+            post_duration = (post.end_time - post.start_time).total_seconds() / 60  # duration in minutes
             
             if category not in durations_by_date_category[date.strftime("%d/%m")]:
                 durations_by_date_category[date.strftime("%d/%m")][category] = 0
