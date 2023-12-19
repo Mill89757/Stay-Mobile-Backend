@@ -4,13 +4,13 @@ from sqlalchemy.orm import Session
 import schemas
 from database import get_db
 import CRUD.user_reaction_log as crud
-from typing import List
+from typing import List, Union
 
 # create routes for user reaction log operations and functions
-router = APIRouter(prefix="/user_eaction_log")
+router = APIRouter(prefix="/user_reaction_log")
 
 # create user reaction log 
-@router.post("/CreateLog", response_model=schemas.UserReactionLogCreate, status_code=status.HTTP_201_CREATED)
+@router.post("/Create", response_model=schemas.UserReactionLogCreate, status_code=status.HTTP_201_CREATED)
 async def create_user_reaction_log(log:schemas.UserReactionLogCreate, db:Session=Depends(get_db)):
     return crud.create_user_reaction_log(db=db, log=log)
 
@@ -45,13 +45,13 @@ async def get_log_by_emoji_image(emoji_image:str, db:Session=Depends(get_db)):
     return emoji_log_list
 
 # read the most recent user reaction log by user id and post id
-@router.get("/GetLatestByUserPost/{post_id}/{user_id}", response_model=schemas.UserReactionLogRead)
+@router.get("/GetLatestByUserPost/{post_id}/{user_id}")
 async def get_latest_log_of_user(post_id:int, user_id:int, db:Session=Depends(get_db)):
     latest_log = crud.get_recent_user_reaction_log_by_user_id(db=db, post_id=post_id, user_id=user_id)
     return latest_log
 
 # update reaction log by log id
-@router.put("/UpdateById/{log_id}", response_model=schemas.UserReactionLogRead)
+@router.put("/UpdateById/{log_id}",response_model=schemas.UserReactionLogRead)
 async def update_reaction_log(log_id:int, log:schemas.UserReactionLogRead, db:Session=Depends(get_db)):
     updated_log = crud.update_user_reaction_log(db=db, log_id=log_id,log=log)
     return updated_log

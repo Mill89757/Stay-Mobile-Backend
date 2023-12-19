@@ -131,7 +131,7 @@ class PostContentRead(PostContentBase):
         orm_mode = True
 
 # Reaction 模型
-class ReactionBase(BaseModel):
+"""class ReactionBase(BaseModel):
     emoji_type: int
     amount: int
 
@@ -144,7 +144,7 @@ class ReactionRead(ReactionBase):
 
     class Config:
         orm_mode = True
-
+"""
 # Course 模型
 class CourseResponse(BaseModel):
     id:int
@@ -183,7 +183,10 @@ class EmojiBase(BaseModel):
 class PostReactionBase(BaseModel):
     count: int
 
-class PostReactionCreate(ReactionBase):
+class PostReactionCreate(PostReactionBase):
     post_id: int
     emoji_image: str
+
+    class Config:
+        orm_mode = True
 

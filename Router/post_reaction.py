@@ -17,7 +17,7 @@ async def create_post_reaction(post_reaction:schemas.PostReactionCreate, db:Sess
     return crud.creat_post_reaction(db=db, post_reaction=post_reaction)
 
 # read all post reaction
-@router.get("/GetReactions", response_model=List[schemas.PostReactionCreate])
+@router.get("", response_model=List[schemas.PostReactionCreate])
 async def get_all_reactions(skip:int = 0, limit:int = 100, db:Session=Depends(get_db)):
     all_post_reaction = crud.get_post_reactions(db=db, skip=skip, limit=limit)
     return all_post_reaction
@@ -68,5 +68,5 @@ async def get_reaction_count_challenge_id(challenge_id:int, db:Session=Depends(g
     for item in post_list:
         post_id_List.append(item.id)
     for id in post_id_List:
-        challenge_reaction_count += crud.get_counts_post
+        challenge_reaction_count += crud.get_counts_post(db=db, post_id=id)
     return challenge_reaction_count

@@ -95,22 +95,24 @@ class Course(Base):
     cover_location = Column(String, nullable=False)
 
 # craete User_reaction_log class inherited from Base class
-
 class UserReactionLog(Base):
     __tablename__ = "user_reaction_log"
 
-    id = Column(Integer, primary_key=True, index=True)
+    log_id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, primary_key=True, index=False)
     user_id = Column(ForeignKey("User.id"), nullable=False)
-    emoji_id = Column(ForeignKey("emoji.id"), nullable=False)
-    created_time = Column(DateTime, default = func.now(), nullable=False)
+    emoji_image = Column(ForeignKey("emoji.id"), nullable=False)
+    created_datetime = Column(DateTime, default = func.now(), nullable=False)
     is_cancelled = Column(Boolean, default= False ,nullable=False)
 
+# create Emoji class inherited from Base class
 class Emoji(Base):
     __tablename__ = "emoji"
 
     emoji_image = Column(String, primary_key=True, index = False)
     name = Column(String)
 
+# create Post Reaction class inherited from Base class
 class PostReaction(Base):
     __tablename__ = "post_reaction"
 
