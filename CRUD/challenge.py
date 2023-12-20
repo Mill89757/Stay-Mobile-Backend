@@ -86,48 +86,43 @@ def get_user_challenges(db: Session, user_id: int):
     finished_challenges = get_finished_challenges_by_user_id(db, user_id)
     return [active_challenges, finished_challenges]
 
+
 def get_challenge_durations_by_category(db: Session, user_id: int):
-    # Find the latest post date for the user
-    latest_post = db.query(models.Post).filter(models.Post.user_id == user_id).order_by(models.Post.end_time.desc()).first()
-    
-    # If there are no posts, return an empty dictionary
-    if not latest_post:
-        return {}
-    
-    # Convert the latest post end time to Sydney timezone
+    # 查询有帖子记录的独特日期，并按降序排列
+    unique_dates = db.query(models.Post.start_time).filter(models.Post.user_id == user_id)\
+                      .order_by(models.Post.start_time.desc()).distinct().all()
+
+    # 提取日期并获取最近五个独特日期
+    unique_dates = [date[0].date() for date in unique_dates][:5]
+
     sydney_tz = pytz.timezone('Australia/Sydney')
-    latest_date = latest_post.end_time.astimezone(sydney_tz).date()
+    durations_by_date_category = {}
 
-    # Determine the date range for the last five days from the latest post
-    date_range = [latest_date - timedelta(days=i) for i in range(5)]
-
-    # Initialize the dictionary for durations by date and category
-    durations_by_date_category = {date.strftime("%d/%m"): {} for date in date_range}
-
-    for date in date_range:
+    for date in unique_dates:
         start_of_day = datetime.combine(date, datetime.min.time(), tzinfo=sydney_tz)
         end_of_day = datetime.combine(date, datetime.max.time(), tzinfo=sydney_tz)
-        
-        # Filter posts by date range and user_id
+
+        # 为这个日期初始化字典
+        date_str = date.strftime("%d/%m")
+        durations_by_date_category[date_str] = {}
+
+        # 根据这个日期和user_id过滤帖子
         daily_posts = db.query(models.Post, models.Challenge).join(models.Challenge).filter(
             models.Post.user_id == user_id,
             models.Post.start_time >= start_of_day,
             models.Post.end_time <= end_of_day
         ).all()
 
-        # Calculate durations by category for each day
+        # 为这个日期计算每个类别的持续时间
         for post, challenge in daily_posts:
             category = challenge.category
-            post_duration = (post.end_time - post.start_time).total_seconds() / 60
+            post_duration = (post.end_time.astimezone(sydney_tz) - post.start_time.astimezone(sydney_tz)).total_seconds() / 60
             
-            if category not in durations_by_date_category[date.strftime("%d/%m")]:
-                durations_by_date_category[date.strftime("%d/%m")][category] = 0
-            durations_by_date_category[date.strftime("%d/%m")][category] += post_duration
+            if category not in durations_by_date_category[date_str]:
+                durations_by_date_category[date_str][category] = 0
+            durations_by_date_category[date_str][category] += post_duration
 
     return durations_by_date_category
-
-# This function should be integrated into your backend application.
-# Make sure to replace 'session.query' with your actual database session or query interface.
 
 
 
