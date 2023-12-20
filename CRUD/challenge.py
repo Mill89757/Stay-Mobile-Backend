@@ -87,15 +87,21 @@ def get_user_challenges(db: Session, user_id: int):
     return [active_challenges, finished_challenges]
 
 def get_challenge_durations_by_category(db: Session, user_id: int):
-    # Step 1: Filter challenges for the user
-    challenges = db.query(models.Challenge).filter(models.Challenge.challenge_owner_id == user_id).all()
-
-    # Step 2: Determine the date range
+    # Find the latest post date for the user
+    latest_post = db.query(models.Post).filter(models.Post.user_id == user_id).order_by(models.Post.end_time.desc()).first()
+    
+    # If there are no posts, return an empty dictionary
+    if not latest_post:
+        return {}
+    
+    # Convert the latest post end time to Sydney timezone
     sydney_tz = pytz.timezone('Australia/Sydney')
-    today = datetime.now(sydney_tz).date()
-    date_range = [today - timedelta(days=i) for i in range(5)]
+    latest_date = latest_post.end_time.astimezone(sydney_tz).date()
 
-    # Step 3 & 4: Filter posts, group by category, and calculate durations
+    # Determine the date range for the last five days from the latest post
+    date_range = [latest_date - timedelta(days=i) for i in range(5)]
+
+    # Initialize the dictionary for durations by date and category
     durations_by_date_category = {date.strftime("%d/%m"): {} for date in date_range}
 
     for date in date_range:
@@ -109,9 +115,10 @@ def get_challenge_durations_by_category(db: Session, user_id: int):
             models.Post.end_time <= end_of_day
         ).all()
 
+        # Calculate durations by category for each day
         for post, challenge in daily_posts:
             category = challenge.category
-            post_duration = (post.end_time - post.start_time).total_seconds() / 60  # duration in minutes
+            post_duration = (post.end_time - post.start_time).total_seconds() / 60
             
             if category not in durations_by_date_category[date.strftime("%d/%m")]:
                 durations_by_date_category[date.strftime("%d/%m")][category] = 0
