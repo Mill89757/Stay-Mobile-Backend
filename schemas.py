@@ -41,7 +41,6 @@ class ChallengeBase(BaseModel):
     category: Optional[int] = None
     cover_location: Optional[str] = None
     days_left: Optional[int] = None
-    breaking_days_left: Optional[int] = None
 
 class ChallengeCreate(BaseModel):
     title: str
@@ -52,8 +51,7 @@ class ChallengeCreate(BaseModel):
     category: Optional[int] = None
     cover_location: Optional[str] = None
     days_left: Optional[int] = None
-    breaking_days_left: Optional[int] = None
-    user_id: int
+    challenge_owner_id: int
     # course_id: Optional[int] = None
 
 class ChallengeRead(ChallengeBase):
@@ -62,12 +60,25 @@ class ChallengeRead(ChallengeBase):
     category: int
     duration: int
     days_left: int
-    breaking_days_left: int
     cover_location: str
     finished_time: Optional[datetime] = None
     is_finished: bool
-    user_id: int
+    challenge_owner_id: int
     course_id: Optional[int] = None
+
+    class Config:
+        orm_mode = True
+
+#Group Challenge 模型
+class GroupChallengeMembersBase(BaseModel):
+    challenge_id: int
+    user_id: int
+
+class GroupChallengeMembersCreate(GroupChallengeMembersBase):
+    breaking_days_left: int
+
+class GroupChallengeMembersRead(GroupChallengeMembersBase):
+    breaking_days_left: int
 
     class Config:
         orm_mode = True
@@ -98,18 +109,22 @@ class PostRead(PostBase):
         orm_mode = True
 
 # Tracking 模型
-class TrackingBase(BaseModel):
-    created_time: Optional[datetime]
-    terminated_time: Optional[datetime]
-    is_terminated: Optional[bool]
-
-class TrackingCreate(TrackingBase):
+class TrackingsRequest(BaseModel):
+    created_time: Optional[datetime] = None
+    terminated_time: Optional[datetime] = None
+    is_terminated: Optional[bool] = False
     owner_id: int
     follower_id: int
     challenge_id: int
 
-class TrackingRead(TrackingBase):
+class TrackingsResponse(BaseModel):
     id: int
+    created_time: datetime
+    terminated_time: Optional[datetime] = None
+    is_terminated: bool
+    owner_id: int
+    follower_id: int
+    challenge_id: int
 
     class Config:
         orm_mode = True
