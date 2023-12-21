@@ -1,3 +1,4 @@
+from inspect import stack
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -12,7 +13,10 @@ router = APIRouter(prefix="/user_reaction_log")
 # create user reaction log 
 @router.post("/Create", response_model=schemas.UserReactionLogCreate, status_code=status.HTTP_201_CREATED)
 async def create_user_reaction_log(log:schemas.UserReactionLogCreate, db:Session=Depends(get_db)):
-    return crud.create_user_reaction_log(db=db, log=log)
+    result = crud.create_user_reaction_log(db=db, log=log)
+    if isinstance(result, str):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result)
+    return result
 
 # read all user reaction log
 @router.get("", response_model=List[schemas.UserReactionLogRead])

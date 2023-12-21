@@ -54,6 +54,7 @@ async def delet_reaction(post_id:int, emoji_image:str, db:Session=Depends(get_db
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail":"Reaction deleted successfully"})
 
 # update count by post id and emoji image
+# action: True: hit the button; False: cancel reaction
 @router.put("/UpdateCount/{post_id}/{emoji_image}", response_model=schemas.PostReactionCreate)
 async def update_count(post_id:int, emoji_image:str, action:bool, db:Session=Depends(get_db)):
     updated_reaction = crud.update_count(db=db, post_id=post_id, emoji_image=emoji_image, action=action)

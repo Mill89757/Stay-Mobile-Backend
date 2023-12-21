@@ -1,3 +1,4 @@
+from ast import For
 from datetime import datetime
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
@@ -46,7 +47,7 @@ class Challenge(Base):
     created_time = Column(DateTime, default = func.now(), nullable=False)
     finished_time = Column(DateTime, nullable=True)
     cover_location = Column(String)
-    user_id = Column(ForeignKey("User.id"), nullable=False)
+    challenge_owner_id = Column(ForeignKey("User.id"), nullable=False)
     course_id = Column(ForeignKey("course.id"), nullable=True)
     is_finished = Column(Boolean, default= False ,nullable=False)
     days_left = Column(Integer)
@@ -99,9 +100,9 @@ class UserReactionLog(Base):
     __tablename__ = "user_reaction_log"
 
     log_id = Column(Integer, primary_key=True, index=True)
-    post_id = Column(Integer, primary_key=True, index=False)
+    post_id = Column(ForeignKey("post.id"), nullable=False)
     user_id = Column(ForeignKey("User.id"), nullable=False)
-    emoji_image = Column(ForeignKey("emoji.id"), nullable=False)
+    emoji_image = Column(ForeignKey("emoji.emoji_image"), nullable=False)
     created_datetime = Column(DateTime, default = func.now(), nullable=False)
     is_cancelled = Column(Boolean, default= False ,nullable=False)
 

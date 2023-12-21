@@ -6,6 +6,9 @@ from typing import List
 
 # create user reaction log
 def create_user_reaction_log(db:Session, log:schemas.UserReactionLogCreate):
+    existing_log = get_recent_user_reaction_log_by_user_id(db=db,user_id=log.user_id, post_id=log.post_id)
+    if existing_log is not None and existing_log.is_cancelled == False and existing_log.emoji_image != log.emoji_image:
+        return "User can only create one reaction in one post"
     db_log = models.UserReactionLog(**log.dict())
     db.add(db_log)
     db.commit()

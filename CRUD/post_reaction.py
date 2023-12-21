@@ -78,7 +78,7 @@ def update_count(db:Session, post_id:int, emoji_image:str, action:bool):
     if action == True:
         db_reaction.count += 1
     else:
-        db_reaction -= 1
+        db_reaction.count -= 1
     db.commit()
     return db_reaction
 
