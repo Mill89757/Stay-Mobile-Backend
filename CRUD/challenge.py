@@ -1,6 +1,6 @@
 
 from sqlalchemy import desc
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 import models, schemas  
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -39,21 +39,67 @@ def get_challenges(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Challenge).offset(skip).limit(limit).all()
 
 # read active challengs list of one user by user id
-def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[models.Challenge]:
-    active_challenges = (
-        db.query(models.Challenge)
+def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.ChallengeWithBreakingDays]:
+    results = (
+        db.query(models.Challenge, models.GroupChallengeMembers.breaking_days_left)
+        .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
         .filter(models.Challenge.challenge_owner_id == user_id, models.Challenge.is_finished == False)
         .all()
     )
+    # Create ChallengeWithBreakingDays instances from the results
+    active_challenges = []
+    for challenge, breaking_days_left in results:
+        challenge_data = schemas.ChallengeWithBreakingDays(
+            id=challenge.id,
+            title=challenge.title,
+            description=challenge.description,
+            duration=challenge.duration,
+            is_public=challenge.is_public,
+            category=challenge.category,
+            created_time=challenge.created_time,
+            finished_time=challenge.finished_time,
+            cover_location=challenge.cover_location,
+            challenge_owner_id=challenge.challenge_owner_id,
+            course_id=challenge.course_id,
+            is_finished=challenge.is_finished,
+            days_left=challenge.days_left,
+            is_group_challenge=challenge.is_group_challenge,
+            breaking_days_left=breaking_days_left  # Access the attribute from group_member
+        )
+        active_challenges.append(challenge_data)
+    
     return active_challenges
 
 # read finished challenges list of one user by user id
-def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[models.Challenge]:
-    finished_challenges = (
-        db.query(models.Challenge)
+def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.ChallengeWithBreakingDays]:
+    results = (
+        db.query(models.Challenge, models.GroupChallengeMembers.breaking_days_left)
+        .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
         .filter(models.Challenge.challenge_owner_id == user_id, models.Challenge.is_finished == True)
         .all()
     )
+    # Create ChallengeWithBreakingDays instances from the results
+    finished_challenges = []
+    for challenge, breaking_days_left in results:
+        challenge_data = schemas.ChallengeWithBreakingDays(
+            id=challenge.id,
+            title=challenge.title,
+            description=challenge.description,
+            duration=challenge.duration,
+            is_public=challenge.is_public,
+            category=challenge.category,
+            created_time=challenge.created_time,
+            finished_time=challenge.finished_time,
+            cover_location=challenge.cover_location,
+            challenge_owner_id=challenge.challenge_owner_id,
+            course_id=challenge.course_id,
+            is_finished=challenge.is_finished,
+            days_left=challenge.days_left,
+            is_group_challenge=challenge.is_group_challenge,
+            breaking_days_left=breaking_days_left  # Access the attribute from group_member
+        )
+        finished_challenges.append(challenge_data)
+    
     return finished_challenges
 
 # read challengs list by course id
@@ -86,44 +132,34 @@ def get_user_challenges(db: Session, user_id: int):
     finished_challenges = get_finished_challenges_by_user_id(db, user_id)
     return [active_challenges, finished_challenges]
 
-
 def get_challenge_durations_by_category(db: Session, user_id: int):
-    # 查询有帖子记录的独特日期，并按降序排列
-    unique_dates = db.query(models.Post.start_time).filter(models.Post.user_id == user_id)\
-                      .order_by(models.Post.start_time.desc()).distinct().all()
+    # Step 1: Filter challenges for the user
+    challenges = db.query(models.Challenge).filter(models.Challenge.challenge_owner_id == user_id).all()
 
-    # 提取日期并获取最近五个独特日期
-    unique_dates = [date[0].date() for date in unique_dates][:5]
-
+    # Step 2: Determine the date range
     sydney_tz = pytz.timezone('Australia/Sydney')
-    durations_by_date_category = {}
-
-    for date in unique_dates:
+    today = datetime.now(sydney_tz).date()
+    date_range = [today - timedelta(days=i) for i in range(5)]
+    # Step 3 & 4: Filter posts, group by category, and calculate durations
+    durations_by_date_category = {date.strftime("%d/%m"): {} for date in date_range}
+    for date in date_range:
         start_of_day = datetime.combine(date, datetime.min.time(), tzinfo=sydney_tz)
         end_of_day = datetime.combine(date, datetime.max.time(), tzinfo=sydney_tz)
-
-        # 为这个日期初始化字典
-        date_str = date.strftime("%d/%m")
-        durations_by_date_category[date_str] = {}
-
-        # 根据这个日期和user_id过滤帖子
+        
+        # Filter posts by date range and user_id
         daily_posts = db.query(models.Post, models.Challenge).join(models.Challenge).filter(
             models.Post.user_id == user_id,
             models.Post.start_time >= start_of_day,
             models.Post.end_time <= end_of_day
         ).all()
-
-        # 为这个日期计算每个类别的持续时间
         for post, challenge in daily_posts:
             category = challenge.category
-            post_duration = (post.end_time.astimezone(sydney_tz) - post.start_time.astimezone(sydney_tz)).total_seconds() / 60
+            post_duration = (post.end_time - post.start_time).total_seconds() / 60  # duration in minutes
             
-            if category not in durations_by_date_category[date_str]:
-                durations_by_date_category[date_str][category] = 0
-            durations_by_date_category[date_str][category] += post_duration
-
+            if category not in durations_by_date_category[date.strftime("%d/%m")]:
+                durations_by_date_category[date.strftime("%d/%m")][category] = 0
+            durations_by_date_category[date.strftime("%d/%m")][category] += post_duration
     return durations_by_date_category
-
 
 
 def update_challenge(db: Session, challenge_id: int, challenge: schemas.ChallengeCreate):

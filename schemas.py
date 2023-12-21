@@ -83,6 +83,9 @@ class GroupChallengeMembersRead(GroupChallengeMembersBase):
     class Config:
         orm_mode = True
 
+class ChallengeWithBreakingDays(ChallengeRead):  # Assuming ChallengeRead is your base schema for reading challenges
+    breaking_days_left: int
+
 # Post 模型
 class PostBase(BaseModel):
     created_time: Optional[datetime] = None

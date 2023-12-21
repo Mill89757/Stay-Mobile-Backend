@@ -35,19 +35,19 @@ async def get_user_last_challenge(user_id: int, db: Session = Depends(get_db)):
     return last_challenges
 
 # read active challenges of one user by user id
-@router.get("/GetUserActiveChallenges/{user_id}", response_model=List[schemas.ChallengeRead])
+@router.get("/GetUserActiveChallenges/{user_id}", response_model=List[schemas.ChallengeWithBreakingDays])
 async def get_user_active_challenges_route(user_id: int, db: Session = Depends(get_db)):
     active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
     return active_challenges
 
 # read challenges list by course id
-@router.get("/GetChallengesWithCourseID/{course_id}", response_model=List[schemas.ChallengeRead])
+@router.get("/GetChallengesWithCourseID/{course_id}", response_model=List[schemas.ChallengeWithBreakingDays])
 async def get_challenge_courseID(course_id: int, db: Session = Depends(get_db)):
     CourseID_related_challenges = challenge_crud.get_challenges_by_course_id(db, course_id)
     return CourseID_related_challenges
 
 # read finished challenges list of one user by user id
-@router.get("/GetUserFinishedChallenges/{user_id}", response_model=List[schemas.ChallengeRead])
+@router.get("/GetUserFinishedChallenges/{user_id}", response_model=List[schemas.ChallengeWithBreakingDays])
 async def get_user_finished_challenges_route(user_id: int, db: Session = Depends(get_db)):
     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
     return finished_challenges
