@@ -41,7 +41,6 @@ class ChallengeBase(BaseModel):
     category: Optional[int] = None
     cover_location: Optional[str] = None
     days_left: Optional[int] = None
-    breaking_days_left: Optional[int] = None
 
 class ChallengeCreate(BaseModel):
     title: str
@@ -52,8 +51,7 @@ class ChallengeCreate(BaseModel):
     category: Optional[int] = None
     cover_location: Optional[str] = None
     days_left: Optional[int] = None
-    breaking_days_left: Optional[int] = None
-    user_id: int
+    challenge_owner_id: int
     # course_id: Optional[int] = None
 
 class ChallengeRead(ChallengeBase):
@@ -62,15 +60,32 @@ class ChallengeRead(ChallengeBase):
     category: int
     duration: int
     days_left: int
-    breaking_days_left: int
     cover_location: str
     finished_time: Optional[datetime] = None
     is_finished: bool
-    user_id: int
+    challenge_owner_id: int
     course_id: Optional[int] = None
 
     class Config:
         orm_mode = True
+
+#Group Challenge 模型
+class GroupChallengeMembersBase(BaseModel):
+    challenge_id: int
+    user_id: int
+
+class GroupChallengeMembersCreate(GroupChallengeMembersBase):
+    breaking_days_left: int
+
+class GroupChallengeMembersRead(GroupChallengeMembersBase):
+    breaking_days_left: int
+
+    class Config:
+        orm_mode = True
+
+class ChallengeWithBreakingDays(ChallengeRead):  # Assuming ChallengeRead is your base schema for reading challenges
+    breaking_days_left: int
+
 
 # Post 模型
 class PostBase(BaseModel):
@@ -151,6 +166,19 @@ class CourseResponse(BaseModel):
     category:int
     description:str
     cover_location:str
+
+    class Config:
+        orm_mode = True
+
+#discover challenge 模型
+class ChallengesDiscover(BaseModel):
+    id: int
+    cover_location: str
+    title: str
+    owner_id: int
+    owner_avatar: str
+    follower_avatars: list
+    challenge_process: float
 
     class Config:
         orm_mode = True
