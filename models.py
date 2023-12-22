@@ -53,6 +53,7 @@ class GroupChallengeMembers(Base):
     user_id = Column(Integer, ForeignKey('User.id'), primary_key=True, index=True)
     breaking_days_left = Column(Integer,nullable=False)
 
+
 class Post(Base):
     __tablename__ = "post"
 

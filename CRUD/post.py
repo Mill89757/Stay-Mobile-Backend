@@ -8,11 +8,12 @@ import models, schemas
 def create_post(db: Session, post: schemas.PostCreate):
     
     challenge = db.query(models.Challenge).filter(models.Challenge.id == post.challenge_id).first()
+    curent_breaking_days_left = (db .query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).filter(models.GroupChallengeMembers.user_id == post.user_id).first())
     if not challenge:
         return "Challenge not found"
 
     new_days_left = challenge.days_left - 1
-    new_breaking_days_left = challenge.breaking_days_left - (1 if post.start_time == post.end_time else 0)
+    new_breaking_days_left = curent_breaking_days_left.breaking_days_left - (1 if post.start_time == post.end_time else 0)
 
     if new_days_left < 0 or new_breaking_days_left < 0:
         return "Cannot create post as it would result in negative days left or breaking days left"
@@ -21,7 +22,7 @@ def create_post(db: Session, post: schemas.PostCreate):
     db.add(db_post)
     db.commit()
     challenge.days_left = new_days_left
-    challenge.breaking_days_left = new_breaking_days_left
+    curent_breaking_days_left.breaking_days_left = new_breaking_days_left
     db.commit()
     db.refresh(db_post)
 
