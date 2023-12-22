@@ -83,6 +83,10 @@ class GroupChallengeMembersRead(GroupChallengeMembersBase):
     class Config:
         orm_mode = True
 
+class ChallengeWithBreakingDays(ChallengeRead):  # Assuming ChallengeRead is your base schema for reading challenges
+    breaking_days_left: int
+
+
 # Post 模型
 class PostBase(BaseModel):
     created_time: Optional[datetime] = None
@@ -167,6 +171,19 @@ class CourseResponse(BaseModel):
     category:int
     description:str
     cover_location:str
+
+    class Config:
+        orm_mode = True
+
+#discover challenge 模型
+class ChallengesDiscover(BaseModel):
+    id: int
+    cover_location: str
+    title: str
+    owner_id: int
+    owner_avatar: str
+    follower_avatars: list
+    challenge_process: float
 
     class Config:
         orm_mode = True
