@@ -77,3 +77,10 @@ async def delete_challenge_route(challenge_id: int, db: Session = Depends(get_db
     if not challenge_crud.delete_challenge(db=db, challenge_id=challenge_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Challenge deleted successfully"})
+
+
+# read discover challenges 拿discover challenge
+@router.get("/GetDiscoverChallenges/")
+async def get_discover_challenges(db: Session = Depends(get_db)):
+    discover_challenges = challenge_crud.get_discover_challenges(db)
+    return discover_challenges

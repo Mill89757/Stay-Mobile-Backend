@@ -179,3 +179,46 @@ def delete_challenge(db: Session, challenge_id: int):
     db.delete(db_challenge)
     db.commit()
 
+
+
+from CRUD.user import read_user_by_id
+#拿到所有follower的头像
+def get_all_follower_avatars(db: Session, challenge_id: int):
+    tracking_objects = (db.query(models.Challenge, models.Tracking)
+                        .join(models.Tracking, models.Tracking.challenge_id == models.Challenge.id)
+                        .filter(models.Challenge.id == challenge_id)
+                        .all())
+    all_follower_ids = [tracking_object[1].follower_id for tracking_object in tracking_objects]
+    all_follower_avatars = []
+    for i in all_follower_ids:
+        all_follower_avatars.append(read_user_by_id(db, i).avatar_location)
+    return all_follower_avatars
+#拿到challenge的进度
+def get_challenge_process(duration, breaking_day_left, days_left):
+    challenge_process = (duration - (breaking_day_left + days_left)) / duration
+    return challenge_process
+#用challenge_id拿到discover challenge的详细信息
+def get_discover_challenges_by_id(db: Session, id: int):
+    challenge_query_result = db.query(models.Challenge, models.GroupChallengeMembers, models.User).join(models.User, models.Challenge.challenge_owner_id == models.User.id).join(
+            models.GroupChallengeMembers, models.Challenge.id == models.GroupChallengeMembers.challenge_id).filter(models.Challenge.id == id).first()
+    challenge_obj, group_challenge_members_obj, user_obj = challenge_query_result[0], challenge_query_result[1], challenge_query_result[2]
+    challenge_process = get_challenge_process(challenge_obj.duration,group_challenge_members_obj.breaking_days_left, challenge_obj.days_left)
+    follower_avatars = get_all_follower_avatars(db, challenge_obj.id)
+    challenge_detail = {"id": challenge_obj.id,
+                        "title": challenge_obj.title,
+                        "cover_location": challenge_obj.cover_location,
+                        "owner_id": user_obj.id,
+                        "owner_avatar": user_obj.avatar_location,
+                        "follow_avatars": follower_avatars,
+                        "challenge_process": challenge_process,
+                                 }
+    return challenge_detail
+
+#返回一个list，包含所有discover challenge的详细信息
+def get_discover_challenges(db: Session):
+    discover_challenges = []
+    challenges = db.query(models.Challenge).filter(models.Challenge.is_finished == False).all()#这里可以用limit（）改成想要的数量
+    for challenge in challenges:
+        challenge_detail = get_discover_challenges_by_id(db, challenge.id)
+        discover_challenges.append(challenge_detail)
+    return discover_challenges
