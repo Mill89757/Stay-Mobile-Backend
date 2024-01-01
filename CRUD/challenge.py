@@ -222,3 +222,13 @@ def get_discover_challenges(db: Session):
         challenge_detail = get_discover_challenges_by_id(db, challenge.id)
         discover_challenges.append(challenge_detail)
     return discover_challenges
+# update challenge & course relastionship by challenge id and course id
+def update_challenge_course_id(db:Session, challenge_id: int, course_id: int):
+    db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
+    if db_challenge is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
+    if db_challenge.course_id is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Challenge has been already linked to course")
+    db_challenge.course_id = course_id
+    db.commit()
+    return db_challenge
