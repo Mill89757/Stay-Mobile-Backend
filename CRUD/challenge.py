@@ -8,6 +8,9 @@ import models, schemas
 from typing import List
 from datetime import datetime, timedelta
 import pytz
+import CRUD.course as course_crud
+import CRUD.post_reaction as reaction_crud
+import CRUD.post_content as post_content_crud
 
 # create challenge
 def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
@@ -232,3 +235,102 @@ def update_challenge_course_id(db:Session, challenge_id: int, course_id: int):
     db_challenge.course_id = course_id
     db.commit()
     return db_challenge
+
+def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: int):
+    challenge_basic_info = get_challenge(db, challenge_id)
+    follower_avatars = get_all_follower_avatars(db, challenge_id)[0:5]
+    course_title = course_crud.read_course_by_id(db, challenge_basic_info.course_id).course_name
+    challenge_details ={
+        "id": challenge_basic_info.id,
+        "title": challenge_basic_info.title,
+        "Description": challenge_basic_info.description,
+        "follwers_avaters": follower_avatars,
+        "Course": course_title
+    }
+    return challenge_details
+
+def get_userName_by_user_id(db:Session, user_id: int):
+    result = db.query(models.User).filter(models.User.id == user_id).first()
+    if result:
+        return result.username
+    else:
+        return None
+
+def reformat_reaction_count_list(db:Session, post_id: int):
+    db_reaction = reaction_crud.get_post_reactions_by_postid(db, post_id)
+    all_reaction_count = []
+    for item in db_reaction:
+        each_block = {
+                item.emoji_image: item.count
+        }
+        all_reaction_count.append(each_block)
+
+    return all_reaction_count
+
+# def challenge_details_page_second_half_by_challengeID(db: Session, challenge_id: int):
+
+#     db_post_details = db.query(
+#         models.Post, models.PostContent, models.PostReaction, models.GroupChallengeMembers
+#     ).join(
+#         models.PostContent, models.PostContent.post_id == models.Post.id
+#     ).join(
+#         models.PostReaction, models.PostReaction.post_id == models.Post.id
+#     ).join(
+#         models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Post.challenge_id
+#     ).filter(
+#         models.Post.challenge_id == challenge_id
+#     ).all()
+
+    
+#     all_page_post_container = []
+#     for item in db_post_details:
+#         Post_obj, PostContent_obj, PostReaction_obj, GroupChallengeMembers_obj = item[0], item[1], item[2], item[3]
+#         User_Post_Block = {
+#                             "UserName": get_userName_by_user_id(db, GroupChallengeMembers_obj.user_id),
+#                             "Posts": [
+#                                 {"id": Post_obj.id,
+#                                  "written_text": Post_obj.written_text,
+#                                  "reactions": reformat_reaction_count_list(db, PostReaction_obj.post_id),
+#                                  "PostCotent":post_content_crud.get_post_contents_by_post_id(db, PostContent_obj.post_id)}
+#                             ]
+#         }
+#         all_page_post_container.append(User_Post_Block)
+
+#     return all_page_post_container
+
+def challenge_details_page_second_half_by_challengeID(db: Session, challenge_id: int):
+    db_post_details = db.query(
+        models.Post, models.PostContent, models.PostReaction, models.GroupChallengeMembers
+    ).join(
+        models.PostContent, models.PostContent.post_id == models.Post.id
+    ).join(
+        models.PostReaction, models.PostReaction.post_id == models.Post.id
+    ).join(
+        models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Post.challenge_id
+    ).filter(
+        models.Post.challenge_id == challenge_id
+    ).all()
+
+    grouped_posts = {}
+    for item in db_post_details:
+        Post_obj, PostContent_obj, PostReaction_obj, GroupChallengeMembers_obj = item
+        username = get_userName_by_user_id(db, GroupChallengeMembers_obj.user_id)
+        post_data = {
+            "id": Post_obj.id,
+            "written_text": Post_obj.written_text,
+            "reactions": reformat_reaction_count_list(db, PostReaction_obj.post_id),
+            "PostContent": post_content_crud.get_post_contents_by_post_id(db, PostContent_obj.post_id)
+        }
+        
+        # Group posts by username
+        if username not in grouped_posts:
+            grouped_posts[username] = {
+                "UserName": username,
+                "Posts": [post_data]
+            }
+        else:
+            grouped_posts[username]["Posts"].append(post_data)
+
+    # Convert the grouped posts back to a list of dictionaries
+    all_page_post_container = list(grouped_posts.values())
+    return all_page_post_container

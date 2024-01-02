@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -52,8 +52,13 @@ app.add_middleware(
 )
 # override the default exception handlers
 # return HTTP responses with error codes to the client in plain text format
+# @app.exception_handler(StarletteHTTPException)
+# async def http_exception_handler(exc):
+#     print(f"{repr(exc)}")
+#     return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
+
 @app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(exc):
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     print(f"{repr(exc)}")
     return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
 

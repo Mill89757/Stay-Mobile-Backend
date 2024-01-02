@@ -84,3 +84,13 @@ async def delete_challenge_route(challenge_id: int, db: Session = Depends(get_db
 async def get_discover_challenges(db: Session = Depends(get_db)):
     discover_challenges = challenge_crud.get_discover_challenges(db)
     return discover_challenges
+
+@router.get("/GetChallengeDetailsPartA/{challenge_id}")
+async def get_challenge_details_first_half(challenge_id: int, db:Session = Depends(get_db)):
+    result = challenge_crud.challenge_details_page_first_half_by_challengeID(db, challenge_id)
+    return result
+
+@router.get("/GetChallengeDetailsPartB/{challenge_id}")
+async def get_challenge_details_second_half(challenge_id: int, db:Session = Depends(get_db)):
+    result = challenge_crud.challenge_details_page_second_half_by_challengeID(db, challenge_id)
+    return result
