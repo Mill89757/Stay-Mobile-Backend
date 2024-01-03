@@ -163,3 +163,42 @@ def upload_course_cover(challenge_id: int, file: UploadFile):
     upload_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{user_id_as_file_name}"
 
     return upload_file_url
+
+#post cover
+@router.post("/Upload_post_covers/{post_id}")
+def upload_post_cover(post_id: int, file: UploadFile):
+
+    # 将上传的文件转换为Pillow图像
+    image = Image.open(file.file).convert("RGB")  # 转换为RGB
+
+    # 可能的分辨率调整 - 根据需要调整这些值
+    max_size = (1080, 1080)
+    image.thumbnail(max_size, Image.Resampling.LANCZOS)
+
+    # 初始化变量
+    compressed_output = io.BytesIO()
+    quality = 85  # 初始质量值，可以调整
+
+    # 保存为JPEG
+    image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
+    compressed_size = compressed_output.tell()
+
+    # 如果文件仍然大于1MB，进一步降低质量
+    while compressed_size > 1024 * 1024 and quality > 20:
+        compressed_output.seek(0)
+        quality -= 5  # 质量递减步长
+        image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
+        compressed_size = compressed_output.tell()
+
+    compressed_output.seek(0)
+    compressed_image = compressed_output.read()
+
+    # 使用 boto3 上传到 S3
+    s3 = boto3.resource("s3", aws_access_key_id=f"{os.environ['AWS_ACCESS_KEY_ID']}", aws_secret_access_key=f"{os.environ['AWS_SECRET_ACCESS_KEY']}")
+    post_id_as_file_name = f"post_covers/{post_id}/{file.filename.split('.')[0]}.jpeg"
+    bucket = s3.Bucket(S3_BUCKET_NAME)
+    bucket.put_object(Key=post_id_as_file_name, Body=compressed_image)
+
+    upload_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{post_id_as_file_name}"
+
+    return upload_file_url
