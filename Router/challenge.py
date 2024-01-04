@@ -22,6 +22,12 @@ async def get_challenge_route(challenge_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
 
+#update breaking days for all challenges  test only !!!
+@router.post("/test/update_breaking_days")
+def test_update_breaking_days(db: Session = Depends(get_db)):
+    challenge_crud.update_breaking_days_for_challenges(db)
+    return {"message": "Breaking days updated successfully for all challenges"}
+
 # read all challenges of one user by user id 
 @router.get("/GetUserChallenges/{user_id}", response_model=List[List[schemas.ChallengeRead]])
 async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db)):
@@ -84,13 +90,3 @@ async def delete_challenge_route(challenge_id: int, db: Session = Depends(get_db
 async def get_discover_challenges(db: Session = Depends(get_db)):
     discover_challenges = challenge_crud.get_discover_challenges(db)
     return discover_challenges
-
-@router.get("/GetChallengeDetailsPartA/{challenge_id}")
-async def get_challenge_details_first_half(challenge_id: int, db:Session = Depends(get_db)):
-    result = challenge_crud.challenge_details_page_first_half_by_challengeID(db, challenge_id)
-    return result
-
-@router.get("/GetChallengeDetailsPartB/{challenge_id}")
-async def get_challenge_details_second_half(challenge_id: int, db:Session = Depends(get_db)):
-    result = challenge_crud.challenge_details_page_second_half_by_challengeID(db, challenge_id)
-    return result
