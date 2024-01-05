@@ -269,6 +269,8 @@ def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: 
     challenge_details ={
         "id": challenge_basic_info.id,
         "title": challenge_basic_info.title,
+        "DisplayName": get_name_by_user_id(db, challenge_basic_info.challenge_owner_id),
+        "Username": get_userName_by_user_id(db, challenge_basic_info.challenge_owner_id),
         "Description": challenge_basic_info.description,
         "follwers_avaters": follower_avatars,
         "Course": course_title
@@ -279,6 +281,13 @@ def get_userName_by_user_id(db:Session, user_id: int):
     result = db.query(models.User).filter(models.User.id == user_id).first()
     if result:
         return result.username
+    else:
+        return None
+    
+def get_name_by_user_id(db:Session, user_id: int):
+    result = db.query(models.User).filter(models.User.id == user_id).first()
+    if result:
+        return result.name
     else:
         return None
 
