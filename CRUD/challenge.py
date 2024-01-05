@@ -8,6 +8,10 @@ import models, schemas
 from typing import List
 from datetime import datetime, timedelta
 import pytz
+import CRUD.course as course_crud
+import CRUD.post_reaction as reaction_crud
+import CRUD.post_content as post_content_crud
+from redis_client import redis_client
 
 # create challenge
 def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
@@ -33,6 +37,31 @@ def get_challenge(db: Session, challenge_id: int):
     if challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
+
+def update_breaking_days_for_challenges(db: Session):
+    # 获取今天日期的字符串
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    redis_key = f"posted_challenges:{today_str}"
+    
+    # 获取 Redis 中存储的当天已发布帖子的挑战ID集合
+    posted_challenge_ids = {int(challenge_id.decode('utf-8')) for challenge_id in redis_client.smembers(redis_key)}
+    
+    # 获取所有挑战
+    all_challenges = db.query(models.Challenge).filter(models.Challenge.is_finished == False).all()
+    
+    for challenge in all_challenges:
+        # 如果挑战ID不在 Redis 集合中，则减少 breaking_days_left
+        if challenge.id not in posted_challenge_ids:
+            # 获取对应的 GroupChallengeMembers 记录
+            group_challenge_member = db.query(models.GroupChallengeMembers).filter(
+                models.GroupChallengeMembers.challenge_id == challenge.id,
+                models.GroupChallengeMembers.user_id == challenge.challenge_owner_id
+            ).first()
+            
+            # 如果找到记录，并且 breaking_days_left 大于0，进行更新
+            if group_challenge_member and group_challenge_member.breaking_days_left > 0:
+                group_challenge_member.breaking_days_left -= 1
+                db.commit()  # 保存到数据库
 
 # read all challenges
 def get_challenges(db: Session, skip: int = 0, limit: int = 100):
@@ -222,3 +251,121 @@ def get_discover_challenges(db: Session):
         challenge_detail = get_discover_challenges_by_id(db, challenge.id)
         discover_challenges.append(challenge_detail)
     return discover_challenges
+# update challenge & course relastionship by challenge id and course id
+def update_challenge_course_id(db:Session, challenge_id: int, course_id: int):
+    db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
+    if db_challenge is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
+    if db_challenge.course_id is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Challenge has been already linked to course")
+    db_challenge.course_id = course_id
+    db.commit()
+    return db_challenge
+
+def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: int):
+    challenge_basic_info = get_challenge(db, challenge_id)
+    follower_avatars = get_all_follower_avatars(db, challenge_id)[0:5]
+    course_title = course_crud.read_course_by_id(db, challenge_basic_info.course_id).course_name
+    challenge_details ={
+        "id": challenge_basic_info.id,
+        "title": challenge_basic_info.title,
+        "DisplayName": get_name_by_user_id(db, challenge_basic_info.challenge_owner_id),
+        "Username": get_userName_by_user_id(db, challenge_basic_info.challenge_owner_id),
+        "Description": challenge_basic_info.description,
+        "follwers_avaters": follower_avatars,
+        "Course": course_title
+    }
+    return challenge_details
+
+def get_userName_by_user_id(db:Session, user_id: int):
+    result = db.query(models.User).filter(models.User.id == user_id).first()
+    if result:
+        return result.username
+    else:
+        return None
+    
+def get_name_by_user_id(db:Session, user_id: int):
+    result = db.query(models.User).filter(models.User.id == user_id).first()
+    if result:
+        return result.name
+    else:
+        return None
+
+def reformat_reaction_count_list(db:Session, post_id: int):
+    db_reaction = reaction_crud.get_post_reactions_by_postid(db, post_id)
+    all_reaction_count = []
+    for item in db_reaction:
+        each_block = {
+                item.emoji_image: item.count
+        }
+        all_reaction_count.append(each_block)
+
+    return all_reaction_count
+
+# def challenge_details_page_second_half_by_challengeID(db: Session, challenge_id: int):
+
+#     db_post_details = db.query(
+#         models.Post, models.PostContent, models.PostReaction, models.GroupChallengeMembers
+#     ).join(
+#         models.PostContent, models.PostContent.post_id == models.Post.id
+#     ).join(
+#         models.PostReaction, models.PostReaction.post_id == models.Post.id
+#     ).join(
+#         models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Post.challenge_id
+#     ).filter(
+#         models.Post.challenge_id == challenge_id
+#     ).all()
+
+    
+#     all_page_post_container = []
+#     for item in db_post_details:
+#         Post_obj, PostContent_obj, PostReaction_obj, GroupChallengeMembers_obj = item[0], item[1], item[2], item[3]
+#         User_Post_Block = {
+#                             "UserName": get_userName_by_user_id(db, GroupChallengeMembers_obj.user_id),
+#                             "Posts": [
+#                                 {"id": Post_obj.id,
+#                                  "written_text": Post_obj.written_text,
+#                                  "reactions": reformat_reaction_count_list(db, PostReaction_obj.post_id),
+#                                  "PostCotent":post_content_crud.get_post_contents_by_post_id(db, PostContent_obj.post_id)}
+#                             ]
+#         }
+#         all_page_post_container.append(User_Post_Block)
+
+#     return all_page_post_container
+
+def challenge_details_page_second_half_by_challengeID(db: Session, challenge_id: int):
+    db_post_details = db.query(
+        models.Post, models.PostContent, models.PostReaction, models.GroupChallengeMembers
+    ).join(
+        models.PostContent, models.PostContent.post_id == models.Post.id
+    ).join(
+        models.PostReaction, models.PostReaction.post_id == models.Post.id
+    ).join(
+        models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Post.challenge_id
+    ).filter(
+        models.Post.challenge_id == challenge_id
+    ).all()
+
+    grouped_posts = {}
+    for item in db_post_details:
+        Post_obj, PostContent_obj, PostReaction_obj, GroupChallengeMembers_obj = item
+        username = get_userName_by_user_id(db, GroupChallengeMembers_obj.user_id)
+        post_data = {
+            "id": Post_obj.id,
+            "written_text": Post_obj.written_text,
+            "reactions": reformat_reaction_count_list(db, PostReaction_obj.post_id),
+            "PostContent": post_content_crud.get_post_contents_by_post_id(db, PostContent_obj.post_id)
+        }
+        
+        # Group posts by username
+        if username not in grouped_posts:
+            grouped_posts[username] = {
+                "UserName": username,
+                "Posts": [post_data]
+            }
+        else:
+            grouped_posts[username]["Posts"].append(post_data)
+
+    # Convert the grouped posts back to a list of dictionaries
+    all_page_post_container = list(grouped_posts.values())
+    return all_page_post_container
