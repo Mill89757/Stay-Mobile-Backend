@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 # schemas.py is used to build pydantic models, which controls data validation, conversion, documentation classes and instances
+# schemas.py is used to build pydantic models, which controls data validation, conversion, documentation classes and instances
 # define and validate whether the incoming data structure matches as expected
 
 # User 模型
@@ -112,6 +113,11 @@ class PostRead(PostBase):
     start_time: datetime
     end_time: datetime
     written_text: str
+    user_id: int
+    challenge_id: int
+    start_time: datetime
+    end_time: datetime
+    written_text: str
 
     class Config:
         orm_mode = True
@@ -154,7 +160,7 @@ class PostContentRead(PostContentBase):
         orm_mode = True
 
 # Reaction 模型
-class ReactionBase(BaseModel):
+"""class ReactionBase(BaseModel):
     emoji_type: int
     amount: int
 
@@ -167,7 +173,7 @@ class ReactionRead(ReactionBase):
 
     class Config:
         orm_mode = True
-
+"""
 # Course 模型
 class CourseResponse(BaseModel):
     id:int
@@ -178,6 +184,41 @@ class CourseResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+# User reaction log model
+class UserReactionLogBase(BaseModel):
+    created_datetime: datetime
+    is_cancelled:bool
+
+class UserReactionLogCreate(UserReactionLogBase):
+    user_id:int
+    post_id:int
+    emoji_image:str
+
+class UserReactionLogRead(UserReactionLogBase):
+    log_id:int
+    user_id:int
+    post_id:int
+    emoji_image:str
+    
+    class Config:
+        orm_mode = True
+
+# emoji 模型
+class EmojiBase(BaseModel):
+    name: str
+
+# post reaction 模型
+class PostReactionBase(BaseModel):
+    count: int
+
+class PostReactionCreate(PostReactionBase):
+    post_id: int
+    emoji_image: str
+
+    class Config:
+        orm_mode = True
+
 
 #discover challenge 模型
 class ChallengesDiscover(BaseModel):

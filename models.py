@@ -1,3 +1,5 @@
+from ast import For
+from datetime import datetime
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -91,3 +93,29 @@ class Course(Base):
     category = Column(Integer, nullable= False)
     description = Column(String, nullable=False)
     cover_location = Column(String, nullable=False)
+
+# craete User_reaction_log class inherited from Base class
+class UserReactionLog(Base):
+    __tablename__ = "user_reaction_log"
+
+    log_id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(ForeignKey("post.id"), nullable=False)
+    user_id = Column(ForeignKey("User.id"), nullable=False)
+    emoji_image = Column(ForeignKey("emoji.emoji_image"), nullable=False)
+    created_datetime = Column(DateTime, default = func.now(), nullable=False)
+    is_cancelled = Column(Boolean, default= False ,nullable=False)
+
+# create Emoji class inherited from Base class
+class Emoji(Base):
+    __tablename__ = "emoji"
+
+    emoji_image = Column(String, primary_key=True, index = False)
+    name = Column(String)
+
+# create Post Reaction class inherited from Base class
+class PostReaction(Base):
+    __tablename__ = "post_reaction"
+
+    post_id = Column(ForeignKey("post.id"), primary_key=True, index=True)
+    emoji_image = Column(ForeignKey("emoji.emoji_image"), primary_key=True, index=True)
+    count = Column(Integer, nullable= False)
