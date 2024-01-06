@@ -100,6 +100,10 @@ class PostCreate(BaseModel):
     start_time: datetime
     end_time: datetime
     written_text: str
+    image_location: Optional[str] = None
+    #when creating a post, the image_location is optional, because the user may not upload an image
+    #create post will create a post and a post_content at the same time
+    #if user wants to upload an image, the image_location will be updated in the post_content table
 
 class PostRead(PostBase):
     id: int

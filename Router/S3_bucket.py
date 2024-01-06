@@ -164,9 +164,13 @@ def upload_course_cover(challenge_id: int, file: UploadFile):
 
     return upload_file_url
 
+
+
 #post cover
-@router.post("/Upload_post_covers/{post_id}")
-def upload_post_cover(post_id: int, file: UploadFile):
+@router.post("/Upload_post_covers/")#用challenge_id来标记post
+def upload_post_cover(challenge_id: int, user_id: int, file: UploadFile):
+
+    # usage example: http://Upload_post_covers?challenge_id=1&user_id=1
 
     # 将上传的文件转换为Pillow图像
     image = Image.open(file.file).convert("RGB")  # 转换为RGB
@@ -195,7 +199,10 @@ def upload_post_cover(post_id: int, file: UploadFile):
 
     # 使用 boto3 上传到 S3
     s3 = boto3.resource("s3", aws_access_key_id=f"{os.environ['AWS_ACCESS_KEY_ID']}", aws_secret_access_key=f"{os.environ['AWS_SECRET_ACCESS_KEY']}")
-    post_id_as_file_name = f"post_covers/{post_id}/{file.filename.split('.')[0]}.jpeg"
+    # post_id_as_file_name = f"post_covers/{challenge_id}/{file.filename.split('.')[0]}.jpeg"
+    from datetime import datetime
+    created_time = datetime.now().strftime("%Y%m%d%H%M%S")
+    post_id_as_file_name = f"post_covers/{challenge_id}/{created_time}_{user_id}_{file.filename.split('.')[0]}.jpeg"
     bucket = s3.Bucket(S3_BUCKET_NAME)
     bucket.put_object(Key=post_id_as_file_name, Body=compressed_image)
 

@@ -49,7 +49,7 @@ app.add_middleware(
 # override the default exception handlers
 # return HTTP responses with error codes to the client in plain text format
 @app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(exc):
+async def http_exception_handler(request,exc):#别删request不然会报错
     print(f"{repr(exc)}")
     return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
 
