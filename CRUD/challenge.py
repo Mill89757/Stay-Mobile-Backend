@@ -20,14 +20,14 @@ def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
     db.commit()
     db.refresh(db_challenge)
 
-    db_groupchallenge = models.GroupChallengeMembers(
+    db_group_challenge = models.GroupChallengeMembers(
         challenge_id=db_challenge.id, 
         user_id=db_challenge.challenge_owner_id, 
         breaking_days_left=db_challenge.breaking_days  # Assuming this field exists in your ChallengeCreate schema
     )
-    db.add(db_groupchallenge)
+    db.add(db_group_challenge)
     db.commit()
-    db.refresh(db_groupchallenge)
+    db.refresh(db_group_challenge)
 
     return db_challenge
 
