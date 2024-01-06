@@ -54,12 +54,17 @@ CHALLENGE = session.query(models.Challenge).offset(clg_len)
 MEMBER = session.query(models.GroupChallengeMembers).offset(mmbr_len)
 POST = session.query(models.Post).offset(post_len)
 
-LIKE = session.query(models.UserReactionLog).offset(like_len)
-LIKE = session.query(
-            LIKE, models.Post.challenge_id
+LIKE = (
+    session.query(
+        models.UserReactionLog, models.Post.challenge_id
         ).join(
-            models.Post, models.Post.id == LIKE.post_id
-        ).all()
+            models.UserReactionLog, models.Post.id == models.UserReactionLog.post_id
+        ).order_by(models.UserReactionLog.created_datetime
+        ).offset(like_len).all()
+    )
+# LIKE is a list of tuple, 
+# instance[0].__table__.columns.keys() = ['log_id', 'post_id', 'user_id', 'emoji_image', 'created_datetime', 'is_cancelled']
+# instance[1] contains info about ['challenge_id']
 
 TRACK = session.query(models.Tracking).offset(track_len)
 
@@ -97,14 +102,14 @@ for clg in ongoing_clg_id:
 
 
 
-# if ongoing challenge is finished by today, then add it here.
-# they will be removed from on_clg_info (redis_key) in the end 
-challenge_to_be_removed = set()    
-
-
-
 # posts_by_categories[i] contains post_id that matches category i 
-post_by_category = [[] for i in range(5)]
+
+# redis_key = category_posts 
+# redis_type = hash
+# hash_field = category code (0, 1, 2, 3, or 4)
+# hash_value = post_id belong to this category, separated by comma 
+
+
 
 
 
