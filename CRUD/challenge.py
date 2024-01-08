@@ -208,6 +208,13 @@ def delete_challenge(db: Session, challenge_id: int):
     db.delete(db_challenge)
     db.commit()
 
+# 中途退出group challenge
+def delete_group_challenge_member(db: Session, challenge_id: int, user_id: int):
+    db_group_challenge_member = db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == challenge_id).filter(models.GroupChallengeMembers.user_id == user_id).first()
+    if db_group_challenge_member is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
+    db.delete(db_group_challenge_member)
+    db.commit()
 
 
 from CRUD.user import read_user_by_id
