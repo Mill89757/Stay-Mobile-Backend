@@ -181,6 +181,8 @@ class CourseResponse(BaseModel):
     category:int
     description:str
     cover_location:str
+    source_link:str
+    short_intro:str
 
     class Config:
         orm_mode = True

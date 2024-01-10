@@ -93,6 +93,8 @@ class Course(Base):
     category = Column(Integer, nullable= False)
     description = Column(String, nullable=False)
     cover_location = Column(String, nullable=False)
+    source_link = Column(String, nullable=False)
+    short_intro = Column(String, nullable=False)
 
 # craete User_reaction_log class inherited from Base class
 class UserReactionLog(Base):
@@ -119,3 +121,4 @@ class PostReaction(Base):
     post_id = Column(ForeignKey("post.id"), primary_key=True, index=True)
     emoji_image = Column(ForeignKey("emoji.emoji_image"), primary_key=True, index=True)
     count = Column(Integer, nullable= False)
+
