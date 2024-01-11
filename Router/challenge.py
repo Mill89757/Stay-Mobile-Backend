@@ -91,6 +91,12 @@ async def delete_group_challenge_member_route(challenge_id: int, user_id:int, db
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge or member not found")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Challenge member deleted successfully"})
 
+@router.get("/GetinvitationLinkByChallengeID/{challenge_id}")
+async def generate_invitation_link(challenge_id: int):
+    result = challenge_crud.generate_invitation_link(challenge_id = challenge_id)
+    if not result:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
+    return result
 
 # read discover challenges 拿discover challenge
 @router.get("/GetDiscoverChallenges/")
