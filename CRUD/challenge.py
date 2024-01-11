@@ -38,30 +38,58 @@ def get_challenge(db: Session, challenge_id: int):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
 
+# def update_breaking_days_for_challenges(db: Session):
+#     # 获取今天日期的字符串
+#     today_str = datetime.now().strftime('%Y-%m-%d')
+#     redis_key = f"posted_challenges:{today_str}"
+    
+#     # 获取 Redis 中存储的当天已发布帖子的挑战ID集合
+#     posted_challenge_ids = {int(challenge_id.decode('utf-8')) for challenge_id in redis_client.smembers(redis_key)}
+    
+#     # 获取所有挑战
+#     all_challenges = db.query(models.Challenge).filter(models.Challenge.is_finished == False).all()
+    
+#     for challenge in all_challenges:
+#         # 如果挑战ID不在 Redis 集合中，则减少 breaking_days_left
+#         if challenge.id not in posted_challenge_ids:
+#             # 获取对应的 GroupChallengeMembers 记录
+#             group_challenge_member = db.query(models.GroupChallengeMembers).filter(
+#                 models.GroupChallengeMembers.challenge_id == challenge.id,
+#                 models.GroupChallengeMembers.user_id == challenge.challenge_owner_id
+#             ).first()
+            
+#             # 如果找到记录，并且 breaking_days_left 大于0，进行更新
+#             if group_challenge_member and group_challenge_member.breaking_days_left > 0:
+#                 group_challenge_member.breaking_days_left -= 1
+#                 db.commit()  # 保存到数据库
+
 def update_breaking_days_for_challenges(db: Session):
     # 获取今天日期的字符串
     today_str = datetime.now().strftime('%Y-%m-%d')
     redis_key = f"posted_challenges:{today_str}"
-    
+
     # 获取 Redis 中存储的当天已发布帖子的挑战ID集合
     posted_challenge_ids = {int(challenge_id.decode('utf-8')) for challenge_id in redis_client.smembers(redis_key)}
-    
-    # 获取所有挑战
-    all_challenges = db.query(models.Challenge).filter(models.Challenge.is_finished == False).all()
-    
-    for challenge in all_challenges:
-        # 如果挑战ID不在 Redis 集合中，则减少 breaking_days_left
-        if challenge.id not in posted_challenge_ids:
-            # 获取对应的 GroupChallengeMembers 记录
-            group_challenge_member = db.query(models.GroupChallengeMembers).filter(
-                models.GroupChallengeMembers.challenge_id == challenge.id,
-                models.GroupChallengeMembers.user_id == challenge.challenge_owner_id
-            ).first()
-            
-            # 如果找到记录，并且 breaking_days_left 大于0，进行更新
-            if group_challenge_member and group_challenge_member.breaking_days_left > 0:
-                group_challenge_member.breaking_days_left -= 1
-                db.commit()  # 保存到数据库
+
+    # 指定的挑战ID列表
+    specific_challenge_ids = [10007, 10022, 10025]
+
+    for challenge_id in specific_challenge_ids:
+        # 如果特定挑战ID不在 Redis 集合中，则减少 breaking_days_left
+        if challenge_id not in posted_challenge_ids:
+            # 获取所有属于这个挑战ID的GroupChallengeMembers记录
+            group_challenge_members = db.query(models.GroupChallengeMembers).filter(
+                models.GroupChallengeMembers.challenge_id == challenge_id
+            ).all()
+
+            # 更新每个用户在该挑战中的 breaking_days_left
+            for group_member in group_challenge_members:
+                if group_member.breaking_days_left > 0:
+                    group_member.breaking_days_left -= 1
+
+            # 提交所有更改到数据库
+            db.commit()
+
 
 # read all challenges
 def get_challenges(db: Session, skip: int = 0, limit: int = 100):
