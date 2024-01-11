@@ -8,6 +8,8 @@ import models, schemas
 from typing import List
 from datetime import datetime, timedelta
 import pytz
+import uuid
+import os
 import CRUD.course as course_crud
 import CRUD.post_reaction as reaction_crud
 import CRUD.post_content as post_content_crud
@@ -337,36 +339,6 @@ def reformat_reaction_count_list(db:Session, post_id: int):
 
     return all_reaction_count
 
-# def challenge_details_page_second_half_by_challengeID(db: Session, challenge_id: int):
-
-#     db_post_details = db.query(
-#         models.Post, models.PostContent, models.PostReaction, models.GroupChallengeMembers
-#     ).join(
-#         models.PostContent, models.PostContent.post_id == models.Post.id
-#     ).join(
-#         models.PostReaction, models.PostReaction.post_id == models.Post.id
-#     ).join(
-#         models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Post.challenge_id
-#     ).filter(
-#         models.Post.challenge_id == challenge_id
-#     ).all()
-
-    
-#     all_page_post_container = []
-#     for item in db_post_details:
-#         Post_obj, PostContent_obj, PostReaction_obj, GroupChallengeMembers_obj = item[0], item[1], item[2], item[3]
-#         User_Post_Block = {
-#                             "UserName": get_userName_by_user_id(db, GroupChallengeMembers_obj.user_id),
-#                             "Posts": [
-#                                 {"id": Post_obj.id,
-#                                  "written_text": Post_obj.written_text,
-#                                  "reactions": reformat_reaction_count_list(db, PostReaction_obj.post_id),
-#                                  "PostCotent":post_content_crud.get_post_contents_by_post_id(db, PostContent_obj.post_id)}
-#                             ]
-#         }
-#         all_page_post_container.append(User_Post_Block)
-
-#     return all_page_post_container
 
 def challenge_details_page_second_half_by_challengeID(db: Session, challenge_id: int):
     db_post_details = db.query(
@@ -404,3 +376,23 @@ def challenge_details_page_second_half_by_challengeID(db: Session, challenge_id:
     # Convert the grouped posts back to a list of dictionaries
     all_page_post_container = list(grouped_posts.values())
     return all_page_post_container
+
+
+def generate_invitation_link(challenge_id : int):
+    unique_token = str(uuid.uuid4())
+    invitation_link = f"{os.environ['SERVER_IP']}/invite/{unique_token}"
+    # Store the unique token along with the challenge_id in the redis
+    # So you can associate an incoming request with the correct challenge
+
+    if redis_client.exists(f"invitation_challenge_id:{challenge_id}") is not 1:
+        today = datetime.now()
+        end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
+        remaining_time = end_of_day - today
+        redis_key = f"invitation_challenge_id:{challenge_id}"
+        redis_client.sadd(redis_key, invitation_link)
+        redis_client.expire(redis_key, remaining_time.seconds)
+    else:
+        return "Invitation link already exsist!"
+
+    return invitation_link
+
