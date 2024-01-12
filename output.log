@@ -1,0 +1,389 @@
+nohup: ignoring input
+/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/pydantic/_internal/_config.py:317: UserWarning: Valid config keys have changed in V2:
+* 'orm_mode' has been renamed to 'from_attributes'
+  warnings.warn(message, UserWarning)
+INFO:     Started server process [19147]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:50808 - "GET /GetUserChallenges/4 HTTP/1.0" 200 OK
+INFO:     127.0.0.1:50812 - "GET /GetPostByChallengeID/4 HTTP/1.0" 200 OK
+INFO:     127.0.0.1:42900 - "GET /user HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:45060 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:47100 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:47116 - "POST / HTTP/1.0" 405 Method Not Allowed
+INFO:     127.0.0.1:44906 - "GET / HTTP/1.0" 200 OK
+INFO:     127.0.0.1:44918 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:44926 - "GET /favicon.ico HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:48280 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:35046 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:35058 - "POST / HTTP/1.0" 405 Method Not Allowed
+INFO:     127.0.0.1:51730 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:47002 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:35840 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:35856 - "POST / HTTP/1.0" 405 Method Not Allowed
+INFO:     127.0.0.1:56554 - "GET / HTTP/1.0" 200 OK
+INFO:     127.0.0.1:47548 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:33292 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:41936 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:41952 - "POST / HTTP/1.0" 405 Method Not Allowed
+INFO:     127.0.0.1:53398 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:39326 - "GET /webui/ HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:54976 - "GET /favicon.ico HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:52052 - "GET /geoserver/web/ HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:52388 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:37150 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:38722 - "GET /portal/redlion HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:33696 - "GET / HTTP/1.0" 200 OK
+INFO:     127.0.0.1:44076 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:59884 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:43264 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:43268 - "POST / HTTP/1.0" 405 Method Not Allowed
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:37304 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:37310 - "POST / HTTP/1.0" 405 Method Not Allowed
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:50104 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:34724 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:34734 - "POST / HTTP/1.0" 405 Method Not Allowed
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:52338 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:58330 - "GET /Temporary_Listen_Addresses HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:58332 - "GET /Pages/log/ HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:48852 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:35988 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:36886 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:39660 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:39676 - "POST / HTTP/1.0" 405 Method Not Allowed
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:34524 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:34530 - "POST / HTTP/1.0" 405 Method Not Allowed
+INFO:     127.0.0.1:52816 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:58482 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:57050 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:57058 - "POST / HTTP/1.0" 405 Method Not Allowed
+INFO:     127.0.0.1:43720 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:37150 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:52194 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:55198 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:55210 - "POST / HTTP/1.0" 405 Method Not Allowed
+INFO:     127.0.0.1:43748 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:46570 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:49492 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:33952 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:33954 - "POST / HTTP/1.0" 405 Method Not Allowed
+INFO:     127.0.0.1:33532 - "GET / HTTP/1.0" 200 OK
+INFO:     127.0.0.1:33538 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:54038 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:37256 - "GET /_profiler/phpinfo HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:37264 - "GET /phpinfo.php HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:37268 - "GET /phpinfo HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:37272 - "GET /aws.yml HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:37284 - "GET /.env.bak HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:37300 - "GET /info.php HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:37316 - "GET /.aws/credentials HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:37330 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:37346 - "GET /config/aws.yml HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:57168 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:57172 - "GET /config.js HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:48326 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:49478 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:49486 - "POST / HTTP/1.0" 405 Method Not Allowed
+INFO:     127.0.0.1:52414 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:60944 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:42124 - "POST /boaform/admin/formLogin HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:35224 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:37034 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:42144 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:49758 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:49764 - "POST / HTTP/1.0" 405 Method Not Allowed
+INFO:     127.0.0.1:37750 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:59154 - "GET /webui/ HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:60654 - "GET /favicon.ico HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:34184 - "GET /geoserver/web/ HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:60116 - "GET / HTTP/1.0" 200 OK
+INFO:     127.0.0.1:38302 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:46192 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:44096 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:44104 - "POST / HTTP/1.0" 405 Method Not Allowed
+INFO:     127.0.0.1:60592 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:35654 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:35668 - "POST / HTTP/1.0" 405 Method Not Allowed
+INFO:     127.0.0.1:49802 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:49590 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:49598 - "POST / HTTP/1.0" 405 Method Not Allowed
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:60084 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:40496 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:50092 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:57374 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:57386 - "POST / HTTP/1.0" 405 Method Not Allowed
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:37002 - "GET /hudson HTTP/1.0" 404 Not Found
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:45076 - "HEAD /Core/Skin/Login.aspx HTTP/1.0" 404 Not Found
+INFO:     127.0.0.1:47828 - "GET / HTTP/1.0" 200 OK
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:43726 - "GET /.env HTTP/1.0" 404 Not Found
+HTTPException(status_code=405, detail='Method Not Allowed')
+INFO:     127.0.0.1:43732 - "POST / HTTP/1.0" 405 Method Not Allowed
+INFO:     127.0.0.1:37020 - "GET / HTTP/1.0" 200 OK
+INFO:     127.0.0.1:53872 - "GET /GetUserChallenges/4 HTTP/1.0" 200 OK
+INFO:     127.0.0.1:53886 - "GET /GetPostByChallengeID/4 HTTP/1.0" 200 OK
+INFO:     127.0.0.1:36948 - "GET /course/ HTTP/1.0" 307 Temporary Redirect
+INFO:     127.0.0.1:36962 - "GET /course HTTP/1.0" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/uvicorn/protocols/http/httptools_impl.py", line 426, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/applications.py", line 1106, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/applications.py", line 122, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/errors.py", line 184, in __call__
+    raise exc
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
+    raise exc
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
+    raise e
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/routing.py", line 66, in app
+    response = await func(request)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    content = await serialize_response(
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/routing.py", line 155, in serialize_response
+    raise ResponseValidationError(
+fastapi.exceptions.ResponseValidationError: 8 validation errors:
+  {'type': 'missing', 'loc': ('response', 0, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d68c0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 1, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d7fd0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 2, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d4040>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 3, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d6410>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 4, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d69e0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 5, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d6aa0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 6, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d63e0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 7, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d4070>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+
+INFO:     127.0.0.1:42012 - "GET /course/ HTTP/1.0" 307 Temporary Redirect
+INFO:     127.0.0.1:42018 - "GET /course HTTP/1.0" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/uvicorn/protocols/http/httptools_impl.py", line 426, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/applications.py", line 1106, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/applications.py", line 122, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/errors.py", line 184, in __call__
+    raise exc
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
+    raise exc
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
+    raise e
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/routing.py", line 66, in app
+    response = await func(request)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    content = await serialize_response(
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/routing.py", line 155, in serialize_response
+    raise ResponseValidationError(
+fastapi.exceptions.ResponseValidationError: 8 validation errors:
+  {'type': 'missing', 'loc': ('response', 0, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d4970>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 1, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d4cd0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 2, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d4130>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 3, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d4ac0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 4, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d67d0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 5, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d5000>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 6, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d4a60>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 7, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d46a0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+
+INFO:     127.0.0.1:42022 - "GET /GetUserChallenges/4 HTTP/1.0" 200 OK
+INFO:     127.0.0.1:42024 - "GET /GetPostByChallengeID/4 HTTP/1.0" 200 OK
+INFO:     127.0.0.1:59030 - "GET /course/ HTTP/1.0" 307 Temporary Redirect
+INFO:     127.0.0.1:59036 - "GET /course HTTP/1.0" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/uvicorn/protocols/http/httptools_impl.py", line 426, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/applications.py", line 1106, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/applications.py", line 122, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/errors.py", line 184, in __call__
+    raise exc
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
+    raise exc
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
+    raise e
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/routing.py", line 66, in app
+    response = await func(request)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    content = await serialize_response(
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/routing.py", line 155, in serialize_response
+    raise ResponseValidationError(
+fastapi.exceptions.ResponseValidationError: 8 validation errors:
+  {'type': 'missing', 'loc': ('response', 0, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d6950>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 1, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d4400>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 2, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d6b30>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 3, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d61d0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 4, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d65f0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 5, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d4340>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 6, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d48e0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 7, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d49a0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+
+INFO:     127.0.0.1:34370 - "GET /course HTTP/1.0" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/uvicorn/protocols/http/httptools_impl.py", line 426, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/applications.py", line 1106, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/applications.py", line 122, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/errors.py", line 184, in __call__
+    raise exc
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/cors.py", line 83, in __call__
+    await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
+    raise exc
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
+    raise e
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/starlette/routing.py", line 66, in app
+    response = await func(request)
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    content = await serialize_response(
+  File "/home/ubuntu/Stay-Mobile-Backend/venv/lib/python3.10/site-packages/fastapi/routing.py", line 155, in serialize_response
+    raise ResponseValidationError(
+fastapi.exceptions.ResponseValidationError: 8 validation errors:
+  {'type': 'missing', 'loc': ('response', 0, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d62f0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 1, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d40d0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 2, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d68c0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 3, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d7fd0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 4, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d4040>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 5, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d6410>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 6, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d69e0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+  {'type': 'missing', 'loc': ('response', 7, 'cover_location'), 'msg': 'Field required', 'input': <models.Course object at 0x7fcc745d6aa0>, 'url': 'https://errors.pydantic.dev/2.4/v/missing'}
+
+HTTPException(status_code=404, detail='Not Found')
+INFO:     127.0.0.1:34374 - "GET /courses HTTP/1.0" 404 Not Found

@@ -379,14 +379,18 @@ def challenge_details_page_second_half_by_challengeID(db: Session, challenge_id:
     all_page_post_container = list(grouped_posts.values())
     return all_page_post_container
 
+def compare_created_time_by_challenge_id(db: Session, challenge_id:int):
+    target_challenge_created_time = db.query(models.User).filter(models.Challenge.id == challenge_id).first().created_time
+    timestamp_date = datetime.fromtimestamp(target_challenge_created_time)
+    today_date = datetime.now()
+    return (timestamp_date.date() == today_date.date())
 
-def generate_invitation_link(challenge_id : int):
+def generate_invitation_link(db : Session, challenge_id : int):
     unique_token = str(uuid.uuid4())
     invitation_link = f"{os.environ['SERVER_IP']}/invite/{unique_token}"
     # Store the unique token along with the challenge_id in the redis
     # So you can associate an incoming request with the correct challenge
-
-    if redis_client.exists(f"invitation_challenge_id:{challenge_id}") is not 1:
+    if redis_client.exists(f"invitation_challenge_id:{challenge_id}") is not 1 and compare_created_time_by_challenge_id(db, challenge_id):
         today = datetime.now()
         end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
         remaining_time = end_of_day - today
@@ -394,7 +398,7 @@ def generate_invitation_link(challenge_id : int):
         redis_client.sadd(redis_key, invitation_link)
         redis_client.expire(redis_key, remaining_time.seconds)
     else:
-        return "Invitation link already exsist!"
+        return "Invitation link already exsist or the link has been expired."
 
     return invitation_link
 
