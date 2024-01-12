@@ -29,7 +29,7 @@ def test_update_breaking_days(db: Session = Depends(get_db)):
     return {"message": "Breaking days updated successfully for all challenges"}
 
 # read all challenges of one user by user id 
-@router.get("/GetUserChallenges/{user_id}", response_model=List[List[schemas.ChallengeRead]])
+@router.get("/GetUserChallenges/{user_id}", response_model=List[List[schemas.ChallengeWithBreakingDays]])
 async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db)):
     active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
