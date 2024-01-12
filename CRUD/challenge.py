@@ -113,6 +113,7 @@ def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.
             title=challenge.title,
             description=challenge.description,
             duration=challenge.duration,
+            breaking_days=challenge.breaking_days,
             is_public=challenge.is_public,
             category=challenge.category,
             created_time=challenge.created_time,
