@@ -388,22 +388,37 @@ def challenge_details_page_second_half_by_challengeID(db: Session, challenge_id:
     return all_page_post_container
 
 def compare_created_time_by_challenge_id(db: Session, challenge_id:int):
-    target_challenge_created_time = db.query(models.User).filter(models.Challenge.id == challenge_id).first().created_time
-    timestamp_date = datetime.fromtimestamp(target_challenge_created_time)
-    today_date = datetime.now()
-    return (timestamp_date.date() == today_date.date())
+    target_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
+    if target_challenge:
+        target_challenge_created_time = target_challenge.created_time
+        # Compare only the date part of 'created_time' with today's date
+        result = target_challenge_created_time.date() == datetime.now().date()
+        print(result)
+        return result
+    else:
+        print("False")
+        return False  # or handle as appropriate if the challenge is not found
 
 def generate_invitation_link(db : Session, challenge_id : int):
     unique_token = str(uuid.uuid4())
-    invitation_link = f"{os.environ['SERVER_IP']}/invite/{unique_token}"
+
+    is_running_on_EC2 = True if os.environ.get("AWS_DEFAULT_REGION") else False
+    if is_running_on_EC2:
+        # set up redis for EC2
+        invitation_link = f"{os.environ['SERVER_IP']}/invite/{unique_token}"
+    
+    else:
+        # set up redis for local development
+        invitation_link = f"http://127.0.0.1:8000/invite/{unique_token}"
+    
     # Store the unique token along with the challenge_id in the redis
     # So you can associate an incoming request with the correct challenge
-    if redis_client.exists(f"invitation_challenge_id:{challenge_id}") is not 1 and compare_created_time_by_challenge_id(db, challenge_id):
+    if redis_client.exists(f"invitation:{unique_token}") is not 1 and compare_created_time_by_challenge_id(db, challenge_id):
         today = datetime.now()
         end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
         remaining_time = end_of_day - today
-        redis_key = f"invitation_challenge_id:{challenge_id}"
-        redis_client.sadd(redis_key, invitation_link)
+        redis_key = f"invitation:{unique_token}"
+        redis_client.set(redis_key, challenge_id)
         redis_client.expire(redis_key, remaining_time.seconds)
     else:
         return "Invitation link already exsist or the link has been expired."
@@ -430,3 +445,11 @@ def get_challenge_category_distribution(db: Session, user_id: int):
 
     result = [category_amounts[i] for i in range(5)]  # Assuming 5 categories
     return result
+def get_challenge_id_by_token(unique_token : str):
+    
+    request_challenge_id = redis_client.get(f"invitation:{unique_token}")
+
+    if request_challenge_id:
+        return request_challenge_id.decode('utf-8')  # Redis stores and returns bytes, so convert to string
+    else:
+        return "Can not found the challenge!"

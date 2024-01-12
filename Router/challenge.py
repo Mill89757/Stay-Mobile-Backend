@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 import schemas  
 from database import get_db  
@@ -91,10 +91,22 @@ async def delete_group_challenge_member_route(challenge_id: int, user_id:int, db
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge or member not found")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Challenge member deleted successfully"})
 
-@router.get("/GetinvitationLinkByChallengeID/{challenge_id}")
+@router.get("/SetinvitationLinkByChallengeID/{challenge_id}")
 async def generate_invitation_link(challenge_id: int, db: Session = Depends(get_db)):
     result = challenge_crud.generate_invitation_link(db=db, challenge_id = challenge_id)
     return result
+
+@router.get("/invite/{token}")
+async def invitation(token: str):
+    # Lookup the challenge using the token from the database
+    challenge_id = challenge_crud.get_challenge_id_by_token(token).split("/")[-1]
+    if not challenge_id:
+        raise HTTPException(status_code=404, detail="Challenge not found or invitation expired")
+    
+    # Redirect to a deep link that opens your app
+    app_deep_link = f"yourapp://challenge/{challenge_id}"
+    return app_deep_link
+
 
 # read discover challenges 拿discover challenge
 @router.get("/GetDiscoverChallenges/")
