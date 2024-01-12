@@ -405,29 +405,21 @@ def generate_invitation_link(db : Session, challenge_id : int):
 
 def get_challenge_category_distribution(db: Session, user_id: int):
     count_result = db.query(
-        models.Challenge, models.GroupChallengeMembers
+        models.Challenge.category,
+        func.count(models.GroupChallengeMembers.user_id)
     ).join(
-        models.Challenge, models.GroupChallengeMembers.challenge_id == models.Challenge.id
-    ).query(models.Challenge.category, func.count(models.Challenge.user_id)
-            ).filter(models.Challenge.user_id == user_id).group_by(models.Challenge.category).all()
+        models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id
+    ).filter(
+        models.GroupChallengeMembers.user_id == user_id
+    ).group_by(
+        models.Challenge.category
+    ).all()
 
-    total_challenge_amount = 0
-    for count_element in count_result:
-        total_challenge_amount += count_element[2]
-    physical_amount, mental_amount, emotion_amount, spiritual_amount, other_amount = 0, 0, 0, 0, 0
+    total_challenge_amount = sum([count_element[1] for count_element in count_result])
+    category_amounts = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}  # Assuming categories are 0, 1, 2, 3, 4
 
-    for count_element in count_result:
-        if count_element[0] == 0:
-            physical_amount = count_element[2]
-        elif count_element[0] == 1:
-            mental_amount = count_element[1]
-        elif count_element[0] == 2:
-            emotion_amount = count_element[1]
-        elif count_element[0] == 3:
-            spiritual_amount = count_element[1]
-        elif count_element[0] == 4:
-            other_amount = count_element[1]
+    for category, amount in count_result:
+        category_amounts[category] = amount
 
-    result = [physical_amount, mental_amount, emotion_amount, spiritual_amount, other_amount]
+    result = [category_amounts[i] for i in range(5)]  # Assuming 5 categories
     return result
-
