@@ -13,7 +13,7 @@ print()
 # print()
 
 
-for user_id in range(1,10):
+for user_id in range(1,3):
     categories, posts = get_recommended_post(user_id)
     print(f"User = {user_id},  Categories = {categories}")
     print('Recommended Posts = ')

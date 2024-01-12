@@ -13,6 +13,21 @@ DATE_TODAY = datetime.datetime.now(sydney_tz).date()
 
 
 
+def decoding(item, StrToSplit = None, ifError = None) -> str or list:
+    """
+    the value retrieved from redis is in binary format.
+    this function converts it to string and split it if necessary.
+    """
+    if item == None:
+        return ifError
+    item = item.decode('utf-8')
+    if StrToSplit: 
+        item = item.split(StrToSplit)
+        if item == ['']: return []
+        else: return item 
+
+
+
 def classify_new_posts_by_category():
     """
     every post belongs to 1 challenge, every challenge has a category.
@@ -50,7 +65,7 @@ def classify_new_posts_by_category():
             clg_detail = r.hget('on_clg_info', challenge_id)
         
         
-        category, isPublic, doneby = decoding(clg_detail).split(',')
+        category, isPublic, doneby = decoding(clg_detail, StrToSplit=',')
         category = int(category)
         doneby = datetime.datetime.strptime(doneby[:], '%Y-%m-%d')
         
@@ -84,13 +99,10 @@ def __record_likerID_under_challengeID():
         if is_cancelled: continue
 
 
-        current_likers = r.hget('like_record_5', challenge_id)
-
-        if current_likers:
-            current_likers = decoding(current_likers)
+        current_likers = decoding(r.hget('like_record_5', challenge_id), ifError='')
 
         # initialise challenge like records
-        else: 
+        if not current_likers:
             current_likers = ''
             for i in range(1,6):
                 r.hset('like_record_'+str(i), challenge_id,'')
@@ -118,11 +130,7 @@ def update_user_challenge_distribution():
         for user in members:
 
             # get user's current contribution
-            contribution = r.hget('user_contribution',user)
-            if not contribution:
-                contribution = ['0']*5
-            else:
-                contribution = decoding(contribution).split(',')
+            contribution = decoding(r.hget('user_contribution',user), StrToSplit=',', ifError=['0']*5)
 
             # modify user contribution according to the challenge's category
             contribution[category] = str( int(contribution[category]) + duration)
@@ -135,7 +143,7 @@ def update_user_challenge_distribution():
 def recommend_post_from_interacted_challenges():
     """
     user can interact with posts, each post belongs to 1 challenge.
-    so reacting to recent post is equivalent to react to challenge.
+    so reacting to recent post is equivalent to react to a challenge.
     this function allocates new posts to users based on their interacted challenges.
     """
 
@@ -154,14 +162,9 @@ def recommend_post_from_interacted_challenges():
 
         # iterate through like_record_[1~5]
         for day in range(1,6):
-            key = 'like_record_' + str(day)
+            record_day = 'like_record_' + str(day)
 
-            try: 
-                users = decoding( r.hget(key, clg_id) ).split(',')
-            except AttributeError: # user has interacted with a completed challenge
-                break 
-            else:
-                if users[0] == '': continue
+            users = decoding( r.hget(record_day, clg_id), StrToSplit=',' , ifError=[] )
 
             # allocate post_id to all users in like_record_[day]
             for user in users:
@@ -172,7 +175,9 @@ def recommend_post_from_interacted_challenges():
 
     # saving the results to redis 
     for user in tmp_data.keys():
-        posts = ','.join(list(tmp_data[user]))
+        # posts = ','.join(list(tmp_data[str(user)]))
+        posts = ','.join(str(item) for item in list(tmp_data[user]))
+        # print(posts)
         r.hset('user_like', user, posts)
     
 
@@ -181,35 +186,37 @@ def top3categories(user_id:int) -> list:
     the 'user_contribution' key in redis is a hash table that record user's contribution to each challenge category.
     this function takes user_id as input and return 3 categories where the user has spent the most time contributing.
     """
-
-    contribution = r.hget('user_contribution',user_id)
     
     # retrive his/her challenge contribution data.
-    if not contribution:
-        contribution = []
-    else:
-        contribution = decoding(contribution).split(',')
+    contribution = decoding( r.hget('user_contribution',user_id), StrToSplit=',', ifError=[])
+    if contribution:
         contribution = [int(num) for num in contribution]
-    n = len(contribution)
 
-    # find the top 3 challenge category codes 
-    if n <= 3: 
-        other_categories = [item for item in [0,1,2,3,4] if item not in contribution]
-        return  contribution + random.sample(other_categories, 3-n)
 
-    category1, category2, category3 = random.sample([0,1,2,3,4],3)
+    topCategories = []
 
-    for i in range(5):
-        category_days = contribution[i]
-        if category_days > category1:
-            category1, category2, category3 = i, category1, category2
-        elif category_days > category2:
-            category2, category3 = i, category2
-        elif category_days > category3:
-            category3 = i
+    for category in range(5):
 
-    return [category1, category2, category3]  
+        # if user did not contribute to category i, then move on to the next category
+        if contribution[category] == 0: continue 
 
+        # otherwise, see if user's contribution is one of the top 3 cateogries. 
+        for i in range(len(topCategories)):
+            if contribution[category] > contribution[topCategories[i]]: 
+                topCategories.insert(i, category)
+                continue
+        if len(topCategories) < 3: 
+            contribution.append(category)
+        elif len(topCategories) > 3:
+            contribution.pop()
+
+    # if user contributed to less than 3 categories, 
+    # then randomly pick some other categories for this user
+    n = len(topCategories)
+    if n == 3:
+        return top3categories
+    other_categories = [item for item in [0,1,2,3,4] if item not in topCategories]
+    return  topCategories + random.sample(other_categories, 3-n)
 
 
 def get_recommended_post(user_id) -> list:
@@ -219,9 +226,9 @@ def get_recommended_post(user_id) -> list:
     """
     posts = set()
 
-    post_by_reactions = r.hget('user_like', user_id)
+    post_by_reactions = decoding(r.hget('user_like', user_id), StrToSplit=',', ifError=[])
+
     if post_by_reactions:  
-        post_by_reactions = decoding(post_by_reactions)
         post_by_reactions = [int(post) for post in post_by_reactions]
         posts = set(post_by_reactions)
 
@@ -230,8 +237,8 @@ def get_recommended_post(user_id) -> list:
         category_posts = r.hget('category_posts', category_code)
         
         if not category_posts: continue
-        category_posts = decoding(category_posts).split(',')
-        if category_posts == ['']: continue
+        category_posts = decoding(category_posts,StrToSplit=',')
+        if not category_posts: continue
 
         for post_id in category_posts:
             posts.add(int(post_id))

@@ -4,7 +4,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import models
 import os
-
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -26,8 +25,18 @@ r = redis.Redis(host='localhost', port=6379, db=0)
 
 
 
-def decoding(item:redis):
-    return item.decode('utf-8')
+def decoding(item, StrToSplit = None, ifError = None) -> str or list:
+    """
+    the value retrieved from redis is in binary format.
+    this function converts it to string and split it if necessary.
+    """
+    if item == None:
+        return ifError
+    item = item.decode('utf-8')
+    if StrToSplit: 
+        item = item.split(StrToSplit)
+        if item == ['']: return []
+        else: return item 
 
 # # -------------------------------------------------------------------------------------
 
@@ -41,11 +50,11 @@ def decoding(item:redis):
 # hash_field = table name's abbreviation
 # hash_value = table length (in previous day)
 
-clg_len  = r.hget('db_len', 'clg').decode('utf-8')      # challenge 
-mmbr_len = r.hget('db_len', 'mmbr').decode('utf-8')     # member
-post_len = r.hget('db_len', 'post').decode('utf-8')    
-like_len = r.hget('db_len', 'like').decode('utf-8')     
-track_len = r.hget('db_len', 'track').decode('utf-8')
+clg_len  = decoding(r.hget('db_len', 'clg'), ifError = 0)      # challenge 
+mmbr_len = decoding(r.hget('db_len', 'mmbr'), ifError = 0)     # member
+post_len = decoding(r.hget('db_len', 'post'), ifError = 0)
+like_len = decoding(r.hget('db_len', 'like'), ifError = 0)
+track_len = decoding(r.hget('db_len', 'track'),ifError = 0)
 
 
 # --- use table_len to access record of interest ---
@@ -76,7 +85,7 @@ TRACK = session.query(models.Tracking).offset(track_len)
 
 # redis_key = like_record_[1~5]
 # redis_type = hash table 
-# hash_field = clg_id
+# hash_field = challenge_id
 # hash_value = user_id separated by comma
 
 
@@ -97,8 +106,8 @@ for clg in ongoing_clg_id:
 
 # redis_key = on_clg_info 
 # redis_type = hash
-# hash_field = clg_id for which challenges are on going
-# hash_value = [category, is_public, finished_date] in string format, separated by comma
+# hash_field = challenge_id for which challenges are on going
+# hash_value = [category, is_public, duration, finished_date] in string format, separated by comma
 
 
 
@@ -108,8 +117,6 @@ for clg in ongoing_clg_id:
 # redis_type = hash
 # hash_field = category code (0, 1, 2, 3, or 4)
 # hash_value = post_id belong to this category, separated by comma 
-
-
 
 
 
@@ -131,6 +138,13 @@ for clg in ongoing_clg_id:
 
 
 
+# --- for posts generated in past 7 days, record their post_id and challenge_id as key-value pair ---
+# --- so we do not need to merge challenge_id from UserReactionLog table into Post table   ---
+
+# redis_key = post_clg_pair
+# redis_type = hash
+# hash_field = post_id
+# hash_value = challenge_id of the post
 
 
 # -------------------------------------------------------------------------------------
