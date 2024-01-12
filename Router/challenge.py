@@ -111,3 +111,7 @@ async def get_challenge_details_first_half(challenge_id: int, db:Session = Depen
 async def get_challenge_details_second_half(challenge_id: int, db:Session = Depends(get_db)):
     result = challenge_crud.challenge_details_page_second_half_by_challengeID(db, challenge_id)
     return result
+
+@router.get("/getChallengeCategoryDistribution/{user_id}")
+def get_challenge_category_distribution(user_id: int, db: Session = Depends(get_db)):
+    return challenge_crud.get_challenge_category_distribution(db, user_id)

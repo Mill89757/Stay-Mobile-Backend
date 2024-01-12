@@ -14,6 +14,7 @@ import CRUD.course as course_crud
 import CRUD.post_reaction as reaction_crud
 import CRUD.post_content as post_content_crud
 from redis_client import redis_client
+from sqlalchemy import func
 
 # create challenge
 def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
@@ -97,7 +98,7 @@ def update_breaking_days_for_challenges(db: Session):
 def get_challenges(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Challenge).offset(skip).limit(limit).all()
 
-# read active challengs list of one user by user id
+# read active challenges list of one user by user id
 def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.ChallengeWithBreakingDays]:
     results = (
         db.query(models.Challenge, models.GroupChallengeMembers.breaking_days_left)
@@ -401,4 +402,32 @@ def generate_invitation_link(db : Session, challenge_id : int):
         return "Invitation link already exsist or the link has been expired."
 
     return invitation_link
+
+def get_challenge_category_distribution(db: Session, user_id: int):
+    count_result = db.query(
+        models.Challenge, models.GroupChallengeMembers
+    ).join(
+        models.Challenge, models.GroupChallengeMembers.challenge_id == models.Challenge.id
+    ).query(models.Challenge.category, func.count(models.Challenge.user_id)
+            ).filter(models.Challenge.user_id == user_id).group_by(models.Challenge.category).all()
+
+    total_challenge_amount = 0
+    for count_element in count_result:
+        total_challenge_amount += count_element[2]
+    physical_amount, mental_amount, emotion_amount, spiritual_amount, other_amount = 0, 0, 0, 0, 0
+
+    for count_element in count_result:
+        if count_element[0] == 0:
+            physical_amount = count_element[2]
+        elif count_element[0] == 1:
+            mental_amount = count_element[1]
+        elif count_element[0] == 2:
+            emotion_amount = count_element[1]
+        elif count_element[0] == 3:
+            spiritual_amount = count_element[1]
+        elif count_element[0] == 4:
+            other_amount = count_element[1]
+
+    result = [physical_amount, mental_amount, emotion_amount, spiritual_amount, other_amount]
+    return result
 
