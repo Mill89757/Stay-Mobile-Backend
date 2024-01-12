@@ -75,7 +75,7 @@ def update_breaking_days_for_challenges(db: Session):
     posted_challenge_ids = {int(challenge_id.decode('utf-8')) for challenge_id in redis_client.smembers(redis_key)}
 
     # 指定的挑战ID列表
-    specific_challenge_ids = [10007, 10022, 10025]
+    specific_challenge_ids = [10007, 10022, 10025, 10004]
 
     for challenge_id in specific_challenge_ids:
         # 如果特定挑战ID不在 Redis 集合中，则减少 breaking_days_left
@@ -83,15 +83,22 @@ def update_breaking_days_for_challenges(db: Session):
             # 获取所有属于这个挑战ID的GroupChallengeMembers记录
             group_challenge_members = db.query(models.GroupChallengeMembers).filter(
                 models.GroupChallengeMembers.challenge_id == challenge_id
-            ).all()
+            ).all()     
 
             # 更新每个用户在该挑战中的 breaking_days_left
             for group_member in group_challenge_members:
                 if group_member.breaking_days_left > 0:
                     group_member.breaking_days_left -= 1
+                 #如果当天没有发布帖子，且breaking_days_left为0，将is_finished改为True
+                if group_member.breaking_days_left == 0:
+                    challenge_to_finish = db.query(models.Challenge).filter_by(id=group_member.challenge_id).first()
+                    if challenge_to_finish and not challenge_to_finish.is_finished:
+                        challenge_to_finish.is_finished = True
+                        challenge_to_finish.finished_time = datetime.now()
+
 
             # 提交所有更改到数据库
-            db.commit()
+        db.commit()
 
 
 # read all challenges
