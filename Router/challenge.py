@@ -96,16 +96,10 @@ async def generate_invitation_link(challenge_id: int, db: Session = Depends(get_
     result = challenge_crud.generate_invitation_link(db=db, challenge_id = challenge_id)
     return result
 
-@router.get("/invite/{token}")
-async def invitation(token: str):
-    # Lookup the challenge using the token from the database
-    challenge_id = challenge_crud.get_challenge_id_by_token(token).split("/")[-1]
-    if not challenge_id:
-        raise HTTPException(status_code=404, detail="Challenge not found or invitation expired")
-    
-    # Redirect to a deep link that opens your app
-    app_deep_link = f"yourapp://challenge/{challenge_id}"
-    return app_deep_link
+@router.post("/JoinGroupChallengeByInvite/{user_id}/{token}")
+async def invitation(token: str, user_id:int, db: Session = Depends(get_db)):
+    result = challenge_crud.join_group_challenge_by_token_and_user_id(db=db, unique_token=token, user_id=user_id)
+    return result
 
 
 # read discover challenges 拿discover challenge
