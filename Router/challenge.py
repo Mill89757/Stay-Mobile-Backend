@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 import schemas  
 from database import get_db  
@@ -22,8 +22,14 @@ async def get_challenge_route(challenge_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
 
+#update breaking days for all challenges  test only !!!
+@router.post("/test/update_breaking_days")
+def test_update_breaking_days(db: Session = Depends(get_db)):
+    challenge_crud.update_breaking_days_for_challenges(db)
+    return {"message": "Breaking days updated successfully for all challenges"}
+
 # read all challenges of one user by user id 
-@router.get("/GetUserChallenges/{user_id}", response_model=List[List[schemas.ChallengeRead]])
+@router.get("/GetUserChallenges/{user_id}", response_model=List[List[schemas.ChallengeWithBreakingDays]])
 async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db)):
     active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
@@ -85,9 +91,39 @@ async def delete_group_challenge_member_route(challenge_id: int, user_id:int, db
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge or member not found")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Challenge member deleted successfully"})
 
+@router.get("/SetinvitationLinkByChallengeID/{challenge_id}")
+async def generate_invitation_link(challenge_id: int, db: Session = Depends(get_db)):
+    result = challenge_crud.generate_invitation_link(db=db, challenge_id = challenge_id)
+    return result
+
+@router.get("/invite/{token}")
+async def invitation(token: str):
+    # Lookup the challenge using the token from the database
+    challenge_id = challenge_crud.get_challenge_id_by_token(token).split("/")[-1]
+    if not challenge_id:
+        raise HTTPException(status_code=404, detail="Challenge not found or invitation expired")
+    
+    # Redirect to a deep link that opens your app
+    app_deep_link = f"yourapp://challenge/{challenge_id}"
+    return app_deep_link
+
 
 # read discover challenges 拿discover challenge
 @router.get("/GetDiscoverChallenges/")
 async def get_discover_challenges(db: Session = Depends(get_db)):
     discover_challenges = challenge_crud.get_discover_challenges(db)
     return discover_challenges
+
+@router.get("/GetChallengeDetailsPartA/{challenge_id}")
+async def get_challenge_details_first_half(challenge_id: int, db:Session = Depends(get_db)):
+    result = challenge_crud.challenge_details_page_first_half_by_challengeID(db, challenge_id)
+    return result
+
+@router.get("/GetChallengeDetailsPartB/{challenge_id}")
+async def get_challenge_details_second_half(challenge_id: int, db:Session = Depends(get_db)):
+    result = challenge_crud.challenge_details_page_second_half_by_challengeID(db, challenge_id)
+    return result
+
+@router.get("/getChallengeCategoryDistribution/{user_id}")
+def get_challenge_category_distribution(user_id: int, db: Session = Depends(get_db)):
+    return challenge_crud.get_challenge_category_distribution(db, user_id)

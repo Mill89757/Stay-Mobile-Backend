@@ -5,6 +5,10 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 import models, schemas
 from sqlalchemy import desc
+import redis
+from datetime import datetime, timedelta
+redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
+
 
 def create_post(db: Session, post: schemas.PostCreate):
     
@@ -32,6 +36,17 @@ def create_post(db: Session, post: schemas.PostCreate):
     current_breaking_days_left.breaking_days_left = new_breaking_days_left
     db.commit()
     db.refresh(db_post)
+    today = datetime.now()
+    end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
+    remaining_time = end_of_day - today
+    redis_key = f"posted_challenges:{today.strftime('%Y-%m-%d')}"
+    redis_client.sadd(redis_key, post.challenge_id)
+    redis_client.expire(redis_key, remaining_time.seconds)
+
+    # 打印 Redis 
+    redis_value = redis_client.smembers(redis_key)
+    print(f"Redis Key: {redis_key}")
+    print(f"Redis Value (challenge_ids): {redis_value}")
 
     db_post_content = models.PostContent(
         post_id=db_post.id,
