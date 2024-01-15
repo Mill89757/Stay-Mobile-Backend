@@ -103,7 +103,7 @@ def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[schema
     
     return finished_challenges
 
-# read challengs list by course id
+# read challenges list by course id
 def get_challenges_by_course_id(db: Session, course_id: int) -> List[models.Challenge]:
     challenges_with_course_id = (
         db.query(models.Challenge)

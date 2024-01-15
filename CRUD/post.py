@@ -4,6 +4,7 @@ import models, schemas
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 import models, schemas
+from sqlalchemy import desc
 
 def create_post(db: Session, post: schemas.PostCreate):
     
@@ -53,7 +54,7 @@ def get_post(db:Session, post_id: int):
 
 # read all posts
 def get_posts(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Post).offset(skip).limit(limit).all()
+    return db.query(models.Post).order_by(desc(models.Post.created_time)).offset(skip).limit(limit).all()
 
 # read posts of one user by user id
 def get_posts_by_user_id(db: Session, user_id: int) -> List[models.Post]:
