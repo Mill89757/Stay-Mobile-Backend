@@ -313,6 +313,7 @@ def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: 
     challenge_basic_info = get_challenge(db, challenge_id)
     follower_avatars = get_all_follower_avatars(db, challenge_id)[0:5]
     course_title = course_crud.read_course_by_id(db, challenge_basic_info.course_id).course_name
+    owner_avatar = get_owner_avatar_by_user_id(db, challenge_basic_info.challenge_owner_id)
     challenge_details ={
         "id": challenge_basic_info.id,
         "title": challenge_basic_info.title,
@@ -320,7 +321,8 @@ def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: 
         "Username": get_userName_by_user_id(db, challenge_basic_info.challenge_owner_id),
         "Description": challenge_basic_info.description,
         "follwers_avaters": follower_avatars,
-        "Course": course_title
+        "Course": course_title,
+        "owner_avatar": owner_avatar,
     }
     return challenge_details
 
@@ -335,6 +337,13 @@ def get_name_by_user_id(db:Session, user_id: int):
     result = db.query(models.User).filter(models.User.id == user_id).first()
     if result:
         return result.name
+    else:
+        return None
+    
+def get_owner_avatar_by_user_id(db:Session, user_id: int):
+    result = db.query(models.User).filter(models.User.id == user_id).first()
+    if result:
+        return result.avatar_location
     else:
         return None
 
