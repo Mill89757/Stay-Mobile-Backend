@@ -314,7 +314,11 @@ def update_challenge_course_id(db:Session, challenge_id: int, course_id: int):
 def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: int):
     challenge_basic_info = get_challenge(db, challenge_id)
     follower_avatars = get_all_follower_avatars(db, challenge_id)[0:5]
-    course_title = course_crud.read_course_by_id(db, challenge_basic_info.course_id).course_name
+    # handle the case when course_id is None
+    if challenge_basic_info.course_id is not None:
+        course_title = course_crud.read_course_by_id(db, challenge_basic_info.course_id).course_name
+    else:
+        course_title = None
     owner_avatar = get_owner_avatar_by_user_id(db, challenge_basic_info.challenge_owner_id)
     challenge_details ={
         "id": challenge_basic_info.id,
