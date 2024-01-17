@@ -1,4 +1,6 @@
 
+import random
+import string
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 import models, schemas  
@@ -409,30 +411,26 @@ def compare_created_time_by_challenge_id(db: Session, challenge_id:int):
         return False  # or handle as appropriate if the challenge is not found
 
 def generate_invitation_link(db : Session, challenge_id : int):
-    unique_token = str(uuid.uuid4())
+    
+    unique_token = ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))
 
-    is_running_on_EC2 = True if os.environ.get("AWS_DEFAULT_REGION") else False
-    if is_running_on_EC2:
-        # set up redis for EC2
-        invitation_link = f"{os.environ['SERVER_IP']}/invite/{unique_token}"
-    
-    else:
-        # set up redis for local development
-        invitation_link = f"http://127.0.0.1:8000/invite/{unique_token}"
-    
-    # Store the unique token along with the challenge_id in the redis
-    # So you can associate an incoming request with the correct challenge
-    if redis_client.exists(f"invitation:{unique_token}") is not 1 and compare_created_time_by_challenge_id(db, challenge_id):
+    if redis_client.get(challenge_id) is None and compare_created_time_by_challenge_id(db, challenge_id):
         today = datetime.now()
         end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
         remaining_time = end_of_day - today
-        redis_key = f"invitation:{unique_token}"
+        redis_key = unique_token
         redis_client.set(redis_key, challenge_id)
+        redis_client.set(challenge_id, redis_key)
         redis_client.expire(redis_key, remaining_time.seconds)
+        redis_client.expire(challenge_id, remaining_time.seconds)
     else:
+        print(redis_client.get(unique_token))
+        today = datetime.now()
+        print(today)
         return "Invitation link already exsist or the link has been expired."
 
-    return invitation_link
+    print(today)
+    return f"invitation code:{unique_token}"
 
 def get_challenge_category_distribution(db: Session, user_id: int):
     count_result = db.query(
@@ -454,11 +452,30 @@ def get_challenge_category_distribution(db: Session, user_id: int):
 
     result = [category_amounts[i] for i in range(5)]  # Assuming 5 categories
     return result
-def get_challenge_id_by_token(unique_token : str):
-    
-    request_challenge_id = redis_client.get(f"invitation:{unique_token}")
 
-    if request_challenge_id:
-        return request_challenge_id.decode('utf-8')  # Redis stores and returns bytes, so convert to string
+def join_group_challenge_by_token_and_user_id(db: Session, unique_token : str, user_id: str):
+    
+    request_challenge_id_bytes = redis_client.get(unique_token)
+
+    if request_challenge_id_bytes is not None:
+        request_challenge_id_str = request_challenge_id_bytes.decode('utf-8')  # 解码字节字符串
+        request_challenge_id = int(request_challenge_id_str)  # 转换成整数
     else:
-        return "Can not found the challenge!"
+        return "Can not find the token in redis"
+
+    request_challenge_breaking_days = db.query(models.Challenge).filter(models.Challenge.id == request_challenge_id).first()
+    
+    if request_challenge_id and db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.user_id == user_id).filter(models.GroupChallengeMembers.challenge_id == request_challenge_id).first() is None:
+        join_group_challenge = models.GroupChallengeMembers(
+                challenge_id = request_challenge_id,
+                user_id = user_id,
+                breaking_days_left = request_challenge_breaking_days.breaking_days
+        )
+        db.add(join_group_challenge)
+        db.commit()
+        db.refresh(join_group_challenge)
+        return "New group member has joined!"
+    elif request_challenge_id and db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.user_id == user_id).filter(models.GroupChallengeMembers.challenge_id == request_challenge_id).first():
+        return "User already joined the group challenge"
+    else:
+        return "Can not found the challenge or related User!"
