@@ -4,7 +4,7 @@ import models, schemas
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 import models, schemas
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 import redis
 from datetime import datetime, timedelta
 redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
@@ -116,16 +116,22 @@ def get_duration_in_minutes(start_time, end_time):
     return 0
 
 
+from datetime import datetime, timedelta
+# ... other imports
+
+from sqlalchemy import func
+# ... other imports
+
 def get_recent_post_duration(db: Session, user_id: int):
     recent_days = 5
-    end_date = datetime.now()
+    end_date = datetime.now().date()
     start_date = end_date - timedelta(days=recent_days)
 
     query_result = db.query(models.Post, models.Challenge, models.GroupChallengeMembers)\
                         .join(models.Challenge, models.Challenge.id == models.Post.challenge_id)\
                         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Post.challenge_id)\
                         .filter(models.GroupChallengeMembers.user_id == user_id)\
-                        .filter(models.Post.end_time >= start_date, models.Post.end_time <= end_date)\
+                        .filter(func.date(models.Post.end_time) >= start_date, func.date(models.Post.end_time) <= end_date)\
                         .order_by(models.Post.created_time)
 
     dummy_duration_data = [[] for _ in range(recent_days)]
@@ -134,12 +140,9 @@ def get_recent_post_duration(db: Session, user_id: int):
         duration = get_duration_in_minutes(post_obj.start_time, post_obj.end_time)
         category = challenge_obj.category
         
-        # Determine which day's sublist this post belongs to
-        day_index = (end_date.date() - post_obj.end_time.date()).days
+        post_end_date = post_obj.end_time.date()  # Here, post_obj.end_time is a Python datetime object, so it's fine
+        day_index = (end_date - post_end_date).days
         if 0 <= day_index < recent_days:
             dummy_duration_data[day_index].append({"value": duration, "category": category, "challenge id": challenge_obj.id})
-
-    # Reverse to have the latest day first
-    # dummy_duration_data.reverse()
 
     return dummy_duration_data
