@@ -9,6 +9,7 @@ import models, schemas
 # create post reaction
 def creat_post_reaction(db: Session, post_reaction: schemas.PostReactionCreate):
     db_post_reaction = models.PostReaction(**post_reaction.dict())
+
     db.add(db_post_reaction)
     db.commit()
     db.refresh(db_post_reaction)

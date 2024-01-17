@@ -62,10 +62,6 @@ async def get_user_finished_challenges_route(user_id: int, db: Session = Depends
 async def get_challenges_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return challenge_crud.get_challenges(db=db, skip=skip, limit=limit)
 
-@router.get("/GetDurationByUserID/{user_id}")
-async def get_challenge_durations_by_category(user_id: int, db: Session = Depends(get_db)):
-    return challenge_crud.get_challenge_durations_by_category(db, user_id)
-
 @router.get("/GetBreakingDaysLeftByUserIdAndChallengeId/{user_id}/{challenge_id}", response_model=schemas.GroupChallengeMembersRead)
 async def get_challenge_breaking_days_left(user_id: int, challenge_id:int ,db: Session = Depends(get_db)):
     return challenge_crud.get_challenge_breaking_days_left(db, user_id, challenge_id)

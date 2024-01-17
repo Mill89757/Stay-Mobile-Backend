@@ -106,3 +106,39 @@ def delete_post(db: Session, post_id: int):
     db.delete(db_post)
     db.commit()
     return {"detail": "Post has been deleted"}
+
+# read the recent post duration for a user
+def get_duration_in_minutes(start_time, end_time):
+    if start_time and end_time:
+        duration = end_time - start_time
+        return int(duration.total_seconds() / 60)
+    return 0
+
+
+def get_recent_post_duration(db: Session, user_id: int):
+    recent_days = 5
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=recent_days)
+
+    query_result = db.query(models.Post, models.Challenge, models.GroupChallengeMembers)\
+                        .join(models.Challenge, models.Challenge.id == models.Post.challenge_id)\
+                        .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Post.challenge_id)\
+                        .filter(models.GroupChallengeMembers.user_id == user_id)\
+                        .filter(models.Post.end_time >= start_date, models.Post.end_time <= end_date)\
+                        .order_by(models.Post.created_time)
+
+    dummy_duration_data = [[] for _ in range(recent_days)]
+    for item in query_result:
+        post_obj, challenge_obj, _ = item
+        duration = get_duration_in_minutes(post_obj.start_time, post_obj.end_time)
+        category = challenge_obj.category
+        
+        # Determine which day's sublist this post belongs to
+        day_index = (end_date.date() - post_obj.end_time.date()).days
+        if 0 <= day_index < recent_days:
+            dummy_duration_data[day_index].append({"value": duration, "category": category, "challenge id": challenge_obj.id})
+
+    # Reverse to have the latest day first
+    # dummy_duration_data.reverse()
+
+    return dummy_duration_data
