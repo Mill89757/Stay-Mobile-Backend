@@ -116,16 +116,14 @@ def get_duration_in_minutes(start_time, end_time):
     return 0
 
 
-from datetime import datetime, timedelta
-# ... other imports
-
-from sqlalchemy import func
-# ... other imports
-
 def get_recent_post_duration(db: Session, user_id: int):
-    recent_days = 5
+    """ Return the duration of posts in the last 5 days for a user
+    
+    Notes: the challenge id is added for testing otherwise is hard to locate the specific post
+    """
+    RECENT_DAYS = 5
     end_date = datetime.now().date()
-    start_date = end_date - timedelta(days=recent_days)
+    start_date = end_date - timedelta(days=RECENT_DAYS)
 
     query_result = db.query(models.Post, models.Challenge, models.GroupChallengeMembers)\
                         .join(models.Challenge, models.Challenge.id == models.Post.challenge_id)\
@@ -134,15 +132,15 @@ def get_recent_post_duration(db: Session, user_id: int):
                         .filter(func.date(models.Post.end_time) >= start_date, func.date(models.Post.end_time) <= end_date)\
                         .order_by(models.Post.created_time)
 
-    dummy_duration_data = [[] for _ in range(recent_days)]
+    duration_data = [[] for _ in range(RECENT_DAYS)]
     for item in query_result:
         post_obj, challenge_obj, _ = item
         duration = get_duration_in_minutes(post_obj.start_time, post_obj.end_time)
         category = challenge_obj.category
         
-        post_end_date = post_obj.end_time.date()  # Here, post_obj.end_time is a Python datetime object, so it's fine
+        post_end_date = post_obj.end_time.date()  
         day_index = (end_date - post_end_date).days
-        if 0 <= day_index < recent_days:
-            dummy_duration_data[day_index].append({"value": duration, "category": category, "challenge id": challenge_obj.id})
+        if 0 <= day_index < RECENT_DAYS:
+            duration_data[day_index].append({"value": duration, "category": category, "challenge id": challenge_obj.id})
 
-    return dummy_duration_data
+    return duration_data
