@@ -4,7 +4,7 @@ import models, schemas
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 import models, schemas
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 import redis
 from datetime import datetime, timedelta
 redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
@@ -107,3 +107,40 @@ def delete_post(db: Session, post_id: int):
     db.delete(db_post)
     db.commit()
     return {"detail": "Post has been deleted"}
+
+# read the recent post duration for a user
+def get_duration_in_minutes(start_time, end_time):
+    if start_time and end_time:
+        duration = end_time - start_time
+        return int(duration.total_seconds() / 60)
+    return 0
+
+
+def get_recent_post_duration(db: Session, user_id: int):
+    """ Return the duration of posts in the last 5 days for a user
+    
+    Notes: the challenge id is added for testing otherwise is hard to locate the specific post
+    """
+    RECENT_DAYS = 5
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=RECENT_DAYS)
+
+    query_result = db.query(models.Post, models.Challenge, models.GroupChallengeMembers)\
+                        .join(models.Challenge, models.Challenge.id == models.Post.challenge_id)\
+                        .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Post.challenge_id)\
+                        .filter(models.GroupChallengeMembers.user_id == user_id)\
+                        .filter(func.date(models.Post.end_time) >= start_date, func.date(models.Post.end_time) <= end_date)\
+                        .order_by(models.Post.created_time)
+
+    duration_data = [[] for _ in range(RECENT_DAYS)]
+    for item in query_result:
+        post_obj, challenge_obj, _ = item
+        duration = get_duration_in_minutes(post_obj.start_time, post_obj.end_time)
+        category = challenge_obj.category
+        
+        post_end_date = post_obj.end_time.date()  
+        day_index = (end_date - post_end_date).days
+        if 0 <= day_index < RECENT_DAYS:
+            duration_data[day_index].append({"value": duration, "category": category, "challenge id": challenge_obj.id})
+
+    return duration_data
