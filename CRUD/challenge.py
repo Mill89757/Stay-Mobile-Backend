@@ -15,6 +15,7 @@ import CRUD.post_reaction as reaction_crud
 import CRUD.post_content as post_content_crud
 from redis_client import redis_client
 from sqlalchemy import func
+from CRUD.user import read_user_by_id
 
 # create challenge
 def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
@@ -257,7 +258,6 @@ def delete_group_challenge_member(db: Session, challenge_id: int, user_id: int):
     db.commit()
 
 
-from CRUD.user import read_user_by_id
 #拿到所有follower的头像
 def get_all_follower_avatars(db: Session, challenge_id: int):
     tracking_objects = (db.query(models.Challenge, models.Tracking)
@@ -466,3 +466,27 @@ def get_challenge_id_by_token(unique_token : str):
         return request_challenge_id.decode('utf-8')  # Redis stores and returns bytes, so convert to string
     else:
         return "Can not found the challenge!"
+
+def challenge_card_by_challengeID(db: Session, challenge_id: int):
+    challenge_basic_info = get_challenge(db, challenge_id)
+    follower_avatars = get_all_follower_avatars(db, challenge_id)[0:5]
+    owner_avatar = get_owner_avatar_by_user_id(db, challenge_basic_info.challenge_owner_id)
+    challenge_details ={
+        "title": challenge_basic_info.title,
+        "description": challenge_basic_info.description,
+        "duration": challenge_basic_info.duration,
+        "breaking_days": challenge_basic_info.breaking_days,
+        "is_public": challenge_basic_info.is_public,
+        "is_finished": challenge_basic_info.is_finished,
+        "created_time": challenge_basic_info.created_time,
+        "category": challenge_basic_info.category,
+        "cover_location": challenge_basic_info.cover_location,
+        "days_left": challenge_basic_info.days_left,
+        "id": challenge_basic_info.id,
+        "finished_time": challenge_basic_info.finished_time,
+        "challenge_owner_id": challenge_basic_info.challenge_owner_id,
+        "course_id": challenge_basic_info.course_id,
+        "user_avatar_location": owner_avatar,
+        "followers": follower_avatars,
+    }
+    return challenge_details
