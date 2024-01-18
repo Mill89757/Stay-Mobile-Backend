@@ -329,6 +329,7 @@ def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: 
         "follwers_avaters": follower_avatars,
         "Course": course_title,
         "owner_avatar": owner_avatar,
+        "cover_location": challenge_basic_info.cover_location,
     }
     return challenge_details
 
