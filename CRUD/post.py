@@ -36,17 +36,26 @@ def create_post(db: Session, post: schemas.PostCreate):
     current_breaking_days_left.breaking_days_left = new_breaking_days_left
     db.commit()
     db.refresh(db_post)
+    # 生成唯一组合键和当天的帖子跟踪键
     today = datetime.now()
     end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
     remaining_time = end_of_day - today
-    redis_key = f"posted_challenges:{today.strftime('%Y-%m-%d')}"
-    redis_client.sadd(redis_key, post.challenge_id)
-    redis_client.expire(redis_key, remaining_time.seconds)
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    unique_key = f"challenge_user:{post.challenge_id}_{post.user_id}_{today_str}"
+    daily_key = f"posted_challenges:{today_str}"
 
-    # 打印 Redis 
-    redis_value = redis_client.smembers(redis_key)
-    print(f"Redis Key: {redis_key}")
-    print(f"Redis Value (challenge_ids): {redis_value}")
+    # 将唯一组合键添加到 Redis 并设置过期时间
+    redis_client.set(unique_key, 'posted')
+    redis_client.expire(unique_key, remaining_time.seconds)
+
+    # 同时将挑战ID和用户ID组合作为值添加到当天的帖子跟踪键中
+    redis_client.sadd(daily_key, f"{post.challenge_id}_{post.user_id}")
+    redis_client.expire(daily_key, remaining_time.seconds)
+
+    # 打印 Redis
+    print(f"Redis Key: {unique_key} and {daily_key}")
+    print(f"Redis Values: {redis_client.get(unique_key)}, {redis_client.smembers(daily_key)}")
+
 
     db_post_content = models.PostContent(
         post_id=db_post.id,

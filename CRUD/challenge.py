@@ -70,38 +70,40 @@ def get_challenge(db: Session, challenge_id: int):
 #                 db.commit()  # 保存到数据库
 
 def update_breaking_days_for_challenges(db: Session):
-    # 获取今天日期的字符串
+    # 获取今天的日期字符串
     today_str = datetime.now().strftime('%Y-%m-%d')
     redis_key = f"posted_challenges:{today_str}"
 
-    # 获取 Redis 中存储的当天已发布帖子的挑战ID集合
-    posted_challenge_ids = {int(challenge_id.decode('utf-8')) for challenge_id in redis_client.smembers(redis_key)}
+    # 获取 Redis 中存储的今天已发布帖子的挑战ID和用户ID组合
+    posted_combinations = {combo.decode('utf-8') for combo in redis_client.smembers(redis_key)}
 
     # 指定的挑战ID列表
     specific_challenge_ids = [10007, 10022, 10025, 10004]
 
     for challenge_id in specific_challenge_ids:
-        # 如果特定挑战ID不在 Redis 集合中，则减少 breaking_days_left
-        if challenge_id not in posted_challenge_ids:
-            # 获取所有属于这个挑战ID的GroupChallengeMembers记录
-            group_challenge_members = db.query(models.GroupChallengeMembers).filter(
-                models.GroupChallengeMembers.challenge_id == challenge_id
-            ).all()     
+        group_challenge_members = db.query(models.GroupChallengeMembers).filter(
+            models.GroupChallengeMembers.challenge_id == challenge_id
+        ).all()
 
-            # 更新每个用户在该挑战中的 breaking_days_left
-            for group_member in group_challenge_members:
+        for group_member in group_challenge_members:
+            # 生成组合键，用于检查是否存在于 Redis 中
+            combo_key = f"{challenge_id}_{group_member.user_id}"
+
+            # 如果组合键不在 Redis 集合中，则减少 breaking_days_left
+            if combo_key not in posted_combinations:
                 if group_member.breaking_days_left > 0:
                     group_member.breaking_days_left -= 1
-                 #如果当天没有发布帖子，且breaking_days_left为0，将is_finished改为True
+
+                # 如果 breaking_days_left 为0，则标记挑战为完成
                 if group_member.breaking_days_left == 0:
-                    challenge_to_finish = db.query(models.Challenge).filter_by(id=group_member.challenge_id).first()
+                    challenge_to_finish = db.query(models.Challenge).filter_by(id=challenge_id).first()
                     if challenge_to_finish and not challenge_to_finish.is_finished:
                         challenge_to_finish.is_finished = True
                         challenge_to_finish.finished_time = datetime.now()
 
+    # 提交所有更改到数据库
+    db.commit()
 
-            # 提交所有更改到数据库
-        db.commit()
 
 
 # read all challenges
