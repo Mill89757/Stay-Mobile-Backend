@@ -1,1 +1,0 @@
-raw_post_pool = r.zrangebyscore(f'recent_posts_for_category{category_code}', 0, float('inf'))
