@@ -21,43 +21,62 @@ def create_post(db: Session, post: schemas.PostCreate):
 
     if new_days_left < 0 or new_breaking_days_left < 0:
         return "Cannot create post as it would result in negative days left or breaking days left"
+    
+    current_days_left = (db.query(models.Challenge).filter(models.Challenge.id == post.challenge_id).first()).days_left
 
-    db_post = models.Post(
-        user_id=post.user_id,
-        challenge_id=post.challenge_id,
-        start_time=post.start_time,
-        end_time=post.end_time,
-        written_text=post.written_text,
-    )
-    db.add(db_post)
-    db.commit()
-    challenge.days_left = new_days_left
-    current_breaking_days_left.breaking_days_left = new_breaking_days_left
-    db.commit()
-    db.refresh(db_post)
-    today = datetime.now()
-    end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
-    remaining_time = end_of_day - today
-    redis_key = f"posted_challenges:{today.strftime('%Y-%m-%d')}"
-    redis_client.sadd(redis_key, post.challenge_id)
-    redis_client.expire(redis_key, remaining_time.seconds)
+    def create_new_post_action():
+        db_post = models.Post(
+            user_id=post.user_id,
+            challenge_id=post.challenge_id,
+            start_time=post.start_time,
+            end_time=post.end_time,
+            written_text=post.written_text,
+        )
+        db.add(db_post)
+        db.commit()
+        if db.query(models.Post).filter(models.Challenge.id == post.challenge_id).first().start_time.date() != datetime.now().date():
 
-    # 打印 Redis 
-    redis_value = redis_client.smembers(redis_key)
-    print(f"Redis Key: {redis_key}")
-    print(f"Redis Value (challenge_ids): {redis_value}")
+            challenge.days_left = new_days_left
+            current_breaking_days_left.breaking_days_left = new_breaking_days_left
+        elif db.query(models.Post).filter(models.Challenge.id == post.challenge_id).first().start_time.date() == datetime.now().date():
+            
+            current_breaking_days_left.breaking_days_left = new_breaking_days_left
+        db.commit()
+        db.refresh(db_post)
+        today = datetime.now()
+        end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
+        remaining_time = end_of_day - today
+        redis_key = f"posted_challenges:{today.strftime('%Y-%m-%d')}"
+        redis_client.sadd(redis_key, post.challenge_id)
+        redis_client.expire(redis_key, remaining_time.seconds)
 
-    db_post_content = models.PostContent(
-        post_id=db_post.id,
-        video_location = None,
-        image_location = post.image_location,
-        voice_location = None,
-    )
-    db.add(db_post_content)
-    db.commit()
-    db.refresh(db_post_content)
+        # 打印 Redis 
+        redis_value = redis_client.smembers(redis_key)
+        print(f"Redis Key: {redis_key}")
+        print(f"Redis Value (challenge_ids): {redis_value}")
 
-    return db_post
+        db_post_content = models.PostContent(
+            post_id=db_post.id,
+            video_location = None,
+            image_location = post.image_location,
+            voice_location = None,
+        )
+        db.add(db_post_content)
+        db.commit()
+        db.refresh(db_post_content)
+
+        return db_post
+    
+    if current_days_left > 1:
+        create_new_post_action
+    elif current_days_left == 1:
+        challenge.is_finished = True
+        db.commit()
+        db.refresh(challenge)
+        create_new_post_action
+    else: 
+        return "The challenge already finished, you can not create new post."
+
 
 # read post by post id
 def get_post(db:Session, post_id: int):
