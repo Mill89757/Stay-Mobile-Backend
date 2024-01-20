@@ -117,3 +117,8 @@ async def get_challenge_details_second_half(challenge_id: int, db:Session = Depe
 @router.get("/getChallengeCategoryDistribution/{user_id}")
 def get_challenge_category_distribution(user_id: int, db: Session = Depends(get_db)):
     return challenge_crud.get_challenge_category_distribution(db, user_id)
+
+@router.get("/GetChallengeCard/{challenge_id}")
+async def get_challenge_card(challenge_id: int, db:Session = Depends(get_db)):
+    result = challenge_crud.challenge_card_by_challengeID(db, challenge_id)
+    return result

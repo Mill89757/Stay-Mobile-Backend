@@ -17,6 +17,7 @@ import CRUD.post_reaction as reaction_crud
 import CRUD.post_content as post_content_crud
 from redis_client import redis_client
 from sqlalchemy import func
+from CRUD.user import read_user_by_id
 
 # create challenge
 def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
@@ -69,38 +70,40 @@ def get_challenge(db: Session, challenge_id: int):
 #                 db.commit()  # 保存到数据库
 
 def update_breaking_days_for_challenges(db: Session):
-    # 获取今天日期的字符串
+    # 获取今天的日期字符串
     today_str = datetime.now().strftime('%Y-%m-%d')
     redis_key = f"posted_challenges:{today_str}"
 
-    # 获取 Redis 中存储的当天已发布帖子的挑战ID集合
-    posted_challenge_ids = {int(challenge_id.decode('utf-8')) for challenge_id in redis_client.smembers(redis_key)}
+    # 获取 Redis 中存储的今天已发布帖子的挑战ID和用户ID组合
+    posted_combinations = {combo.decode('utf-8') for combo in redis_client.smembers(redis_key)}
 
     # 指定的挑战ID列表
     specific_challenge_ids = [10007, 10022, 10025, 10004]
 
     for challenge_id in specific_challenge_ids:
-        # 如果特定挑战ID不在 Redis 集合中，则减少 breaking_days_left
-        if challenge_id not in posted_challenge_ids:
-            # 获取所有属于这个挑战ID的GroupChallengeMembers记录
-            group_challenge_members = db.query(models.GroupChallengeMembers).filter(
-                models.GroupChallengeMembers.challenge_id == challenge_id
-            ).all()     
+        group_challenge_members = db.query(models.GroupChallengeMembers).filter(
+            models.GroupChallengeMembers.challenge_id == challenge_id
+        ).all()
 
-            # 更新每个用户在该挑战中的 breaking_days_left
-            for group_member in group_challenge_members:
+        for group_member in group_challenge_members:
+            # 生成组合键，用于检查是否存在于 Redis 中
+            combo_key = f"{challenge_id}_{group_member.user_id}"
+
+            # 如果组合键不在 Redis 集合中，则减少 breaking_days_left
+            if combo_key not in posted_combinations:
                 if group_member.breaking_days_left > 0:
                     group_member.breaking_days_left -= 1
-                 #如果当天没有发布帖子，且breaking_days_left为0，将is_finished改为True
+
+                # 如果 breaking_days_left 为0，则标记挑战为完成
                 if group_member.breaking_days_left == 0:
-                    challenge_to_finish = db.query(models.Challenge).filter_by(id=group_member.challenge_id).first()
+                    challenge_to_finish = db.query(models.Challenge).filter_by(id=challenge_id).first()
                     if challenge_to_finish and not challenge_to_finish.is_finished:
                         challenge_to_finish.is_finished = True
                         challenge_to_finish.finished_time = datetime.now()
 
+    # 提交所有更改到数据库
+    db.commit()
 
-            # 提交所有更改到数据库
-        db.commit()
 
 
 # read all challenges
@@ -259,7 +262,6 @@ def delete_group_challenge_member(db: Session, challenge_id: int, user_id: int):
     db.commit()
 
 
-from CRUD.user import read_user_by_id
 #拿到所有follower的头像
 def get_all_follower_avatars(db: Session, challenge_id: int):
     tracking_objects = (db.query(models.Challenge, models.Tracking)
@@ -314,7 +316,11 @@ def update_challenge_course_id(db:Session, challenge_id: int, course_id: int):
 def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: int):
     challenge_basic_info = get_challenge(db, challenge_id)
     follower_avatars = get_all_follower_avatars(db, challenge_id)[0:5]
-    course_title = course_crud.read_course_by_id(db, challenge_basic_info.course_id).course_name
+    # handle the case when course_id is None
+    if challenge_basic_info.course_id is not None:
+        course_title = course_crud.read_course_by_id(db, challenge_basic_info.course_id).course_name
+    else:
+        course_title = None
     owner_avatar = get_owner_avatar_by_user_id(db, challenge_basic_info.challenge_owner_id)
     challenge_details ={
         "id": challenge_basic_info.id,
@@ -325,6 +331,7 @@ def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: 
         "follwers_avaters": follower_avatars,
         "Course": course_title,
         "owner_avatar": owner_avatar,
+        "cover_location": challenge_basic_info.cover_location,
     }
     return challenge_details
 
@@ -478,4 +485,28 @@ def join_group_challenge_by_token_and_user_id(db: Session, unique_token : str, u
     elif request_challenge_id and db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.user_id == user_id).filter(models.GroupChallengeMembers.challenge_id == request_challenge_id).first():
         return "User already joined the group challenge"
     else:
-        return "Can not found the challenge or related User!"
+        return "Can not found the challenge!"
+
+def challenge_card_by_challengeID(db: Session, challenge_id: int):
+    challenge_basic_info = get_challenge(db, challenge_id)
+    follower_avatars = get_all_follower_avatars(db, challenge_id)[0:5]
+    owner_avatar = get_owner_avatar_by_user_id(db, challenge_basic_info.challenge_owner_id)
+    challenge_details ={
+        "title": challenge_basic_info.title,
+        "description": challenge_basic_info.description,
+        "duration": challenge_basic_info.duration,
+        "breaking_days": challenge_basic_info.breaking_days,
+        "is_public": challenge_basic_info.is_public,
+        "is_finished": challenge_basic_info.is_finished,
+        "created_time": challenge_basic_info.created_time,
+        "category": challenge_basic_info.category,
+        "cover_location": challenge_basic_info.cover_location,
+        "days_left": challenge_basic_info.days_left,
+        "id": challenge_basic_info.id,
+        "finished_time": challenge_basic_info.finished_time,
+        "challenge_owner_id": challenge_basic_info.challenge_owner_id,
+        "course_id": challenge_basic_info.course_id,
+        "user_avatar_location": owner_avatar,
+        "followers": follower_avatars,
+    }
+    return challenge_details
