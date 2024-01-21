@@ -21,7 +21,18 @@ from CRUD.user import read_user_by_id
 
 # create challenge
 def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
-    db_challenge = models.Challenge(**challenge.dict())
+    db_challenge = models.Challenge(
+        title=challenge.title,
+        description=challenge.description,
+        duration=challenge.duration,
+        breaking_days=challenge.breaking_days,
+        is_public=challenge.is_public,
+        category=challenge.category,
+        cover_location=challenge.cover_location,
+        challenge_owner_id=challenge.challenge_owner_id,
+        course_id=None,
+        is_completed=None,
+    )
     db.add(db_challenge)
     db.commit()
     db.refresh(db_challenge)
@@ -29,8 +40,11 @@ def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
     db_group_challenge = models.GroupChallengeMembers(
         challenge_id=db_challenge.id, 
         user_id=db_challenge.challenge_owner_id, 
-        breaking_days_left=db_challenge.breaking_days  # Assuming this field exists in your ChallengeCreate schema
+        breaking_days_left=db_challenge.breaking_days,  # Assuming this field exists in your ChallengeCreate schema
+        is_challenge_finished=False,
+        days_left=db_challenge.duration,
     )
+    
     db.add(db_group_challenge)
     db.commit()
     db.refresh(db_group_challenge)
@@ -113,14 +127,14 @@ def get_challenges(db: Session, skip: int = 0, limit: int = 100):
 # read active challenges list of one user by user id
 def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.ChallengeWithBreakingDays]:
     results = (
-        db.query(models.Challenge, models.GroupChallengeMembers.breaking_days_left)
+        db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
-        .filter(models.Challenge.challenge_owner_id == user_id, models.Challenge.is_finished == False)
+        .filter(models.Challenge.challenge_owner_id == user_id, models.Challenge.finished_time == None)
         .all()
     )
     # Create ChallengeWithBreakingDays instances from the results
     active_challenges = []
-    for challenge, breaking_days_left in results:
+    for challenge, group_challenge_members in results:
         challenge_data = schemas.ChallengeWithBreakingDays(
             id=challenge.id,
             title=challenge.title,
@@ -134,10 +148,10 @@ def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.
             cover_location=challenge.cover_location,
             challenge_owner_id=challenge.challenge_owner_id,
             course_id=challenge.course_id,
-            is_finished=challenge.is_finished,
-            days_left=challenge.days_left,
+            is_completed=challenge.is_completed,
+            days_left=group_challenge_members.days_left,
             is_group_challenge=challenge.is_group_challenge,
-            breaking_days_left=breaking_days_left  # Access the attribute from group_member
+            breaking_days_left=group_challenge_members.breaking_days_left  # Access the attribute from group_member
         )
         active_challenges.append(challenge_data)
     
@@ -146,14 +160,14 @@ def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.
 # read finished challenges list of one user by user id
 def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.ChallengeWithBreakingDays]:
     results = (
-        db.query(models.Challenge, models.GroupChallengeMembers.breaking_days_left)
+        db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
-        .filter(models.Challenge.challenge_owner_id == user_id, models.Challenge.is_finished == True)
+        .filter(models.Challenge.challenge_owner_id == user_id, models.Challenge.finished_time != None)
         .all()
     )
     # Create ChallengeWithBreakingDays instances from the results
     finished_challenges = []
-    for challenge, breaking_days_left in results:
+    for challenge, group_challenge_members in results:
         challenge_data = schemas.ChallengeWithBreakingDays(
             id=challenge.id,
             title=challenge.title,
@@ -167,10 +181,10 @@ def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[schema
             cover_location=challenge.cover_location,
             challenge_owner_id=challenge.challenge_owner_id,
             course_id=challenge.course_id,
-            is_finished=challenge.is_finished,
-            days_left=challenge.days_left,
+            is_completed=challenge.is_completed,
+            days_left=group_challenge_members.days_left,
             is_group_challenge=challenge.is_group_challenge,
-            breaking_days_left=breaking_days_left  # Access the attribute from group_member
+            breaking_days_left=group_challenge_members.breaking_days_left  # Access the attribute from group_member
         )
         finished_challenges.append(challenge_data)
     
@@ -249,9 +263,10 @@ def update_challenge(db: Session, challenge_id: int, challenge: schemas.Challeng
 def delete_challenge(db: Session, challenge_id: int):
     db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     if db_challenge is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
+        return False
     db.delete(db_challenge)
     db.commit()
+    return True
 
 # 中途退出group challenge
 def delete_group_challenge_member(db: Session, challenge_id: int, user_id: int):
@@ -274,15 +289,15 @@ def get_all_follower_avatars(db: Session, challenge_id: int):
         all_follower_avatars.append(read_user_by_id(db, i).avatar_location)
     return all_follower_avatars
 #拿到challenge的进度
-def get_challenge_process(duration, breaking_day_left, days_left):
-    challenge_process = (duration - (breaking_day_left + days_left)) / duration
+def get_challenge_process(duration, days_left):
+    challenge_process = days_left / duration
     return challenge_process
 #用challenge_id拿到discover challenge的详细信息
 def get_discover_challenges_by_id(db: Session, id: int):
     challenge_query_result = db.query(models.Challenge, models.GroupChallengeMembers, models.User).join(models.User, models.Challenge.challenge_owner_id == models.User.id).join(
             models.GroupChallengeMembers, models.Challenge.id == models.GroupChallengeMembers.challenge_id).filter(models.Challenge.id == id).first()
     challenge_obj, group_challenge_members_obj, user_obj = challenge_query_result[0], challenge_query_result[1], challenge_query_result[2]
-    challenge_process = get_challenge_process(challenge_obj.duration,group_challenge_members_obj.breaking_days_left, challenge_obj.days_left)
+    challenge_process = get_challenge_process(challenge_obj.duration, group_challenge_members_obj.days_left)
     follower_avatars = get_all_follower_avatars(db, challenge_obj.id)
     challenge_detail = {"id": challenge_obj.id,
                         "title": challenge_obj.title,
@@ -297,7 +312,7 @@ def get_discover_challenges_by_id(db: Session, id: int):
 #返回一个list，包含所有discover challenge的详细信息
 def get_discover_challenges(db: Session):
     discover_challenges = []
-    challenges = db.query(models.Challenge).filter(models.Challenge.is_finished == False).all()#这里可以用limit（）改成想要的数量
+    challenges = db.query(models.Challenge).filter(models.Challenge.finished_time != None).all()#这里可以用limit（）改成想要的数量
     for challenge in challenges:
         challenge_detail = get_discover_challenges_by_id(db, challenge.id)
         discover_challenges.append(challenge_detail)
@@ -417,7 +432,7 @@ def compare_created_time_by_challenge_id(db: Session, challenge_id:int):
         print("False")
         return False  # or handle as appropriate if the challenge is not found
 
-def generate_invitation_link(db : Session, challenge_id : int):
+def generate_invitation_code(db : Session, challenge_id : int):
     
     unique_token = ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))
 

@@ -45,15 +45,17 @@ class Challenge(Base):
     cover_location = Column(String)
     challenge_owner_id = Column(ForeignKey("User.id"), nullable=False)
     course_id = Column(ForeignKey("course.id"), nullable=True)
-    is_finished = Column(Boolean, default= False ,nullable=False)
-    days_left = Column(Integer)
-    is_group_challenge = Column(Boolean, default=False, nullable=False)
+    is_completed = Column(Boolean, default=False ,nullable=True)
+    is_group_challenge = Column(Boolean, default=False, nullable=True) 
 
 class GroupChallengeMembers(Base):
     __tablename__ = "groupchallengemembers"
     challenge_id = Column(Integer, ForeignKey('challenge.id'), primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('User.id'), primary_key=True, index=True)
     breaking_days_left = Column(Integer,nullable=False)
+    is_challenge_finished = Column(Boolean, default=False, nullable=False)
+    days_left = Column(Integer, nullable=False)
+
 
 
 class Post(Base):
