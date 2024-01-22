@@ -58,31 +58,6 @@ def get_challenge(db: Session, challenge_id: int):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
 
-# def update_breaking_days_for_challenges(db: Session):
-#     # 获取今天日期的字符串
-#     today_str = datetime.now().strftime('%Y-%m-%d')
-#     redis_key = f"posted_challenges:{today_str}"
-    
-#     # 获取 Redis 中存储的当天已发布帖子的挑战ID集合
-#     posted_challenge_ids = {int(challenge_id.decode('utf-8')) for challenge_id in redis_client.smembers(redis_key)}
-    
-#     # 获取所有挑战
-#     all_challenges = db.query(models.Challenge).filter(models.Challenge.is_finished == False).all()
-    
-#     for challenge in all_challenges:
-#         # 如果挑战ID不在 Redis 集合中，则减少 breaking_days_left
-#         if challenge.id not in posted_challenge_ids:
-#             # 获取对应的 GroupChallengeMembers 记录
-#             group_challenge_member = db.query(models.GroupChallengeMembers).filter(
-#                 models.GroupChallengeMembers.challenge_id == challenge.id,
-#                 models.GroupChallengeMembers.user_id == challenge.challenge_owner_id
-#             ).first()
-            
-#             # 如果找到记录，并且 breaking_days_left 大于0，进行更新
-#             if group_challenge_member and group_challenge_member.breaking_days_left > 0:
-#                 group_challenge_member.breaking_days_left -= 1
-#                 db.commit()  # 保存到数据库
-
 def update_breaking_days_for_challenges(db: Session):
     # 获取今天的日期字符串
     today_str = datetime.now().strftime('%Y-%m-%d')
@@ -111,8 +86,8 @@ def update_breaking_days_for_challenges(db: Session):
                 # 如果 breaking_days_left 为0，则标记挑战为完成
                 if group_member.breaking_days_left == 0:
                     challenge_to_finish = db.query(models.Challenge).filter_by(id=challenge_id).first()
-                    if challenge_to_finish and not challenge_to_finish.is_finished:
-                        challenge_to_finish.is_finished = True
+                    if challenge_to_finish and not challenge_to_finish.is_completed:
+                        challenge_to_finish.is_completed = True
                         challenge_to_finish.finished_time = datetime.now()
 
     # 提交所有更改到数据库
@@ -512,11 +487,10 @@ def challenge_card_by_challengeID(db: Session, challenge_id: int):
         "duration": challenge_basic_info.duration,
         "breaking_days": challenge_basic_info.breaking_days,
         "is_public": challenge_basic_info.is_public,
-        "is_finished": challenge_basic_info.is_finished,
+        "is_completed": challenge_basic_info.is_completed,
         "created_time": challenge_basic_info.created_time,
         "category": challenge_basic_info.category,
         "cover_location": challenge_basic_info.cover_location,
-        "days_left": challenge_basic_info.days_left,
         "id": challenge_basic_info.id,
         "finished_time": challenge_basic_info.finished_time,
         "challenge_owner_id": challenge_basic_info.challenge_owner_id,
