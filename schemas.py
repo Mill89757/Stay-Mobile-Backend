@@ -12,9 +12,10 @@ class UsersRequest(BaseModel):
     name: str
     username: str
     email_address: str
-    created_time:Optional[datetime] = None
+    created_time: Optional[datetime] = None
     avatar_location: Optional[str] = None
     is_completed: Optional[bool] = False#默认false
+    user_timezone: str
 
 class UsersResponse(BaseModel):
     id: int
@@ -22,9 +23,10 @@ class UsersResponse(BaseModel):
     name: str
     username: str
     email_address: str
-    created_time: datetime
+    created_time:  Optional[datetime] = None
     avatar_location: str
     is_completed: bool
+    user_timezone: str
 
     class Config:
         orm_mode = True
