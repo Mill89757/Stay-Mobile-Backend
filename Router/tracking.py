@@ -29,6 +29,8 @@ def get_tracking_by_challenge_id(challenge_id: int, db: Session = Depends(get_db
     tracking = crud.read_tracking_by_challenge_id(db, challenge_id)
     if tracking is None:
         raise HTTPException(status_code=404, detail="challenge not found")
+    elif len(tracking) == 0:
+        raise HTTPException(status_code=404, detail="no tracking found")
     return tracking
 
 # read follower avatar_location by challenge_id拿到challenge_id的所有tracking，再拿到每个tracking的follower_id，再拿到每个follower的avatar_location
