@@ -71,3 +71,8 @@ async def delete_post_route(post_id: int, db: Session = Depends(get_db)):
     if not post_crud.delete_post(db=db, post_id=post_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found or has been deleted")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Post deleted successfully"})
+
+# read the recent post duration for a user
+@router.get("/GetRecentPostDuration/{user_id}")
+async def get_recent_post_duration(user_id: int, db: Session = Depends(get_db)):
+    return post_crud.get_recent_post_duration(db, user_id)

@@ -12,9 +12,10 @@ class UsersRequest(BaseModel):
     name: str
     username: str
     email_address: str
-    created_time:Optional[datetime] = None
+    created_time: Optional[datetime] = None
     avatar_location: Optional[str] = None
     is_completed: Optional[bool] = False#默认false
+    user_timezone: str
 
 class UsersResponse(BaseModel):
     id: int
@@ -22,9 +23,10 @@ class UsersResponse(BaseModel):
     name: str
     username: str
     email_address: str
-    created_time: datetime
+    created_time:  Optional[datetime] = None
     avatar_location: str
     is_completed: bool
+    user_timezone: str
 
     class Config:
         orm_mode = True
@@ -101,6 +103,10 @@ class PostCreate(BaseModel):
     start_time: datetime
     end_time: datetime
     written_text: str
+    image_location: Optional[str] = None
+    #when creating a post, the image_location is optional, because the user may not upload an image
+    #create post will create a post and a post_content at the same time
+    #if user wants to upload an image, the image_location will be updated in the post_content table
 
 class PostRead(PostBase):
     id: int
@@ -177,6 +183,8 @@ class CourseResponse(BaseModel):
     category:int
     description:str
     cover_location:str
+    source_link:str
+    short_intro:str
 
     class Config:
         orm_mode = True

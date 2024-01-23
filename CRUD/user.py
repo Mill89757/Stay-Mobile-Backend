@@ -34,7 +34,8 @@ def create_user(db: Session, user: schemas.UsersRequest):
         # created_time=convert_datetime(user.created_time),
         created_time = user.created_time,
         avatar_location=user.avatar_location,
-        is_completed=user.is_completed
+        is_completed=user.is_completed,
+        user_timezone = user.user_timezone
     )
     db.add(db_user)
     db.commit()

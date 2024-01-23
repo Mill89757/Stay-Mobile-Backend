@@ -4,42 +4,68 @@ import models, schemas
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 import models, schemas
+from sqlalchemy import desc, func
 import redis
 from datetime import datetime, timedelta
-
 redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
+
 
 def create_post(db: Session, post: schemas.PostCreate):
     
     challenge = db.query(models.Challenge).filter(models.Challenge.id == post.challenge_id).first()
-    curent_breaking_days_left = (db .query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).filter(models.GroupChallengeMembers.user_id == post.user_id).first())
+    current_breaking_days_left = (db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).filter(models.GroupChallengeMembers.user_id == post.user_id).first())
     if not challenge:
         return "Challenge not found"
 
     new_days_left = challenge.days_left - 1
-    new_breaking_days_left = curent_breaking_days_left.breaking_days_left - (1 if post.start_time == post.end_time else 0)
+    new_breaking_days_left = current_breaking_days_left.breaking_days_left - (1 if post.start_time == post.end_time else 0)
 
     if new_days_left < 0 or new_breaking_days_left < 0:
         return "Cannot create post as it would result in negative days left or breaking days left"
 
-    db_post = models.Post(**post.dict())
+    db_post = models.Post(
+        user_id=post.user_id,
+        challenge_id=post.challenge_id,
+        start_time=post.start_time,
+        end_time=post.end_time,
+        written_text=post.written_text,
+    )
     db.add(db_post)
     db.commit()
     challenge.days_left = new_days_left
-    curent_breaking_days_left.breaking_days_left = new_breaking_days_left
+    current_breaking_days_left.breaking_days_left = new_breaking_days_left
     db.commit()
     db.refresh(db_post)
+    # 生成唯一组合键和当天的帖子跟踪键
     today = datetime.now()
     end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
     remaining_time = end_of_day - today
-    redis_key = f"posted_challenges:{today.strftime('%Y-%m-%d')}"
-    redis_client.sadd(redis_key, post.challenge_id)
-    redis_client.expire(redis_key, remaining_time.seconds)
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    unique_key = f"challenge_user:{post.challenge_id}_{post.user_id}_{today_str}"
+    daily_key = f"posted_challenges:{today_str}"
 
-    # 打印 Redis 
-    redis_value = redis_client.smembers(redis_key)
-    print(f"Redis Key: {redis_key}")
-    print(f"Redis Value (challenge_ids): {redis_value}")
+    # 将唯一组合键添加到 Redis 并设置过期时间
+    redis_client.set(unique_key, 'posted')
+    redis_client.expire(unique_key, remaining_time.seconds)
+
+    # 同时将挑战ID和用户ID组合作为值添加到当天的帖子跟踪键中
+    redis_client.sadd(daily_key, f"{post.challenge_id}_{post.user_id}")
+    redis_client.expire(daily_key, remaining_time.seconds)
+
+    # 打印 Redis
+    print(f"Redis Key: {unique_key} and {daily_key}")
+    print(f"Redis Values: {redis_client.get(unique_key)}, {redis_client.smembers(daily_key)}")
+
+
+    db_post_content = models.PostContent(
+        post_id=db_post.id,
+        video_location = None,
+        image_location = post.image_location,
+        voice_location = None,
+    )
+    db.add(db_post_content)
+    db.commit()
+    db.refresh(db_post_content)
 
     return db_post
 
@@ -52,7 +78,7 @@ def get_post(db:Session, post_id: int):
 
 # read all posts
 def get_posts(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Post).offset(skip).limit(limit).all()
+    return db.query(models.Post).order_by(desc(models.Post.created_time)).offset(skip).limit(limit).all()
 
 # read posts of one user by user id
 def get_posts_by_user_id(db: Session, user_id: int) -> List[models.Post]:
@@ -90,3 +116,40 @@ def delete_post(db: Session, post_id: int):
     db.delete(db_post)
     db.commit()
     return {"detail": "Post has been deleted"}
+
+# read the recent post duration for a user
+def get_duration_in_minutes(start_time, end_time):
+    if start_time and end_time:
+        duration = end_time - start_time
+        return int(duration.total_seconds() / 60)
+    return 0
+
+
+def get_recent_post_duration(db: Session, user_id: int):
+    """ Return the duration of posts in the last 5 days for a user
+    
+    Notes: the challenge id is added for testing otherwise is hard to locate the specific post
+    """
+    RECENT_DAYS = 5
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=RECENT_DAYS)
+
+    query_result = db.query(models.Post, models.Challenge, models.GroupChallengeMembers)\
+                        .join(models.Challenge, models.Challenge.id == models.Post.challenge_id)\
+                        .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Post.challenge_id)\
+                        .filter(models.GroupChallengeMembers.user_id == user_id)\
+                        .filter(func.date(models.Post.end_time) >= start_date, func.date(models.Post.end_time) <= end_date)\
+                        .order_by(models.Post.created_time)
+
+    duration_data = [[] for _ in range(RECENT_DAYS)]
+    for item in query_result:
+        post_obj, challenge_obj, _ = item
+        duration = get_duration_in_minutes(post_obj.start_time, post_obj.end_time)
+        category = challenge_obj.category
+        
+        post_end_date = post_obj.end_time.date()  
+        day_index = (end_date - post_end_date).days
+        if 0 <= day_index < RECENT_DAYS:
+            duration_data[day_index].append({"value": duration, "category": category, "challenge id": challenge_obj.id})
+
+    return duration_data

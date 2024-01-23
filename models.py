@@ -15,9 +15,10 @@ class User(Base):
     name = Column(String, nullable=False)
     username = Column(String, nullable=False, unique=True)
     email_address = Column(String)
-    created_time = Column(DateTime)
+    created_time = Column(DateTime, default = func.now(), nullable=False)
     avatar_location = Column(String)
     is_completed = Column(Boolean, default=False)
+    user_timezone = Column(String, nullable=False)
 
 class Tracking(Base):
     __tablename__ = "tracking"
@@ -45,15 +46,17 @@ class Challenge(Base):
     cover_location = Column(String)
     challenge_owner_id = Column(ForeignKey("User.id"), nullable=False)
     course_id = Column(ForeignKey("course.id"), nullable=True)
-    is_finished = Column(Boolean, default= False ,nullable=False)
-    days_left = Column(Integer)
-    is_group_challenge = Column(Boolean, default=False, nullable=False)
+    is_completed = Column(Boolean, default=False ,nullable=True)
+    is_group_challenge = Column(Boolean, default=False, nullable=True) 
 
 class GroupChallengeMembers(Base):
     __tablename__ = "groupchallengemembers"
     challenge_id = Column(Integer, ForeignKey('challenge.id'), primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('User.id'), primary_key=True, index=True)
     breaking_days_left = Column(Integer,nullable=False)
+    is_challenge_finished = Column(Boolean, default=False, nullable=False)
+    days_left = Column(Integer, nullable=False)
+
 
 
 class Post(Base):
@@ -93,6 +96,8 @@ class Course(Base):
     category = Column(Integer, nullable= False)
     description = Column(String, nullable=False)
     cover_location = Column(String, nullable=False)
+    source_link = Column(String, nullable=False)
+    short_intro = Column(String, nullable=False)
 
 # craete User_reaction_log class inherited from Base class
 class UserReactionLog(Base):
@@ -119,3 +124,4 @@ class PostReaction(Base):
     post_id = Column(ForeignKey("post.id"), primary_key=True, index=True)
     emoji_image = Column(ForeignKey("emoji.emoji_image"), primary_key=True, index=True)
     count = Column(Integer, nullable= False)
+
