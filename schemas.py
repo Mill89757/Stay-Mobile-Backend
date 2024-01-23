@@ -12,9 +12,10 @@ class UsersRequest(BaseModel):
     name: str
     username: str
     email_address: str
-    created_time:Optional[datetime] = None
+    created_time: Optional[datetime] = None
     avatar_location: Optional[str] = None
-    is_completed: Optional[bool] = False    #   默认false
+    is_completed: Optional[bool] = False#默认false
+    user_timezone: str
 
 class UsersResponse(BaseModel):
     id: int
@@ -22,9 +23,10 @@ class UsersResponse(BaseModel):
     name: str
     username: str
     email_address: str
-    created_time: datetime
+    created_time:  Optional[datetime] = None
     avatar_location: str
     is_completed: bool
+    user_timezone: str
 
     class Config:
         orm_mode = True
@@ -37,13 +39,11 @@ class ChallengeBase(BaseModel):
     duration: Optional[int] = None
     breaking_days: Optional[int] = None
     is_public: bool = False
-    is_completed: Optional[bool] = False
+    is_finished: Optional[bool] = False
     created_time:Optional[datetime] = None
     category: Optional[int] = None
     cover_location: Optional[str] = None
     days_left: Optional[int] = None
-    finished_time: Optional[datetime] = None
-    is_group_challenge: Optional[bool] = False
 
 class ChallengeCreate(BaseModel):
     title: str
@@ -53,16 +53,19 @@ class ChallengeCreate(BaseModel):
     is_public: bool = False
     category: Optional[int] = None
     cover_location: Optional[str] = None
+    days_left: Optional[int] = None
     challenge_owner_id: int
+    # course_id: Optional[int] = None
 
 class ChallengeRead(ChallengeBase):
     id: int
     title: str
     category: int
     duration: int
+    days_left: int
     cover_location: str
     finished_time: Optional[datetime] = None
-    is_completed: bool
+    is_finished: bool
     challenge_owner_id: int
     course_id: Optional[int] = None
 
