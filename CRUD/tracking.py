@@ -23,7 +23,9 @@ def create_tracking(db: Session, tracking: schemas.TrackingsRequest):
 
 # read tracking by challenge_id
 def read_tracking_by_challenge_id(db: Session, challenge_id: int):
-    return db.query(models.Tracking).filter(models.Tracking.challenge_id == challenge_id).all()
+    get_challenge(db, challenge_id)# check if challenge_id exists
+    result = db.query(models.Tracking).filter(models.Tracking.challenge_id == challenge_id).all()
+    return result
 
 # read follower avatar_location by challenge_id拿到challenge_id的所有tracking，再拿到每个tracking的follower_id，再拿到每个follower的avatar_location
 #长度可以记录这个challenge被tracking过多少次，不论终止与否
