@@ -26,6 +26,18 @@ def create_tracking(tracking: schemas.TrackingsRequest, db: Session = Depends(ge
 # read tracking by challenge_id
 @router.get("/challenge/{challenge_id}", response_model=List[schemas.TrackingsResponse])
 def get_tracking_by_challenge_id(challenge_id: int, db: Session = Depends(get_db)):
+    """read tracking by challenge_id
+
+    Args: 
+        challenge_id: id of challenge
+
+    Returns: 
+        tracking record
+    
+    Raises:
+        HTTPException: challenge not found
+        HTTPException: no tracking found
+    """
     tracking = crud.read_tracking_by_challenge_id(db, challenge_id)
     if tracking is None:
         raise HTTPException(status_code=404, detail="challenge not found")
@@ -33,18 +45,38 @@ def get_tracking_by_challenge_id(challenge_id: int, db: Session = Depends(get_db
         raise HTTPException(status_code=404, detail="no tracking found")
     return tracking
 
-# read follower avatar_location by challenge_id拿到challenge_id的所有tracking，再拿到每个tracking的follower_id，再拿到每个follower的avatar_location
-#长度可以记录这个challenge被tracking过多少次，不论终止与否
 @router.get("/challenge/follower/{challenge_id}")
 def get_tracking_by_challenge_id(challenge_id: int, db: Session = Depends(get_db)):
+    """read all follower avatar_location by challenge_id, is_terminated is False/True
+
+    Args:
+        challenge_id: id of challenge
+
+    Returns:
+        list of follower avatar_location
+
+    Raises:
+        HTTPException: challenge not found
+    """
     tracking = crud.read_follower_by_challenge_id(db, challenge_id)
     if tracking is None:
         raise HTTPException(status_code=404, detail="challenge not found")
     return tracking
 
-# read all activated tracking by user_id给定一个user_id，拿到这个user_id的所有activated tracking
 @router.get("/follower/data/{follower_id}")
 def get_activated_tracking_challenge_data_by_follower_id(follower_id: int, db: Session = Depends(get_db)):
+    """
+    read all activated tracking by user_id
+
+    Args:
+        follower_id: id of follower
+        
+    Returns:
+        list of tracking record
+    
+    Raises:
+        HTTPException: follower not found
+    """
     tracking = crud.read_activated_tracking_challenge_data_by_follower_id(db, follower_id)
     if tracking is None:
         raise HTTPException(status_code=404, detail="follower not found")
