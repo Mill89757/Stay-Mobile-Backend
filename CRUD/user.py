@@ -7,23 +7,6 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-
-# convert string to datetime (keep it here for now)
-# def convert_datetime(string):
-#     split_list = re.split("-|:| ", string)
-#     temp_list = []
-#     for i in split_list:
-#         temp_list.append(int(i))
-#     result = datetime(
-#         temp_list[0],
-#         temp_list[1],
-#         temp_list[2],
-#         temp_list[3],
-#         temp_list[4],
-#         temp_list[5],
-#     )
-#     return result
-
 #create user
 def create_user(db: Session, user: schemas.UsersRequest):
     db_user = models.User(

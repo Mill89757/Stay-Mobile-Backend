@@ -21,15 +21,35 @@ def create_tracking(db: Session, tracking: schemas.TrackingsRequest):
     else:
         return None
 
-# read tracking by challenge_id
 def read_tracking_by_challenge_id(db: Session, challenge_id: int):
+    """read tracking by challenge_id
+
+    Args: 
+        challenge_id: id of challenge
+
+    Returns: 
+        tracking record
+    
+    Raises:
+        HTTPException: challenge not found
+        HTTPException: no tracking found
+    """
     get_challenge(db, challenge_id)# check if challenge_id exists
     result = db.query(models.Tracking).filter(models.Tracking.challenge_id == challenge_id).all()
     return result
 
-# read follower avatar_location by challenge_id拿到challenge_id的所有tracking，再拿到每个tracking的follower_id，再拿到每个follower的avatar_location
-#长度可以记录这个challenge被tracking过多少次，不论终止与否
 def read_follower_by_challenge_id(db: Session, challenge_id: int):
+    """read all follower avatar_location by challenge_id, is_terminated is False/True
+
+    Args:
+        challenge_id: id of challenge
+
+    Returns:
+        list of follower avatar_location
+
+    Raises:
+        HTTPException: challenge not found
+    """
     challenge_tracking = db.query(models.Challenge, models.Tracking)\
         .join(models.Tracking, models.Challenge.id == models.Tracking.challenge_id)\
         .order_by(models.Tracking.created_time).filter(models.Tracking.challenge_id == challenge_id).limit(10).all()
@@ -41,8 +61,19 @@ def read_follower_by_challenge_id(db: Session, challenge_id: int):
         result.append(follower_avatar)
     return result
 
-# read all activated tracking by user_id给定一个user_id，拿到这个user_id的所有activated tracking
 def read_activated_tracking_challenge_data_by_follower_id(db: Session, follower_id: int):
+    """
+    read all activated tracking by user_id
+
+    Args:
+        follower_id: id of follower
+        
+    Returns:
+        list of tracking record
+    
+    Raises:
+        HTTPException: follower not found
+    """
     db_activated_tracking = db.query(models.Tracking).filter(
         models.Tracking.follower_id == follower_id).filter(models.Tracking.is_terminated == False).all()
     result = []
