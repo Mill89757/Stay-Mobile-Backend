@@ -16,23 +16,15 @@ def create_post(db: Session, post: schemas.PostCreate):
     group_challenge_members = db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).first()
     current_breaking_days_left = (db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).filter(models.GroupChallengeMembers.user_id == post.user_id).first())
     if not challenge:
-        return "Challenge not found"
+        return "Cannot create post, Challenge not found"
 
     new_days_left = group_challenge_members.days_left - 1
     new_breaking_days_left = current_breaking_days_left.breaking_days_left - (1 if post.start_time == post.end_time else 0)
 
     if new_days_left < 0 or new_breaking_days_left < 0:
         return "Cannot create post as it would result in negative days left or breaking days left"
-
-    if group_challenge_members.days_left > 1:
-        create_post_action
-    elif group_challenge_members.days_left == 1:
-        if challenge.is_group_challenge is False:
-            create_post_action
-            
     
-    
-    def create_post_action():
+    def create_post_action(db: Session, post: schemas.PostCreate):
         db_post = models.Post(
             user_id=post.user_id,
             challenge_id=post.challenge_id,
@@ -78,6 +70,31 @@ def create_post(db: Session, post: schemas.PostCreate):
         db.refresh(db_post_content)
 
         return db_post
+
+    if group_challenge_members.days_left > 1 and challenge.is_completed is False:
+        result = create_post_action(db, post)
+        return result
+    elif group_challenge_members.days_left == 1:
+        if challenge.is_group_challenge is False:
+            result = create_post_action(db, post)
+            challenge.is_completed = True
+            group_challenge_members.is_challenge_finished = True
+            challenge.finished_time = post.end_time
+            return result
+        elif challenge.is_group_challenge is True:
+            result = create_post_action(db, post)
+            group_challenge_members.is_challenge_finished = True
+            other_group_members = db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).all() 
+            for items in other_group_members:
+                if items.is_challenge_finished is True:
+                    challenge.is_completed = True
+                    challenge.finished_time = post.end_time
+                    return result
+    else:
+        return "Cannot create post, no days left for the challenge"
+    
+    
+    
 
 # read post by post id
 def get_post(db:Session, post_id: int):
