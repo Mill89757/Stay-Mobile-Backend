@@ -71,8 +71,12 @@ def get_challenge(db: Session, challenge_id: int):
     return challenge
 
 def update_breaking_days_for_challenges(db: Session):
-    # 获取今天的日期字符串
-    today_str = datetime.now().strftime('%Y-%m-%d')
+    # 获取今天的日期字符串,并且处理这个function的时间由时区决定
+    sydney_tz = pytz.timezone('Australia/Sydney')
+    today = datetime.now(sydney_tz).date()
+    today_str = today.strftime('%Y-%m-%d')
+
+   
     redis_key = f"posted_challenges:{today_str}"
 
     # 获取 Redis 中存储的今天已发布帖子的挑战ID和用户ID组合
@@ -90,17 +94,33 @@ def update_breaking_days_for_challenges(db: Session):
             # 生成组合键，用于检查是否存在于 Redis 中
             combo_key = f"{challenge_id}_{group_member.user_id}"
 
-            # 如果组合键不在 Redis 集合中，则减少 breaking_days_left
+            # 如果组合键不在 Redis 集合中，则减少 breaking_days_left, days_left, 并生成一条用户的帖子记录
             if combo_key not in posted_combinations:
                 if group_member.breaking_days_left > 0:
-                    group_member.breaking_days_left -= 1
-
+                    if group_member.days_left > 0:
+                        group_member.breaking_days_left -= 1
+                        group_member.days_left -= 1
+                        #generate a post record for the user called "I have a break"
+                        db_post = models.Post(
+                            user_id=group_member.user_id,
+                            challenge_id=challenge_id,
+                            #change the start time to today at 23:59:59
+                            start_time=datetime.now().replace(hour=23, minute=59, second=59),
+                            end_time=datetime.now().replace(hour=23, minute=59, second=59),
+                            written_text="I have a break",
+                        )
+                        db.add(db_post)
+                        db.commit()
+                        db.refresh(db_post)
                 # 如果 breaking_days_left 为0，则标记挑战为完成
-                if group_member.breaking_days_left == 0:
-                    challenge_to_finish = db.query(models.Challenge).filter_by(id=challenge_id).first()
-                    if challenge_to_finish and not challenge_to_finish.is_completed:
-                        challenge_to_finish.is_completed = True
-                        challenge_to_finish.finished_time = datetime.now()
+                elif group_member.breaking_days_left == 0:
+                    challenge_to_completed = db.query(models.Challenge).filter_by(id=challenge_id).first()
+                    challenge_to_finished = db.query(models.GroupChallengeMembers).filter_by(challenge_id=challenge_id).filter_by(user_id=group_member.user_id).first()
+                    if challenge_to_completed and not challenge_to_completed.is_completed:
+                        challenge_to_completed.is_completed = False
+                        challenge_to_finished.is_challenge_finished = True
+                        challenge_to_completed.finished_time = datetime.now()
+                        db.commit()
 
     # 提交所有更改到数据库
     db.commit()
