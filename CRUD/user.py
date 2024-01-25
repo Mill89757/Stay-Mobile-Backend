@@ -30,11 +30,18 @@ def read_users(db: Session):
 
 #read user by id
 def read_user_by_id(db: Session, id: int):
-    return db.query(models.User).filter(models.User.id == id).first()
+    user = db.query(models.User).filter(models.User.id == id).first()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
+    
 
 #read user by firebase_uid (for login)
 def read_user_by_firebase_uid(db: Session, firebase_uid: str):
-    return db.query(models.User).filter(models.User.firebase_uid == firebase_uid).first()
+    user = db.query(models.User).filter(models.User.firebase_uid == firebase_uid).first()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
 
 #update user
 def update_user(db: Session, id: int, user: schemas.UsersRequest):

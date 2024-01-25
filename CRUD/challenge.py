@@ -18,6 +18,7 @@ import CRUD.post_content as post_content_crud
 from redis_client import redis_client
 from sqlalchemy import func
 from CRUD.user import read_user_by_id
+from CRUD.course import read_course_by_id
 
 # create challenge
 def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
@@ -53,6 +54,17 @@ def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
 
 # read challenge by id
 def get_challenge(db: Session, challenge_id: int):
+    """read challenge by id
+    
+    Args:
+        challenge_id: id of challenge
+
+    Returns:
+        challenge
+    
+    Raises:
+        HTTPException: challenge not found
+    """
     challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     if challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
@@ -93,14 +105,21 @@ def update_breaking_days_for_challenges(db: Session):
     # 提交所有更改到数据库
     db.commit()
 
-
-
 # read all challenges
 def get_challenges(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Challenge).offset(skip).limit(limit).all()
 
 # read active challenges list of one user by user id
 def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.ChallengeWithBreakingDays]:
+    """read active challenges list of one user by user id
+    
+    Args:
+        user_id: id of user
+    
+    Returns:
+        active_challenges: list of active challenges
+    """
+    read_user_by_id(db, user_id)#handle user not found
     results = (
         db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
@@ -134,6 +153,15 @@ def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.
 
 # read finished challenges list of one user by user id
 def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.ChallengeWithBreakingDays]:
+    """read finished challenges list of one user by user id
+    
+    Args:
+        user_id: id of user
+
+    Returns:
+        finished_challenges: list of finished challenges
+    """
+    read_user_by_id(db, user_id)#handle user not found
     results = (
         db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
@@ -167,6 +195,18 @@ def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[schema
 
 # read challenges list by course id
 def get_challenges_by_course_id(db: Session, course_id: int) -> List[models.Challenge]:
+    """read challenges list by course id
+    
+    Args:
+        course_id: id of course
+        
+    Returns:
+        challenges_with_course_id: list of challenges
+    
+    Raises:
+        HTTPException: Course not found
+    """
+    read_course_by_id(db, course_id)#handle course not found
     challenges_with_course_id = (
         db.query(models.Challenge)
         .filter(models.Challenge.course_id == course_id)
@@ -175,6 +215,18 @@ def get_challenges_by_course_id(db: Session, course_id: int) -> List[models.Chal
     return challenges_with_course_id
 
 def get_last_challenge_by_user_id(db: Session, user_id: int):
+    """read last challenge of one user by user id
+    
+    Args:
+        user_id: id of user
+
+    Returns:
+        last_challenge: last challenge
+    
+    Raises:
+        HTTPException: user not found
+    """
+    read_user_by_id(db, user_id)#handle user not found
     last_challenge = (db.query(models.Challenge)
         .filter(models.Challenge.challenge_owner_id == user_id)
         .order_by(desc(models.Challenge.created_time)).first()
@@ -182,6 +234,21 @@ def get_last_challenge_by_user_id(db: Session, user_id: int):
     return last_challenge
 
 def get_challenge_breaking_days_left(db: Session, user_id: int, challenge_id):
+    """read challenge breaking days left by user id and challenge id
+    
+    Args:
+        user_id: id of user
+        challenge_id: id of challenge
+        
+    Returns:
+        challenge_breaking_days_left: challenge breaking days left
+    
+    Raises:
+        HTTPException: user not found
+        HTTPException: challenge not found
+    """
+    read_user_by_id(db, user_id)#handle user not found
+    get_challenge(db, challenge_id)#handle challenge not found
     challenge_breaking_days_left = (db.query(models.GroupChallengeMembers)
                                     .filter(models.GroupChallengeMembers.
                                             challenge_id == challenge_id, 
@@ -245,9 +312,18 @@ def delete_challenge(db: Session, challenge_id: int):
 
 # 中途退出group challenge
 def delete_group_challenge_member(db: Session, challenge_id: int, user_id: int):
+    """delete group challenge member by challenge id and user id
+
+    Args:
+        challenge_id: id of challenge
+        user_id: id of user
+
+    Raises:
+        Challenge not found or member not found
+    """
     db_group_challenge_member = db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == challenge_id).filter(models.GroupChallengeMembers.user_id == user_id).first()
     if db_group_challenge_member is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found or member not found")
     db.delete(db_group_challenge_member)
     db.commit()
 
@@ -263,10 +339,12 @@ def get_all_follower_avatars(db: Session, challenge_id: int):
     for i in all_follower_ids:
         all_follower_avatars.append(read_user_by_id(db, i).avatar_location)
     return all_follower_avatars
+
 #拿到challenge的进度
 def get_challenge_process(duration, days_left):
     challenge_process = days_left / duration
     return challenge_process
+
 #用challenge_id拿到discover challenge的详细信息
 def get_discover_challenges_by_id(db: Session, id: int):
     challenge_query_result = db.query(models.Challenge, models.GroupChallengeMembers, models.User).join(models.User, models.Challenge.challenge_owner_id == models.User.id).join(
@@ -286,14 +364,26 @@ def get_discover_challenges_by_id(db: Session, id: int):
 
 #返回一个list，包含所有discover challenge的详细信息
 def get_discover_challenges(db: Session):
+    """read discover challenges"""
     discover_challenges = []
     challenges = db.query(models.Challenge).filter(models.Challenge.finished_time != None).all()#这里可以用limit（）改成想要的数量
     for challenge in challenges:
         challenge_detail = get_discover_challenges_by_id(db, challenge.id)
         discover_challenges.append(challenge_detail)
     return discover_challenges
-# update challenge & course relastionship by challenge id and course id
+
+# update challenge & course relationship by challenge id and course id
 def update_challenge_course_id(db:Session, challenge_id: int, course_id: int):
+    """update challenge course_id by challenge id and course id
+    
+    Args:
+        challenge_id: id of challenge
+        course_id: id of course
+
+    Raises:
+        HTTPException: challenge not found
+        HTTPException: challenge has been already linked to course
+    """
     db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     if db_challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
@@ -304,6 +394,17 @@ def update_challenge_course_id(db:Session, challenge_id: int, course_id: int):
     return db_challenge
 
 def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: int):
+    """read first half information need by challenge details page by challenge_id
+    
+    Args:
+        challenge_id: id of challenge
+        
+    Returns:
+        result: first half information need by challenge details page
+    
+    Raises:
+        HTTPException: challenge not found
+    """
     challenge_basic_info = get_challenge(db, challenge_id)
     follower_avatars = get_all_follower_avatars(db, challenge_id)[0:5]
     # handle the case when course_id is None
@@ -318,7 +419,7 @@ def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: 
         "DisplayName": get_name_by_user_id(db, challenge_basic_info.challenge_owner_id),
         "Username": get_userName_by_user_id(db, challenge_basic_info.challenge_owner_id),
         "Description": challenge_basic_info.description,
-        "follwers_avaters": follower_avatars,
+        "followers_avatars": follower_avatars,
         "Course": course_title,
         "owner_avatar": owner_avatar,
         "cover_location": challenge_basic_info.cover_location,
@@ -359,6 +460,17 @@ def reformat_reaction_count_list(db:Session, post_id: int):
 
 
 def challenge_details_page_second_half_by_challengeID(db: Session, challenge_id: int):
+    """read first half information need by challenge details page by challenge_id
+    
+    Args:
+        challenge_id: id of challenge
+        
+    Returns:
+        result: first half information need by challenge details page
+    
+    Raises:
+        HTTPException: challenge not found
+    """
     db_post_details = db.query(
         models.Post, models.PostContent, models.PostReaction, models.GroupChallengeMembers
     ).join(
@@ -408,7 +520,14 @@ def compare_created_time_by_challenge_id(db: Session, challenge_id:int):
         return False  # or handle as appropriate if the challenge is not found
 
 def generate_invitation_code(db : Session, challenge_id : int):
+    """generate invitation code by challenge_id
     
+    Args:
+        challenge_id: id of challenge
+        
+    Returns:
+        invitation code
+    """
     unique_token = ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))
 
     if redis_client.get(challenge_id) is None and compare_created_time_by_challenge_id(db, challenge_id):
@@ -424,12 +543,24 @@ def generate_invitation_code(db : Session, challenge_id : int):
         print(redis_client.get(unique_token))
         today = datetime.now()
         print(today)
-        return "Invitation link already exsist or the link has been expired."
+        return "Invitation link already exist or the link has been expired."
 
     print(today)
     return f"invitation code:{unique_token}"
 
 def get_challenge_category_distribution(db: Session, user_id: int):
+    """read challenge category distribution by user id
+    
+    Args:
+        user_id: id of user
+        
+    Returns:
+        result: list of challenge category distribution
+        
+    Raises:
+        HTTPException: user not found
+    """
+    read_user_by_id(db, user_id)#handle user not found
     count_result = db.query(
         models.Challenge.category,
         func.count(models.GroupChallengeMembers.user_id)
@@ -478,6 +609,17 @@ def join_group_challenge_by_token_and_user_id(db: Session, unique_token : str, u
         return "Can not found the challenge!"
 
 def challenge_card_by_challengeID(db: Session, challenge_id: int):
+    """read information need by challenge card by challenge_id
+
+    Args:
+        challenge_id: id of challenge
+
+    Returns:
+        challenge card information
+    
+    Raises:
+        HTTPException: challenge not found
+    """
     challenge_basic_info = get_challenge(db, challenge_id)
     follower_avatars = get_all_follower_avatars(db, challenge_id)[0:5]
     owner_avatar = get_owner_avatar_by_user_id(db, challenge_basic_info.challenge_owner_id)
