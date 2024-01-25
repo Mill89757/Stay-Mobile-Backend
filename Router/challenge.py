@@ -33,11 +33,22 @@ async def get_challenge_route(challenge_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
 
-# update breaking days for all challenges  test only !!! （Created by Rick）
-# @router.post("/test/update_breaking_days")
-# def test_update_breaking_days(db: Session = Depends(get_db)):
-#     challenge_crud.update_breaking_days_for_challenges(db)
-#     return {"message": "Breaking days updated successfully for all challenges"}
+TIMEZONE_MAPPING = {
+    "Sydney": "Australia/Sydney",
+    "Perth": "Australia/Perth",
+    "Brisbane": "Australia/Brisbane",
+    "Beijing": "Asia/Shanghai"
+}
+# update breaking days for specific challenges
+@router.post("/test/update_breaking_days/{timezone}")
+def test_update_breaking_days(timezone: str, db: Session = Depends(get_db)):
+    specific_challenge_ids = [10007, 10022, 10025, 10004]
+    # 使用映射表来获取正确的时区字符串
+    full_timezone_str = TIMEZONE_MAPPING.get(timezone, "UTC")
+    challenge_crud.update_breaking_days_for_specific_challenges(db, full_timezone_str, specific_challenge_ids)
+    return {"message": f"Breaking days updated successfully for timezone {timezone}"}
+
+
 
 # read all challenges of one user by user id 
 @router.get("/GetUserChallenges/{user_id}", response_model=List[List[schemas.ChallengeWithBreakingDays]])
