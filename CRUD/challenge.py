@@ -154,7 +154,7 @@ def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.
     results = (
         db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
-        .filter(models.Challenge.challenge_owner_id == user_id, models.Challenge.finished_time == None)
+        .filter(models.GroupChallengeMembers.user_id == user_id, models.Challenge.is_completed == False)
         .all()
     )
     # Create ChallengeWithBreakingDays instances from the results
@@ -196,7 +196,7 @@ def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[schema
     results = (
         db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
-        .filter(models.Challenge.challenge_owner_id == user_id, models.Challenge.finished_time != None)
+        .filter(models.GroupChallengeMembers.user_id == user_id, models.Challenge.is_completed == True)
         .all()
     )
     # Create ChallengeWithBreakingDays instances from the results
