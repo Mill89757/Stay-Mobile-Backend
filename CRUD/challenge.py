@@ -641,3 +641,19 @@ def challenge_card_by_challengeID(db: Session, challenge_id: int):
         "followers": follower_avatars,
     }
     return challenge_details
+
+def get_group_challenge_members(db: Session, challenge_id: int):
+    """read group challenge members by challenge_id
+
+    Args:
+        challenge_id: id of challenge
+
+    Returns:
+        group challenge members
+    
+    Raises:
+        HTTPException: challenge not found
+    """
+    get_challenge(db, challenge_id)#handle challenge not found
+    group_challenge_members=db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == challenge_id).all()
+    return group_challenge_members

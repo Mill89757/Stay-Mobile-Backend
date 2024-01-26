@@ -270,3 +270,19 @@ async def get_challenge_card(challenge_id: int, db:Session = Depends(get_db)):
     """
     result = challenge_crud.challenge_card_by_challengeID(db, challenge_id)
     return result
+
+@router.get("/GetGroupChallengeMembers/{challenge_id}")
+async def get_group_challenge_members(challenge_id: int, db:Session = Depends(get_db)):
+    """read group challenge members by challenge_id
+
+    Args:
+        challenge_id: id of challenge
+
+    Returns:
+        group challenge members
+    
+    Raises:
+        HTTPException: challenge not found
+    """
+    result = challenge_crud.get_group_challenge_members(db, challenge_id)
+    return result
