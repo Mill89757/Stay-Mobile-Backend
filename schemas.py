@@ -233,3 +233,16 @@ class ChallengesDiscover(BaseModel):
 
     class Config:
         orm_mode = True
+
+#group challenge member模型
+class GroupChallengesMember(BaseModel):
+    user_id: int
+    breaking_days_left: int
+    days_left: int
+    is_challenge_finished: bool
+    challenge_id: int
+    user_name: str
+    challenge_category: int
+
+    class Config:
+        orm_mode = True

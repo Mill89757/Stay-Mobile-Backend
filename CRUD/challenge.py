@@ -656,5 +656,23 @@ def get_group_challenge_members(db: Session, challenge_id: int):
         HTTPException: challenge not found
     """
     get_challenge(db, challenge_id)#handle challenge not found
-    group_challenge_members=db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == challenge_id).all()
-    return group_challenge_members
+    results = (
+        db.query(models.Challenge, models.GroupChallengeMembers, models.User)
+        .join(models.GroupChallengeMembers, models.Challenge.id == models.GroupChallengeMembers.challenge_id)
+        .join(models.User, models.GroupChallengeMembers.user_id == models.User.id)
+        .filter(models.Challenge.id == challenge_id)
+        .all()
+    )
+    group_members_details = []
+    for challenge, group_challenge_members,user in results:
+        data = schemas.GroupChallengesMember(
+            user_id = group_challenge_members.user_id,
+            breaking_days_left = group_challenge_members.breaking_days_left,
+            days_left = group_challenge_members.days_left,
+            is_challenge_finished = group_challenge_members.is_challenge_finished,
+            challenge_id = group_challenge_members.challenge_id,
+            user_name = user.name,
+            challenge_category = challenge.category,
+            )
+        group_members_details.append(data)
+    return group_members_details
