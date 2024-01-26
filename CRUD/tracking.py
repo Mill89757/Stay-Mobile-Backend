@@ -3,6 +3,7 @@ import models
 import schemas
 from CRUD.user import read_user_by_id
 from CRUD.challenge import get_challenge
+from fastapi import HTTPException, status
 
 # create tracking
 def create_tracking(db: Session, tracking: schemas.TrackingsRequest):
@@ -50,6 +51,7 @@ def read_follower_by_challenge_id(db: Session, challenge_id: int):
     Raises:
         HTTPException: challenge not found
     """
+    get_challenge(db, challenge_id)# check if challenge_id exists
     challenge_tracking = db.query(models.Challenge, models.Tracking)\
         .join(models.Tracking, models.Challenge.id == models.Tracking.challenge_id)\
         .order_by(models.Tracking.created_time).filter(models.Tracking.challenge_id == challenge_id).limit(10).all()
@@ -74,6 +76,10 @@ def read_activated_tracking_challenge_data_by_follower_id(db: Session, follower_
     Raises:
         HTTPException: follower not found
     """
+    read_user_by_id(db, follower_id)# check if follower_id exists
+    follower = db.query(models.Tracking).filter(models.Tracking.follower_id == follower_id).first()
+    if follower is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This user haven't followed any challenge")
     db_activated_tracking = db.query(models.Tracking).filter(
         models.Tracking.follower_id == follower_id).filter(models.Tracking.is_terminated == False).all()
     result = []
