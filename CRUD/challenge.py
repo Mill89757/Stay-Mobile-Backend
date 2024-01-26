@@ -454,6 +454,7 @@ def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: 
         "Course": course_title,
         "owner_avatar": owner_avatar,
         "cover_location": challenge_basic_info.cover_location,
+        "is_group_challenge": challenge_basic_info.is_group_challenge,
     }
     return challenge_details
 
