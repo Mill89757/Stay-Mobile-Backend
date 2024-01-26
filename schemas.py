@@ -40,6 +40,7 @@ class ChallengeBase(BaseModel):
     breaking_days: Optional[int] = None
     is_public: bool = False
     is_completed: Optional[bool] = False
+    is_completed: Optional[bool] = False
     created_time:Optional[datetime] = None
     category: Optional[int] = None
     cover_location: Optional[str] = None
@@ -78,14 +79,18 @@ class GroupChallengeMembersBase(BaseModel):
     user_id: int
     days_left: Optional[int] = None
     breaking_days_left: int
+    is_challenge_finished: bool
 
 class GroupChallengeMembersCreate(GroupChallengeMembersBase):
     breaking_days_left: int
     days_left: Optional[int] = None
+    is_challenge_finished: bool
 
 class GroupChallengeMembersRead(GroupChallengeMembersBase):
     breaking_days_left: int
     days_left: Optional[int] = None
+    is_challenge_finished: bool
+
     class Config:
         orm_mode = True
 

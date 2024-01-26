@@ -13,61 +13,89 @@ redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
 def create_post(db: Session, post: schemas.PostCreate):
     
     challenge = db.query(models.Challenge).filter(models.Challenge.id == post.challenge_id).first()
-    current_breaking_days_left = (db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).filter(models.GroupChallengeMembers.user_id == post.user_id).first())
+    current_challenge_member_DL_and_BDL = (db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).filter(models.GroupChallengeMembers.user_id == post.user_id).first())
     if not challenge:
-        return "Challenge not found"
+        return "Cannot create post, Challenge not found"
 
-    new_days_left = challenge.days_left - 1
-    new_breaking_days_left = current_breaking_days_left.breaking_days_left - (1 if post.start_time == post.end_time else 0)
+    new_days_left = current_challenge_member_DL_and_BDL.days_left - 1
+    new_breaking_days_left = current_challenge_member_DL_and_BDL.breaking_days_left - (1 if post.start_time == post.end_time else 0)
 
     if new_days_left < 0 or new_breaking_days_left < 0:
         return "Cannot create post as it would result in negative days left or breaking days left"
+    
+    def create_post_action(db: Session, post: schemas.PostCreate):
+        db_post = models.Post(
+            user_id=post.user_id,
+            challenge_id=post.challenge_id,
+            start_time=post.start_time,
+            end_time=post.end_time,
+            written_text=post.written_text,
+        )
+        db.add(db_post)
+        db.commit()
+        current_challenge_member_DL_and_BDL.days_left = new_days_left
+        current_challenge_member_DL_and_BDL.breaking_days_left = new_breaking_days_left
+        db.commit()
+        db.refresh(db_post)
+        # 生成唯一组合键和当天的帖子跟踪键
+        today = datetime.now()
+        end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
+        remaining_time = end_of_day - today
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        unique_key = f"challenge_user:{post.challenge_id}_{post.user_id}_{today_str}"
+        daily_key = f"posted_challenges:{today_str}"
 
-    db_post = models.Post(
-        user_id=post.user_id,
-        challenge_id=post.challenge_id,
-        start_time=post.start_time,
-        end_time=post.end_time,
-        written_text=post.written_text,
-    )
-    db.add(db_post)
-    db.commit()
-    challenge.days_left = new_days_left
-    current_breaking_days_left.breaking_days_left = new_breaking_days_left
-    db.commit()
-    db.refresh(db_post)
-    # 生成唯一组合键和当天的帖子跟踪键
-    today = datetime.now()
-    end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
-    remaining_time = end_of_day - today
-    today_str = datetime.now().strftime('%Y-%m-%d')
-    unique_key = f"challenge_user:{post.challenge_id}_{post.user_id}_{today_str}"
-    daily_key = f"posted_challenges:{today_str}"
+        # 将唯一组合键添加到 Redis 并设置过期时间
+        redis_client.set(unique_key, 'posted')
+        redis_client.expire(unique_key, remaining_time.seconds)
 
-    # 将唯一组合键添加到 Redis 并设置过期时间
-    redis_client.set(unique_key, 'posted')
-    redis_client.expire(unique_key, remaining_time.seconds)
+        # 同时将挑战ID和用户ID组合作为值添加到当天的帖子跟踪键中
+        redis_client.sadd(daily_key, f"{post.challenge_id}_{post.user_id}")
+        redis_client.expire(daily_key, remaining_time.seconds)
 
-    # 同时将挑战ID和用户ID组合作为值添加到当天的帖子跟踪键中
-    redis_client.sadd(daily_key, f"{post.challenge_id}_{post.user_id}")
-    redis_client.expire(daily_key, remaining_time.seconds)
-
-    # 打印 Redis
-    print(f"Redis Key: {unique_key} and {daily_key}")
-    print(f"Redis Values: {redis_client.get(unique_key)}, {redis_client.smembers(daily_key)}")
+        # 打印 Redis
+        print(f"Redis Key: {unique_key} and {daily_key}")
+        print(f"Redis Values: {redis_client.get(unique_key)}, {redis_client.smembers(daily_key)}")
 
 
-    db_post_content = models.PostContent(
-        post_id=db_post.id,
-        video_location = None,
-        image_location = post.image_location,
-        voice_location = None,
-    )
-    db.add(db_post_content)
-    db.commit()
-    db.refresh(db_post_content)
+        db_post_content = models.PostContent(
+            post_id=db_post.id,
+            video_location = None,
+            image_location = post.image_location,
+            voice_location = None,
+        )
+        db.add(db_post_content)
+        db.commit()
+        db.refresh(db_post_content)
 
-    return db_post
+        return db_post
+
+    if current_challenge_member_DL_and_BDL.days_left > 1 and challenge.is_completed is False:
+        result = create_post_action(db, post)
+        return result
+    elif current_challenge_member_DL_and_BDL.days_left == 1:
+        if challenge.is_group_challenge is False:
+            result = create_post_action(db, post)
+            challenge.is_completed = True
+            current_challenge_member_DL_and_BDL.is_challenge_finished = True
+            challenge.finished_time = post.end_time
+            db.commit()
+            return result
+        elif challenge.is_group_challenge is True:
+            result = create_post_action(db, post)
+            current_challenge_member_DL_and_BDL.is_challenge_finished = True
+            other_group_members = db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).all() 
+            all_finished = all(member.is_challenge_finished for member in other_group_members)
+            if all_finished:
+                challenge.is_completed = True
+                challenge.finished_time = post.end_time
+                db.commit()
+                return result
+    else:
+        return "Cannot create post, no days left for the challenge"
+    
+    
+    
 
 # read post by post id
 def get_post(db:Session, post_id: int):
