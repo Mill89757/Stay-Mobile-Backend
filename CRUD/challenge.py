@@ -400,7 +400,7 @@ def compare_created_time_by_challenge_id(db: Session, challenge_id:int):
     if target_challenge:
         target_challenge_created_time = target_challenge.created_time
         # Compare only the date part of 'created_time' with today's date
-        result = target_challenge_created_time.date() == datetime.now().date()
+        result = target_challenge_created_time.date() == datetime.now(pytz.utc).date()
         print(result)
         return result
     else:
@@ -435,13 +435,12 @@ def generate_invitation_code(db : Session, challenge_id : int):
         redis_client.expire(redis_key, int(remaining_time))
         redis_client.expire(challenge_id, int(remaining_time))
     else:
-        print(redis_client.get(unique_token))
-        today = datetime.now()
+        today = datetime.now(pytz.utc)
         print(today)
         return "Invitation link already exsist or the link has been expired."
 
-    print(today)
-    return f"invitation code:{unique_token}"
+    
+    return f"{unique_token}"
 
 def get_challenge_category_distribution(db: Session, user_id: int):
     count_result = db.query(
