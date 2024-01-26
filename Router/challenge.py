@@ -89,7 +89,7 @@ async def delete_group_challenge_member_route(challenge_id: int, user_id:int, db
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Challenge member deleted successfully"})
 
 
-@router.get("/SentInvitationCodeByChallengeID/{challenge_id}")
+@router.get("/SetInvitationCodeByChallengeID/{challenge_id}")
 async def generate_invitation_code(challenge_id: int, db: Session = Depends(get_db)):
     result = challenge_crud.generate_invitation_code(db=db, challenge_id = challenge_id)
     return result

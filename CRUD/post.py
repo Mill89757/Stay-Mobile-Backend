@@ -13,13 +13,12 @@ redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
 def create_post(db: Session, post: schemas.PostCreate):
     
     challenge = db.query(models.Challenge).filter(models.Challenge.id == post.challenge_id).first()
-    group_challenge_members = db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).first()
-    current_breaking_days_left = (db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).filter(models.GroupChallengeMembers.user_id == post.user_id).first())
+    current_challenge_member_DL_and_BDL = (db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).filter(models.GroupChallengeMembers.user_id == post.user_id).first())
     if not challenge:
         return "Cannot create post, Challenge not found"
 
-    new_days_left = group_challenge_members.days_left - 1
-    new_breaking_days_left = current_breaking_days_left.breaking_days_left - (1 if post.start_time == post.end_time else 0)
+    new_days_left = current_challenge_member_DL_and_BDL.days_left - 1
+    new_breaking_days_left = current_challenge_member_DL_and_BDL.breaking_days_left - (1 if post.start_time == post.end_time else 0)
 
     if new_days_left < 0 or new_breaking_days_left < 0:
         return "Cannot create post as it would result in negative days left or breaking days left"
@@ -34,8 +33,8 @@ def create_post(db: Session, post: schemas.PostCreate):
         )
         db.add(db_post)
         db.commit()
-        group_challenge_members.days_left = new_days_left
-        current_breaking_days_left.breaking_days_left = new_breaking_days_left
+        current_challenge_member_DL_and_BDL.days_left = new_days_left
+        current_challenge_member_DL_and_BDL.breaking_days_left = new_breaking_days_left
         db.commit()
         db.refresh(db_post)
         # 生成唯一组合键和当天的帖子跟踪键
@@ -71,25 +70,27 @@ def create_post(db: Session, post: schemas.PostCreate):
 
         return db_post
 
-    if group_challenge_members.days_left > 1 and challenge.is_completed is False:
+    if current_challenge_member_DL_and_BDL.days_left > 1 and challenge.is_completed is False:
         result = create_post_action(db, post)
         return result
-    elif group_challenge_members.days_left == 1:
+    elif current_challenge_member_DL_and_BDL.days_left == 1:
         if challenge.is_group_challenge is False:
             result = create_post_action(db, post)
             challenge.is_completed = True
-            group_challenge_members.is_challenge_finished = True
+            current_challenge_member_DL_and_BDL.is_challenge_finished = True
             challenge.finished_time = post.end_time
+            db.commit()
             return result
         elif challenge.is_group_challenge is True:
             result = create_post_action(db, post)
-            group_challenge_members.is_challenge_finished = True
+            current_challenge_member_DL_and_BDL.is_challenge_finished = True
             other_group_members = db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).all() 
-            for items in other_group_members:
-                if items.is_challenge_finished is True:
-                    challenge.is_completed = True
-                    challenge.finished_time = post.end_time
-                    return result
+            all_finished = all(member.is_challenge_finished for member in other_group_members)
+            if all_finished:
+                challenge.is_completed = True
+                challenge.finished_time = post.end_time
+                db.commit()
+                return result
     else:
         return "Cannot create post, no days left for the challenge"
     

@@ -407,19 +407,33 @@ def compare_created_time_by_challenge_id(db: Session, challenge_id:int):
         print("False")
         return False  # or handle as appropriate if the challenge is not found
 
+def get_end_of_day_in_user_timezone(user_timezone):
+    # Get the current time in UTC
+    utc_now = datetime.utcnow()
+    # Convert UTC to user's timezone
+    user_tz = pytz.timezone(user_timezone)
+    user_now = utc_now.replace(tzinfo=pytz.utc).astimezone(user_tz)
+    # Calculate the end of the day in user's timezone
+    end_of_day_user_tz = user_now.replace(hour=23, minute=59, second=59, microsecond=0)
+    return end_of_day_user_tz
+
+
 def generate_invitation_code(db : Session, challenge_id : int):
     
     unique_token = ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))
+    user_timezone = db.query(models.User).filter(models.User.id == models.Challenge.challenge_owner_id).first().user_timezone
+    end_of_day_user_tz = get_end_of_day_in_user_timezone(user_timezone)
 
     if redis_client.get(challenge_id) is None and compare_created_time_by_challenge_id(db, challenge_id):
-        today = datetime.now()
-        end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
-        remaining_time = end_of_day - today
+        # today = datetime.now()
+        # end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
+        # remaining_time = end_of_day - today
+        remaining_time = (end_of_day_user_tz - datetime.now(pytz.utc)).total_seconds()
         redis_key = unique_token
         redis_client.set(redis_key, challenge_id)
         redis_client.set(challenge_id, redis_key)
-        redis_client.expire(redis_key, remaining_time.seconds)
-        redis_client.expire(challenge_id, remaining_time.seconds)
+        redis_client.expire(redis_key, int(remaining_time))
+        redis_client.expire(challenge_id, int(remaining_time))
     else:
         print(redis_client.get(unique_token))
         today = datetime.now()
@@ -460,13 +474,14 @@ def join_group_challenge_by_token_and_user_id(db: Session, unique_token : str, u
     else:
         return "Can not find the token in redis"
 
-    request_challenge_breaking_days = db.query(models.Challenge).filter(models.Challenge.id == request_challenge_id).first()
+    request_challenge = db.query(models.Challenge).filter(models.Challenge.id == request_challenge_id).first()
     
     if request_challenge_id and db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.user_id == user_id).filter(models.GroupChallengeMembers.challenge_id == request_challenge_id).first() is None:
         join_group_challenge = models.GroupChallengeMembers(
                 challenge_id = request_challenge_id,
                 user_id = user_id,
-                breaking_days_left = request_challenge_breaking_days.breaking_days
+                breaking_days_left = request_challenge.breaking_days,
+                days_left = request_challenge.duration * 7
         )
         db.add(join_group_challenge)
         db.commit()
@@ -478,6 +493,7 @@ def join_group_challenge_by_token_and_user_id(db: Session, unique_token : str, u
         return "Can not found the challenge!"
 
 def challenge_card_by_challengeID(db: Session, challenge_id: int):
+
     challenge_basic_info = get_challenge(db, challenge_id)
     follower_avatars = get_all_follower_avatars(db, challenge_id)[0:5]
     owner_avatar = get_owner_avatar_by_user_id(db, challenge_basic_info.challenge_owner_id)
