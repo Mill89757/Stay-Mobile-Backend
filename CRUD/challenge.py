@@ -1,4 +1,5 @@
 
+from pyexpat import model
 from sqlalchemy.orm import Session
 import models, schemas  
 from fastapi import HTTPException, status
@@ -77,13 +78,24 @@ def delete_challenge(db: Session, challenge_id: int):
     db.delete(db_challenge)
     db.commit()
 
-# update challenge & course relastionship by challenge id and course id
+# update challenge & course relationship by challenge id and course id
 def update_challenge_course_id(db:Session, challenge_id: int, course_id: int):
     db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     if db_challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     if db_challenge.course_id is not None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Challenge has been already linked to course")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Challenge has been already linked to a course")
     db_challenge.course_id = course_id
     db.commit()
     return db_challenge
+
+# check if the user is the challenge onwer or not
+def check_challenge_onwer(db:Session, challenge_id:int, user_id):
+    db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
+    if db_challenge is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
+    else:
+        if db_challenge.challenge_owner_id == user_id:
+            return True
+        else:
+            return False

@@ -41,7 +41,7 @@ class ChallengeBase(BaseModel):
     category: Optional[int] = None
     cover_location: Optional[str] = None
     days_left: Optional[int] = None
-    breaking_days_left: Optional[int] = None
+
 
 class ChallengeCreate(BaseModel):
     title: str
@@ -52,8 +52,7 @@ class ChallengeCreate(BaseModel):
     category: Optional[int] = None
     cover_location: Optional[str] = None
     days_left: Optional[int] = None
-    breaking_days_left: Optional[int] = None
-    user_id: int
+    challenge_owner_id: int
     course_id: Optional[int] = None
 
 class ChallengeRead(ChallengeBase):

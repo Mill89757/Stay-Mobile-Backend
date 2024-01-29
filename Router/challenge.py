@@ -1,3 +1,4 @@
+from cmath import asin
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -65,3 +66,10 @@ async def delete_challenge_route(challenge_id: int, db: Session = Depends(get_db
     if not challenge_crud.delete_challenge(db=db, challenge_id=challenge_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Challenge deleted successfully"})
+
+
+# check if user is the challenge owner or not
+@router.get("/CheckOwner/{challenge_id}")
+async def check_challenge_owner(challenge_id: int, user_id: int, db: Session=Depends(get_db)):
+    result = challenge_crud.check_challenge_onwer(challenge_id=challenge_id, user_id=user_id, db=db)
+    return result

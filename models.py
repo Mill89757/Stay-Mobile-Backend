@@ -51,7 +51,9 @@ class Challenge(Base):
     course_id = Column(ForeignKey("course.id"), nullable=True)
     is_finished = Column(Boolean, default= False ,nullable=False)
     days_left = Column(Integer)
-    breaking_days_left = Column(Integer)
+    is_group_challenge = Column(Boolean, default=False, nullable=False)
+
+    
 
 # create Post class inherited from Base class
 class Post(Base):
