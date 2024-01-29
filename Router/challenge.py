@@ -17,20 +17,53 @@ async def create_challenge_route(challenge: schemas.ChallengeCreate, db: Session
 # read challenge by id
 @router.get("/GetChallenge/{challenge_id}", response_model=schemas.ChallengeRead)
 async def get_challenge_route(challenge_id: int, db: Session = Depends(get_db)):
+    """read challenge by id
+    
+    Args:
+        challenge_id: id of challenge
+
+    Returns:
+        challenge
+    
+    Raises:
+        HTTPException: challenge not found
+    """
     challenge = challenge_crud.get_challenge(db=db, challenge_id=challenge_id)
     if challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
 
-# update breaking days for all challenges  test only !!! （Created by Rick）
-# @router.post("/test/update_breaking_days")
-# def test_update_breaking_days(db: Session = Depends(get_db)):
-#     challenge_crud.update_breaking_days_for_challenges(db)
-#     return {"message": "Breaking days updated successfully for all challenges"}
+TIMEZONE_MAPPING = {
+    "Sydney": "Australia/Sydney",
+    "Perth": "Australia/Perth",
+    "Brisbane": "Australia/Brisbane",
+    "Beijing": "Asia/Shanghai"
+}
+# update breaking days for specific challenges
+@router.post("/test/update_breaking_days/{timezone}")
+def test_update_breaking_days(timezone: str, db: Session = Depends(get_db)):
+    specific_challenge_ids = [10007, 10022, 10025, 10004]
+    # 使用映射表来获取正确的时区字符串
+    full_timezone_str = TIMEZONE_MAPPING.get(timezone, "UTC")
+    challenge_crud.update_breaking_days_for_specific_challenges(db, full_timezone_str, specific_challenge_ids)
+    return {"message": f"Breaking days updated successfully for timezone {timezone}"}
+
+
 
 # read all challenges of one user by user id 
 @router.get("/GetUserChallenges/{user_id}", response_model=List[List[schemas.ChallengeWithBreakingDays]])
 async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db)):
+    """read all challenges of one user by user id
+    
+    Args:
+        user_id: id of user
+    
+    Returns:
+        list of active challenges and finished challenges
+    
+    Raises:
+        HTTPException: user not found
+    """
     active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
     return [active_challenges, finished_challenges]
@@ -38,24 +71,68 @@ async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db))
 # read last challenge of one user by user id
 @router.get("/GetUserLastChallenges{user_id}", response_model=schemas.ChallengeRead)
 async def get_user_last_challenge(user_id: int, db: Session = Depends(get_db)):
+    """read last challenge of one user by user id
+    
+    Args:
+        user_id: id of user
+
+    Returns:
+        last_challenge: last challenge
+
+    Raises:
+        HTTPException: user not found
+    """
     last_challenges = challenge_crud.get_last_challenge_by_user_id(db, user_id)
     return last_challenges
 
 # read active challenges of one user by user id
 @router.get("/GetUserActiveChallenges/{user_id}", response_model=List[schemas.ChallengeWithBreakingDays])
 async def get_user_active_challenges_route(user_id: int, db: Session = Depends(get_db)):
+    """read active challenges list of one user by user id
+    
+    Args:
+        user_id: id of user
+    
+    Returns:
+        active_challenges: list of active challenges
+
+    Raises:
+        HTTPException: user not found
+    """
     active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
     return active_challenges
 
 # read challenges list by course id
 @router.get("/GetChallengesWithCourseID/{course_id}", response_model=List[schemas.ChallengeRead])
 async def get_challenge_courseID(course_id: int, db: Session = Depends(get_db)):
+    """read challenges list by course id
+    
+    Args:
+        course_id: id of course
+        
+    Returns:
+        challenges_with_course_id: list of challenges
+    
+    Raises:
+        HTTPException: Course not found
+    """
     CourseID_related_challenges = challenge_crud.get_challenges_by_course_id(db, course_id)
     return CourseID_related_challenges
 
 # read finished challenges list of one user by user id
 @router.get("/GetUserFinishedChallenges/{user_id}", response_model=List[schemas.ChallengeWithBreakingDays])
 async def get_user_finished_challenges_route(user_id: int, db: Session = Depends(get_db)):
+    """read finished challenges list of one user by user id
+    
+    Args:
+        user_id: id of user
+
+    Returns:
+        finished_challenges: list of finished challenges
+    
+    Raises:
+        HTTPException: user not found
+    """
     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
     return finished_challenges
 
@@ -65,6 +142,19 @@ async def get_challenges_route(skip: int = 0, limit: int = 100, db: Session = De
 
 @router.get("/GetBreakingDaysLeftByUserIdAndChallengeId/{user_id}/{challenge_id}", response_model=schemas.GroupChallengeMembersRead)
 async def get_challenge_breaking_days_left(user_id: int, challenge_id:int ,db: Session = Depends(get_db)):
+    """read challenge breaking days left by user id and challenge id
+    
+    Args:
+        user_id: id of user
+        challenge_id: id of challenge
+        
+    Returns:
+        challenge_breaking_days_left: challenge breaking days left
+    
+    Raises:
+        HTTPException: user not found
+        HTTPException: challenge not found
+    """
     return challenge_crud.get_challenge_breaking_days_left(db, user_id, challenge_id)
 
 @router.put("/UpdateChallenge/{challenge_id}", response_model=schemas.ChallengeRead)
@@ -84,13 +174,30 @@ async def delete_challenge_route(challenge_id: int, db: Session = Depends(get_db
 # 中途退出group challenge
 @router.delete("/DeleteGroupChallengeMember/{challenge_id}/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_group_challenge_member_route(challenge_id: int, user_id:int, db: Session = Depends(get_db)):
+    """delete group challenge member by challenge id and user id
+
+    Args:
+        challenge_id: id of challenge
+        user_id: id of user
+
+    Raises:
+        Challenge not found or member not found
+    """
     if not challenge_crud.delete_group_challenge_member(db=db, challenge_id=challenge_id, user_id=user_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge or member not found")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Challenge member deleted successfully"})
 
 
-@router.get("/SentInvitationCodeByChallengeID/{challenge_id}")
+@router.get("/SetInvitationCodeByChallengeID/{challenge_id}")
 async def generate_invitation_code(challenge_id: int, db: Session = Depends(get_db)):
+    """generate invitation code by challenge_id
+    
+    Args:
+        challenge_id: id of challenge
+        
+    Returns:
+        invitation code
+    """
     result = challenge_crud.generate_invitation_code(db=db, challenge_id = challenge_id)
     return result
 
@@ -104,28 +211,89 @@ async def invitation(token: str, user_id:int, db: Session = Depends(get_db)):
 # read discover challenges 拿discover challenge
 @router.get("/GetDiscoverChallenges/")
 async def get_discover_challenges(db: Session = Depends(get_db)):
+    """read discover challenges"""
     discover_challenges = challenge_crud.get_discover_challenges(db)
     return discover_challenges
 
 
 @router.get("/GetChallengeDetailsPartA/{challenge_id}")
 async def get_challenge_details_first_half(challenge_id: int, db:Session = Depends(get_db)):
+    """read first half information need by challenge details page by challenge_id
+    
+    Args:
+        challenge_id: id of challenge
+        
+    Returns:
+        result: first half information need by challenge details page
+    
+    Raises:
+        HTTPException: challenge not found
+    """
     result = challenge_crud.challenge_details_page_first_half_by_challengeID(db, challenge_id)
     return result
 
 
 @router.get("/GetChallengeDetailsPartB/{challenge_id}")
 async def get_challenge_details_second_half(challenge_id: int, db:Session = Depends(get_db)):
+    """read second half information need by challenge details page by challenge_id
+    
+    Args:
+        challenge_id: id of challenge
+        
+    Returns:
+        result: first half information need by challenge details page
+    
+    Raises:
+        HTTPException: challenge not found
+    """
     result = challenge_crud.challenge_details_page_second_half_by_challengeID(db, challenge_id)
     return result
 
 
 @router.get("/getChallengeCategoryDistribution/{user_id}")
 def get_challenge_category_distribution(user_id: int, db: Session = Depends(get_db)):
+    """read challenge category distribution by user id
+    
+    Args:
+        user_id: id of user
+        
+    Returns:
+        result: list of challenge category distribution
+        
+    Raises:
+        HTTPException: user not found
+    """
     return challenge_crud.get_challenge_category_distribution(db, user_id)
 
 
 @router.get("/GetChallengeCard/{challenge_id}")
 async def get_challenge_card(challenge_id: int, db:Session = Depends(get_db)):
+    """read information need by challenge card by challenge_id
+
+    Args:
+        challenge_id: id of challenge
+
+    Returns:
+        challenge card information
+    
+    Raises:
+        HTTPException: challenge not found
+    """
     result = challenge_crud.challenge_card_by_challengeID(db, challenge_id)
+    return result
+
+@router.get("/GetGroupChallengeMembers/{challenge_id}")
+async def get_group_challenge_members(challenge_id: int, db:Session = Depends(get_db)):
+    """read group challenge members by challenge_id
+
+    Args:
+        challenge_id: id of challenge
+
+    Returns:
+        group challenge members
+    
+    Raises:
+        HTTPException: challenge not found
+    """
+    result = challenge_crud.get_group_challenge_members(db, challenge_id)
     return result

@@ -18,6 +18,7 @@ import CRUD.post_content as post_content_crud
 from redis_client import redis_client
 from sqlalchemy import func
 from CRUD.user import read_user_by_id
+from CRUD.course import read_course_by_id
 
 # create challenge
 def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
@@ -53,47 +54,87 @@ def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
 
 # read challenge by id
 def get_challenge(db: Session, challenge_id: int):
+    """read challenge by id
+    
+    Args:
+        challenge_id: id of challenge
+
+    Returns:
+        challenge
+    
+    Raises:
+        HTTPException: challenge not found
+    """
     challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     if challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
 
-def update_breaking_days_for_challenges(db: Session):
-    # 获取今天的日期字符串
-    today_str = datetime.now().strftime('%Y-%m-%d')
-    redis_key = f"posted_challenges:{today_str}"
 
-    # 获取 Redis 中存储的今天已发布帖子的挑战ID和用户ID组合
+TIMEZONE_MAPPING = {
+    "Sydney": "Australia/Sydney",
+    "Perth": "Australia/Perth",
+    "Brisbane": "Australia/Brisbane",
+    "Beijing": "Asia/Shanghai"
+}
+
+
+def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str, specific_challenge_ids: list):
+     # 使用映射表转换时区字符串
+    user_timezone = pytz.timezone(TIMEZONE_MAPPING.get(timezone_str, "UTC"))
+    # 获取当前时间
+    current_time = datetime.now(user_timezone)
+  
+    # 获取当前时间的日期字符串
+    current_date_str = current_time.strftime('%Y-%m-%d')
+
+    # 获取Redis中存储的帖子跟踪键
+    redis_key = f"posted_challenges:{current_date_str}"
     posted_combinations = {combo.decode('utf-8') for combo in redis_client.smembers(redis_key)}
-
-    # 指定的挑战ID列表
-    specific_challenge_ids = [10007, 10022, 10025, 10004]
-
+    
+   
+    # 遍历所有challenge_id
     for challenge_id in specific_challenge_ids:
         group_challenge_members = db.query(models.GroupChallengeMembers).filter(
             models.GroupChallengeMembers.challenge_id == challenge_id
         ).all()
-
+        
+        # 遍历所有group_challenge_members
         for group_member in group_challenge_members:
             # 生成组合键，用于检查是否存在于 Redis 中
             combo_key = f"{challenge_id}_{group_member.user_id}"
+            check_user_timezone = db.query(models.User).filter(models.User.id == group_member.user_id).first()
 
-            # 如果组合键不在 Redis 集合中，则减少 breaking_days_left
-            if combo_key not in posted_combinations:
-                if group_member.breaking_days_left > 0:
-                    group_member.breaking_days_left -= 1
-
+            # 如果组合键不在 Redis 集合中，则减少 breaking_days_left, days_left, 并生成一条用户的帖子记录
+            if combo_key not in posted_combinations: 
+                if check_user_timezone.user_timezone == timezone_str:
+                    if group_member.breaking_days_left > 0:
+                        if group_member.days_left > 0:
+                            group_member.breaking_days_left -= 1
+                            group_member.days_left -= 1
+                            #generate a post record for the user called "I have a break"
+                            db_post = models.Post(
+                                user_id=group_member.user_id,
+                                challenge_id=challenge_id,
+                                #change the start time to today at 23:59:59
+                                start_time=datetime.now().replace(hour=23, minute=59, second=59),
+                                end_time=datetime.now().replace(hour=23, minute=59, second=59),
+                                written_text="I have a break",
+                            )
+                            db.add(db_post)
+                            db.commit()
                 # 如果 breaking_days_left 为0，则标记挑战为完成
-                if group_member.breaking_days_left == 0:
-                    challenge_to_finish = db.query(models.Challenge).filter_by(id=challenge_id).first()
-                    if challenge_to_finish and not challenge_to_finish.is_completed:
-                        challenge_to_finish.is_completed = True
-                        challenge_to_finish.finished_time = datetime.now()
+                elif group_member.breaking_days_left == 0:
+                    challenge_to_completed = db.query(models.Challenge).filter_by(id=challenge_id).first()
+                    challenge_to_finished = db.query(models.GroupChallengeMembers).filter_by(challenge_id=challenge_id).filter_by(user_id=group_member.user_id).first()
+                    if challenge_to_completed and not challenge_to_completed.is_completed:
+                        challenge_to_completed.is_completed = False
+                        challenge_to_finished.is_challenge_finished = True
+                        challenge_to_completed.finished_time = datetime.now()
+                        db.commit()
 
     # 提交所有更改到数据库
     db.commit()
-
-
 
 # read all challenges
 def get_challenges(db: Session, skip: int = 0, limit: int = 100):
@@ -101,10 +142,19 @@ def get_challenges(db: Session, skip: int = 0, limit: int = 100):
 
 # read active challenges list of one user by user id
 def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.ChallengeWithBreakingDays]:
+    """read active challenges list of one user by user id
+    
+    Args:
+        user_id: id of user
+    
+    Returns:
+        active_challenges: list of active challenges
+    """
+    read_user_by_id(db, user_id)#handle user not found
     results = (
         db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
-        .filter(models.Challenge.challenge_owner_id == user_id, models.Challenge.finished_time == None)
+        .filter(models.GroupChallengeMembers.user_id == user_id, models.Challenge.is_completed == False)
         .all()
     )
     # Create ChallengeWithBreakingDays instances from the results
@@ -134,10 +184,19 @@ def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.
 
 # read finished challenges list of one user by user id
 def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.ChallengeWithBreakingDays]:
+    """read finished challenges list of one user by user id
+    
+    Args:
+        user_id: id of user
+
+    Returns:
+        finished_challenges: list of finished challenges
+    """
+    read_user_by_id(db, user_id)#handle user not found
     results = (
         db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
-        .filter(models.Challenge.challenge_owner_id == user_id, models.Challenge.finished_time != None)
+        .filter(models.GroupChallengeMembers.user_id == user_id, models.Challenge.is_completed == True)
         .all()
     )
     # Create ChallengeWithBreakingDays instances from the results
@@ -167,6 +226,18 @@ def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[schema
 
 # read challenges list by course id
 def get_challenges_by_course_id(db: Session, course_id: int) -> List[models.Challenge]:
+    """read challenges list by course id
+    
+    Args:
+        course_id: id of course
+        
+    Returns:
+        challenges_with_course_id: list of challenges
+    
+    Raises:
+        HTTPException: Course not found
+    """
+    read_course_by_id(db, course_id)#handle course not found
     challenges_with_course_id = (
         db.query(models.Challenge)
         .filter(models.Challenge.course_id == course_id)
@@ -175,6 +246,18 @@ def get_challenges_by_course_id(db: Session, course_id: int) -> List[models.Chal
     return challenges_with_course_id
 
 def get_last_challenge_by_user_id(db: Session, user_id: int):
+    """read last challenge of one user by user id
+    
+    Args:
+        user_id: id of user
+
+    Returns:
+        last_challenge: last challenge
+    
+    Raises:
+        HTTPException: user not found
+    """
+    read_user_by_id(db, user_id)#handle user not found
     last_challenge = (db.query(models.Challenge)
         .filter(models.Challenge.challenge_owner_id == user_id)
         .order_by(desc(models.Challenge.created_time)).first()
@@ -182,6 +265,21 @@ def get_last_challenge_by_user_id(db: Session, user_id: int):
     return last_challenge
 
 def get_challenge_breaking_days_left(db: Session, user_id: int, challenge_id):
+    """read challenge breaking days left by user id and challenge id
+    
+    Args:
+        user_id: id of user
+        challenge_id: id of challenge
+        
+    Returns:
+        challenge_breaking_days_left: challenge breaking days left
+    
+    Raises:
+        HTTPException: user not found
+        HTTPException: challenge not found
+    """
+    read_user_by_id(db, user_id)#handle user not found
+    get_challenge(db, challenge_id)#handle challenge not found
     challenge_breaking_days_left = (db.query(models.GroupChallengeMembers)
                                     .filter(models.GroupChallengeMembers.
                                             challenge_id == challenge_id, 
@@ -245,9 +343,18 @@ def delete_challenge(db: Session, challenge_id: int):
 
 # 中途退出group challenge
 def delete_group_challenge_member(db: Session, challenge_id: int, user_id: int):
+    """delete group challenge member by challenge id and user id
+
+    Args:
+        challenge_id: id of challenge
+        user_id: id of user
+
+    Raises:
+        Challenge not found or member not found
+    """
     db_group_challenge_member = db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == challenge_id).filter(models.GroupChallengeMembers.user_id == user_id).first()
     if db_group_challenge_member is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found or member not found")
     db.delete(db_group_challenge_member)
     db.commit()
 
@@ -263,10 +370,12 @@ def get_all_follower_avatars(db: Session, challenge_id: int):
     for i in all_follower_ids:
         all_follower_avatars.append(read_user_by_id(db, i).avatar_location)
     return all_follower_avatars
+
 #拿到challenge的进度
 def get_challenge_process(duration, days_left):
     challenge_process = days_left / duration
     return challenge_process
+
 #用challenge_id拿到discover challenge的详细信息
 def get_discover_challenges_by_id(db: Session, id: int):
     challenge_query_result = db.query(models.Challenge, models.GroupChallengeMembers, models.User).join(models.User, models.Challenge.challenge_owner_id == models.User.id).join(
@@ -286,14 +395,26 @@ def get_discover_challenges_by_id(db: Session, id: int):
 
 #返回一个list，包含所有discover challenge的详细信息
 def get_discover_challenges(db: Session):
+    """read discover challenges"""
     discover_challenges = []
     challenges = db.query(models.Challenge).filter(models.Challenge.finished_time != None).all()#这里可以用limit（）改成想要的数量
     for challenge in challenges:
         challenge_detail = get_discover_challenges_by_id(db, challenge.id)
         discover_challenges.append(challenge_detail)
     return discover_challenges
-# update challenge & course relastionship by challenge id and course id
+
+# update challenge & course relationship by challenge id and course id
 def update_challenge_course_id(db:Session, challenge_id: int, course_id: int):
+    """update challenge course_id by challenge id and course id
+    
+    Args:
+        challenge_id: id of challenge
+        course_id: id of course
+
+    Raises:
+        HTTPException: challenge not found
+        HTTPException: challenge has been already linked to course
+    """
     db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     if db_challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
@@ -304,6 +425,17 @@ def update_challenge_course_id(db:Session, challenge_id: int, course_id: int):
     return db_challenge
 
 def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: int):
+    """read first half information need by challenge details page by challenge_id
+    
+    Args:
+        challenge_id: id of challenge
+        
+    Returns:
+        result: first half information need by challenge details page
+    
+    Raises:
+        HTTPException: challenge not found
+    """
     challenge_basic_info = get_challenge(db, challenge_id)
     follower_avatars = get_all_follower_avatars(db, challenge_id)[0:5]
     # handle the case when course_id is None
@@ -318,10 +450,11 @@ def challenge_details_page_first_half_by_challengeID(db: Session, challenge_id: 
         "DisplayName": get_name_by_user_id(db, challenge_basic_info.challenge_owner_id),
         "Username": get_userName_by_user_id(db, challenge_basic_info.challenge_owner_id),
         "Description": challenge_basic_info.description,
-        "follwers_avaters": follower_avatars,
+        "followers_avatars": follower_avatars,
         "Course": course_title,
         "owner_avatar": owner_avatar,
         "cover_location": challenge_basic_info.cover_location,
+        "is_group_challenge": challenge_basic_info.is_group_challenge,
     }
     return challenge_details
 
@@ -359,6 +492,17 @@ def reformat_reaction_count_list(db:Session, post_id: int):
 
 
 def challenge_details_page_second_half_by_challengeID(db: Session, challenge_id: int):
+    """read first half information need by challenge details page by challenge_id
+    
+    Args:
+        challenge_id: id of challenge
+        
+    Returns:
+        result: first half information need by challenge details page
+    
+    Raises:
+        HTTPException: challenge not found
+    """
     db_post_details = db.query(
         models.Post, models.PostContent, models.PostReaction, models.GroupChallengeMembers
     ).join(
@@ -400,36 +544,68 @@ def compare_created_time_by_challenge_id(db: Session, challenge_id:int):
     if target_challenge:
         target_challenge_created_time = target_challenge.created_time
         # Compare only the date part of 'created_time' with today's date
-        result = target_challenge_created_time.date() == datetime.now().date()
+        result = target_challenge_created_time.date() == datetime.now(pytz.utc).date()
         print(result)
         return result
     else:
         print("False")
         return False  # or handle as appropriate if the challenge is not found
 
+def get_end_of_day_in_user_timezone(user_timezone):
+    # Get the current time in UTC
+    utc_now = datetime.utcnow()
+    # Convert UTC to user's timezone
+    user_tz = pytz.timezone(user_timezone)
+    user_now = utc_now.replace(tzinfo=pytz.utc).astimezone(user_tz)
+    # Calculate the end of the day in user's timezone
+    end_of_day_user_tz = user_now.replace(hour=23, minute=59, second=59, microsecond=0)
+    return end_of_day_user_tz
+
+
 def generate_invitation_code(db : Session, challenge_id : int):
+    """generate invitation code by challenge_id
     
+    Args:
+        challenge_id: id of challenge
+        
+    Returns:
+        invitation code
+    """
     unique_token = ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))
+    user_timezone = db.query(models.User).filter(models.User.id == models.Challenge.challenge_owner_id).first().user_timezone
+    end_of_day_user_tz = get_end_of_day_in_user_timezone(user_timezone)
 
     if redis_client.get(challenge_id) is None and compare_created_time_by_challenge_id(db, challenge_id):
-        today = datetime.now()
-        end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
-        remaining_time = end_of_day - today
+        # today = datetime.now()
+        # end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
+        # remaining_time = end_of_day - today
+        remaining_time = (end_of_day_user_tz - datetime.now(pytz.utc)).total_seconds()
         redis_key = unique_token
         redis_client.set(redis_key, challenge_id)
         redis_client.set(challenge_id, redis_key)
-        redis_client.expire(redis_key, remaining_time.seconds)
-        redis_client.expire(challenge_id, remaining_time.seconds)
+        redis_client.expire(redis_key, int(remaining_time))
+        redis_client.expire(challenge_id, int(remaining_time))
     else:
-        print(redis_client.get(unique_token))
-        today = datetime.now()
+        today = datetime.now(pytz.utc)
         print(today)
         return "Invitation link already exsist or the link has been expired."
 
-    print(today)
-    return f"invitation code:{unique_token}"
+    
+    return f"{unique_token}"
 
 def get_challenge_category_distribution(db: Session, user_id: int):
+    """read challenge category distribution by user id
+    
+    Args:
+        user_id: id of user
+        
+    Returns:
+        result: list of challenge category distribution
+        
+    Raises:
+        HTTPException: user not found
+    """
+    read_user_by_id(db, user_id)#handle user not found
     count_result = db.query(
         models.Challenge.category,
         func.count(models.GroupChallengeMembers.user_id)
@@ -460,24 +636,42 @@ def join_group_challenge_by_token_and_user_id(db: Session, unique_token : str, u
     else:
         return "Can not find the token in redis"
 
-    request_challenge_breaking_days = db.query(models.Challenge).filter(models.Challenge.id == request_challenge_id).first()
+    request_challenge = db.query(models.Challenge).filter(models.Challenge.id == request_challenge_id).first()
     
     if request_challenge_id and db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.user_id == user_id).filter(models.GroupChallengeMembers.challenge_id == request_challenge_id).first() is None:
         join_group_challenge = models.GroupChallengeMembers(
                 challenge_id = request_challenge_id,
                 user_id = user_id,
-                breaking_days_left = request_challenge_breaking_days.breaking_days
+                breaking_days_left = request_challenge.breaking_days,
+                days_left = request_challenge.duration * 7
         )
         db.add(join_group_challenge)
         db.commit()
         db.refresh(join_group_challenge)
-        return "New group member has joined!"
+        if request_challenge.is_group_challenge is False:
+            request_challenge.is_group_challenge = True
+            db.commit()
+            return "New group member has joined!"
+        else:
+            return "New group member has joined!"
     elif request_challenge_id and db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.user_id == user_id).filter(models.GroupChallengeMembers.challenge_id == request_challenge_id).first():
         return "User already joined the group challenge"
     else:
         return "Can not found the challenge!"
 
 def challenge_card_by_challengeID(db: Session, challenge_id: int):
+
+    """read information need by challenge card by challenge_id
+
+    Args:
+        challenge_id: id of challenge
+
+    Returns:
+        challenge card information
+    
+    Raises:
+        HTTPException: challenge not found
+    """
     challenge_basic_info = get_challenge(db, challenge_id)
     follower_avatars = get_all_follower_avatars(db, challenge_id)[0:5]
     owner_avatar = get_owner_avatar_by_user_id(db, challenge_basic_info.challenge_owner_id)
@@ -499,3 +693,37 @@ def challenge_card_by_challengeID(db: Session, challenge_id: int):
         "followers": follower_avatars,
     }
     return challenge_details
+
+def get_group_challenge_members(db: Session, challenge_id: int):
+    """read group challenge members by challenge_id
+
+    Args:
+        challenge_id: id of challenge
+
+    Returns:
+        group challenge members
+    
+    Raises:
+        HTTPException: challenge not found
+    """
+    get_challenge(db, challenge_id)#handle challenge not found
+    results = (
+        db.query(models.Challenge, models.GroupChallengeMembers, models.User)
+        .join(models.GroupChallengeMembers, models.Challenge.id == models.GroupChallengeMembers.challenge_id)
+        .join(models.User, models.GroupChallengeMembers.user_id == models.User.id)
+        .filter(models.Challenge.id == challenge_id)
+        .all()
+    )
+    group_members_details = []
+    for challenge, group_challenge_members,user in results:
+        data = schemas.GroupChallengesMember(
+            user_id = group_challenge_members.user_id,
+            breaking_days_left = group_challenge_members.breaking_days_left,
+            days_left = group_challenge_members.days_left,
+            is_challenge_finished = group_challenge_members.is_challenge_finished,
+            challenge_id = group_challenge_members.challenge_id,
+            user_name = user.name,
+            challenge_category = challenge.category,
+            )
+        group_members_details.append(data)
+    return group_members_details

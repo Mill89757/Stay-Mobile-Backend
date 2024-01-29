@@ -7,23 +7,6 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-
-# convert string to datetime (keep it here for now)
-# def convert_datetime(string):
-#     split_list = re.split("-|:| ", string)
-#     temp_list = []
-#     for i in split_list:
-#         temp_list.append(int(i))
-#     result = datetime(
-#         temp_list[0],
-#         temp_list[1],
-#         temp_list[2],
-#         temp_list[3],
-#         temp_list[4],
-#         temp_list[5],
-#     )
-#     return result
-
 #create user
 def create_user(db: Session, user: schemas.UsersRequest):
     db_user = models.User(
@@ -48,11 +31,18 @@ def read_users(db: Session):
 
 #read user by id
 def read_user_by_id(db: Session, id: int):
-    return db.query(models.User).filter(models.User.id == id).first()
+    user = db.query(models.User).filter(models.User.id == id).first()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
+    
 
 #read user by firebase_uid (for login)
 def read_user_by_firebase_uid(db: Session, firebase_uid: str):
-    return db.query(models.User).filter(models.User.firebase_uid == firebase_uid).first()
+    user = db.query(models.User).filter(models.User.firebase_uid == firebase_uid).first()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
 
 #update user
 def update_user(db: Session, id: int, user: schemas.UsersRequest):
