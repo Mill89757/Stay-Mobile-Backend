@@ -106,7 +106,8 @@ def get_post(db:Session, post_id: int):
 
 # read all posts
 def get_posts(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Post).order_by(desc(models.Post.created_time)).offset(skip).limit(limit).all()
+    posts = db.query(models.Post).order_by(desc(models.Post.created_time)).filter(models.Post.written_text != "I have a break").offset(skip).limit(limit).all()
+    return posts
 
 # read posts of one user by user id
 def get_posts_by_user_id(db: Session, user_id: int) -> List[models.Post]:
