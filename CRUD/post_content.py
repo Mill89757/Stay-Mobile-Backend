@@ -4,6 +4,7 @@ import models, schemas
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 import models, schemas
+from CRUD.post import get_post
 
 # crate post content
 def create_post_content(db: Session, post_content: schemas.PostContentCreate):
@@ -26,6 +27,7 @@ def get_post_contents(db: Session, skip: int = 0, limit: int = 100):
 
 # read post content by post id
 def get_post_contents_by_post_id(db: Session, post_id: int) -> List[models.PostContent]:
+    get_post(db, post_id)#handle post not found
     post_id_post_contents = (
         db.query(models.PostContent)
         .filter(models.PostContent.post_id == post_id)
