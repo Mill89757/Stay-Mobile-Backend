@@ -190,7 +190,7 @@ async def update_recommendation(db: Session = Depends(get_db)):
     DAY_INDEX = int(decoding(redis_client.hget('rs_param', 'day_index'),ifError='-1')) + 1
     DAY_INDEX = str(DAY_INDEX%DAYS_BACK)
 
-    new_clg_records = add_new_ongoing_challenges_to_redis()
+    new_clg_records = add_new_ongoing_challenges_to_redis(db)
     update_challenge_distribution_for_users(db=db)
     classify_newPosts_by_challengeCategory(db=db)
     process_recent_reaction_data(db=db)
