@@ -7,6 +7,7 @@ import models, schemas
 from sqlalchemy import desc, func
 import redis
 from datetime import datetime, timedelta
+from CRUD.user import read_user_by_id
 redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 
@@ -104,10 +105,12 @@ def get_post(db:Session, post_id: int):
 
 # read all posts
 def get_posts(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Post).order_by(desc(models.Post.created_time)).offset(skip).limit(limit).all()
+    posts = db.query(models.Post).order_by(desc(models.Post.created_time)).filter(models.Post.written_text != "I have a break").offset(skip).limit(limit).all()
+    return posts
 
 # read posts of one user by user id
 def get_posts_by_user_id(db: Session, user_id: int) -> List[models.Post]:
+    read_user_by_id(db, user_id)#handle user not found
     user_id_posts = (
         db.query(models.Post)
         .filter(models.Post.user_id == user_id)
@@ -117,6 +120,9 @@ def get_posts_by_user_id(db: Session, user_id: int) -> List[models.Post]:
 
 # read posts by challenge id
 def get_posts_by_challenge_id(db: Session, challenge_id: int) -> List[models.Post]:
+    challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
+    if challenge is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     challenge_id_posts = (
         db.query(models.Post)
         .filter(models.Post.challenge_id == challenge_id)

@@ -95,6 +95,21 @@ class GroupChallengeMembersRead(GroupChallengeMembersBase):
         orm_mode = True
 
 class ChallengeWithBreakingDays(ChallengeRead):  # Assuming ChallengeRead is your base schema for reading challenges
+    id: int
+    title: str
+    description: str
+    duration: int
+    breaking_days: int
+    is_public: bool
+    category: int
+    created_time: datetime
+    finished_time: Optional[datetime] = None
+    cover_location: str
+    challenge_owner_id: int
+    course_id: Optional[int] = None
+    is_completed: bool
+    days_left: int
+    is_group_challenge: bool
     breaking_days_left: int
 
 
