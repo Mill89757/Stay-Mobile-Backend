@@ -123,10 +123,10 @@ def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.
     results = (
         db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
-        .filter(models.GroupChallengeMembers.user_id == user_id, models.Challenge.is_completed == False)
+        .filter(models.GroupChallengeMembers.user_id == user_id)
+        .filter(models.Challenge.finished_time == None)
         .all()
     )
-    # Create ChallengeWithBreakingDays instances from the results
     active_challenges = []
     for challenge, group_challenge_members in results:
         challenge_data = schemas.ChallengeWithBreakingDays(
@@ -145,7 +145,7 @@ def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.
             is_completed=challenge.is_completed,
             days_left=group_challenge_members.days_left,
             is_group_challenge=challenge.is_group_challenge,
-            breaking_days_left=group_challenge_members.breaking_days_left  # Access the attribute from group_member
+            breaking_days_left=group_challenge_members.breaking_days_left
         )
         active_challenges.append(challenge_data)
     
@@ -165,10 +165,10 @@ def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[schema
     results = (
         db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
-        .filter(models.GroupChallengeMembers.user_id == user_id, models.Challenge.is_completed == True)
+        .filter(models.GroupChallengeMembers.user_id == user_id)
+        .filter(models.Challenge.finished_time != None)
         .all()
     )
-    # Create ChallengeWithBreakingDays instances from the results
     finished_challenges = []
     for challenge, group_challenge_members in results:
         challenge_data = schemas.ChallengeWithBreakingDays(
@@ -187,7 +187,7 @@ def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[schema
             is_completed=challenge.is_completed,
             days_left=group_challenge_members.days_left,
             is_group_challenge=challenge.is_group_challenge,
-            breaking_days_left=group_challenge_members.breaking_days_left  # Access the attribute from group_member
+            breaking_days_left=group_challenge_members.breaking_days_left
         )
         finished_challenges.append(challenge_data)
     
