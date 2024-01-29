@@ -1,21 +1,28 @@
 import redis
 import random 
-from r1_automation import decoding, MAX_POST_AGE
+from r1_automation import byte_to_utf8, CLG_CATEGORY
 
-def top3categories(user_id:int) -> set:
+def top3categories(user_id:int) -> list:
     """
     the 'user_contribution' key in redis is a hash table that record user's contribution to each challenge category.
     this function takes user_id as input and return 3 categories where the user has spent the most time contributing.
     """
     
-    # retrive uer's challenge contribution data.
-    contribution = decoding( r.hget('user_contribution',user_id), StrToSplit=',', ifError=['0']*5)
-    contribution = [int(num) for num in contribution]
+    # retrive user's challenge contribution data.
+
+    # contribution = byte_to_utf8( r.hget('user_contribution',user_id), StrToSplit=',')
+    # if not contribution: return []
+    contribution = byte_to_utf8( r.hget('user_contribution',user_id), StrToSplit=',', ifError=[0]*5)
+    contribution = {idx:item for idx,item in enumerate(contribution)}
+
+    # randomly shuffle category code
+    categories = list(range(CLG_CATEGORY))
+    random.shuffle(categories)
 
     topCategories = []
 
-    for category in range(5):
-
+    for category in categories:
+        
         # if user did not contribute to category i, then move on to the next category
         if contribution[category] == 0: continue 
 
@@ -25,9 +32,9 @@ def top3categories(user_id:int) -> set:
                 topCategories.insert(i, category)
                 continue
         if len(topCategories) < 3: 
-            contribution.append(category)
+            topCategories.append(category)
         elif len(topCategories) > 3:
-            contribution.pop()
+            topCategories.pop()
 
     # if user contributed to less than 3 categories, 
     # then randomly pick some other categories for this user
@@ -53,7 +60,7 @@ def filteredPosts_from_reacted_challenges(user_id:int) -> set:
     candidate_clgs = []
 
     for i in range(len(reacted_clgs)):
-        challenge_id = int(decoding(reacted_clgs[i]))
+        challenge_id = byte_to_utf8(reacted_clgs[i])
 
         if i == 30 and len(candidate_clgs)>10:
             random.sample(candidate_clgs, 10)
@@ -83,19 +90,18 @@ def filteredPosts_from_reacted_challenges(user_id:int) -> set:
         
         for item in posts:
             if not r.sismember(f'{user_id}_reacted_post_pool', item):
-                postPool.add(int(decoding(item)))
+                postPool.add(byte_to_utf8(item))
 
     return postPool
 
 
-def filteredPosts_from_top3Categories(user_id:int) -> set:
-    top3 = top3categories(user_id)
+def filteredPosts_from_top3Categories(user_id:int, top3) -> set:
     postPool = set()
 
     for category_code in top3:
 
         # get all recent post from specified category
-        raw_post_pool = r.zrangebyscore(f'category{category_code}', 0, float('inf'))
+        raw_post_pool = r.zrangebyscore(f'category{category_code}post', 0, float('inf'))
         raw_post_pool = [int(post) for post in raw_post_pool]
         n = len(raw_post_pool) 
         if n > 0:
@@ -107,24 +113,57 @@ def filteredPosts_from_top3Categories(user_id:int) -> set:
     return postPool
 
 
+def get_popular_posts(n):return set()
+
+
 def get_recommended_post(user_id):
+
+    # get posts from top 3 categories
+    top3 = top3categories(user_id)
+    if len(top3):
+        post_from_category = filteredPosts_from_top3Categories(user_id,top3)
+
+    # get new posts from user reacted challenges
     post_from_reaction = filteredPosts_from_reacted_challenges(user_id)
-    post_from_category = filteredPosts_from_top3Categories(user_id)
-    return post_from_reaction.union(post_from_category)
+
+    # get recent posts that are popular in general 
+    if len(top3) == 0:
+        popular_posts = get_popular_posts(50)
+    else:
+        popular_posts = get_popular_posts(20)
+
+    return post_from_reaction.union(post_from_category).union(popular_posts)
 
 
 if __name__ == "__main__":
     r = redis.Redis(host='localhost', port=6379, db=0)
 
-    for user_id in range(1,11):
+    def group_testing(userGroup, group_desc):
         print('\n')
-        print(f'userid: {user_id}')
-        print(f'top3 category = {top3categories(user_id)}')
+        print(f'# ------ {group_desc} ------')
 
-        post_by_category = filteredPosts_from_top3Categories(user_id)
-        post_by_reaction = filteredPosts_from_reacted_challenges(user_id)
-        print(f'post by category:\n{post_by_category}\n')
-        print(f'post by reaction:\n{post_by_reaction}\n')
+        for user_id in userGroup:
+            print('\n')
 
-        # posts = get_recommended_post(user_id)
-        # print(posts)
+            print(f'user_id: {user_id}')
+            top3 = top3categories(user_id)
+            print(f'top3: {top3}')
+            post_from_category = filteredPosts_from_top3Categories(user_id,top3)
+            post_from_reaction = filteredPosts_from_reacted_challenges(user_id)
+            if len(top3) == 0:
+                popular_posts = get_popular_posts(50)
+            else:
+                popular_posts = get_popular_posts(20)
+            print(f'post from category:{post_from_category}')
+            print(f'post from reaction:{post_from_reaction}')
+            print(f'the popualr posts: {popular_posts}')
+            print(f'recommended posts --> {get_recommended_post(user_id)}')
+
+    groups = [
+        ([-1,-2,-3],'cold start'),
+        ([10000,10001,10002], 'user with some challenge'),
+        ([1,2,3,4,5], 'users with reaction data')
+        ]
+
+    for members, group_description in groups:
+        group_testing(members, group_description)

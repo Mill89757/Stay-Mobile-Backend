@@ -1,5 +1,5 @@
 import redis
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import session, sessionmaker
 import models
@@ -10,38 +10,65 @@ import pytz
 
 
 CLG_CATEGORY = 5 
-MAX_POST_AGE = 80
+MAX_POST_AGE = 30
 
 
-def decoding(item, StrToSplit = None, ifError = None) -> str or list:
+def byte_to_utf8(item: bytes or str, StrToSplit:str = None, ifError = None):
     """
-    the value retrieved from redis is in binary format.
-    this function converts it to string and split it if necessary.
+    param item: a bytes or string object.
+    param StrToSplit: character(s) to separate a sequence of objects.
+    param ifError: returned value if item is neither a bytes or string object. 
+
+    This function first turn the given item into utf-8 string, 
+    or a sequence of string objects if StrToSplit is given.
+
+    It then converts the string into an object of preferrable type. 
     """
+
     if item == None:
         return ifError
-    item = item.decode('utf-8')
-    if StrToSplit: 
-        item = item.split(StrToSplit)
-        if item == ['']: item = []
-    return item
+    
+    if isinstance(item, bytes):
+        item = item.decode('utf-8')
+    
+    # base case: not a list or sequence of items. 
+    if not StrToSplit:
+
+        try:
+            # item is numeric 
+            item = float(item)
+        except ValueError: # item is indeed a string
+            pass  
+        else:
+            if int(item) == item:
+                item = int(item)
+        finally:
+            return item 
+
+    # general case: item is a sequence of object 
+    item = item.split(StrToSplit)
+
+    for i in range(len(item)):
+        item[i] = byte_to_utf8(item[i])
+
+    return [] if item == [''] else item 
 
 
 def remove_outdated_clg_and_post_from_redis() -> None:
     outdated_clg = r.zrangebyscore('completed_clg',DAY_INDEX, DAY_INDEX)
 
     for item in outdated_clg:
-        challenge_id = int(decoding(item))
+        challenge_id = byte_to_utf8(item)
 
         # get challenge category
         try:
-            category = int(decoding(r.hget('on_clg_info', challenge_id), StrToSplit=',')[0])
+            category = byte_to_utf8(r.hget('on_clg_info', challenge_id), StrToSplit=',')[0]
         except IndexError: 
             raise KeyError(f'challenge {challenge_id} is not found') 
 
         # remove posts of this challenge from redis 
         for post in r.lrange('clg{challenge_id}posts', 0, -1):
-            r.zrem(f'category{category}', post)
+            r.zrem(f'category{category}post', post)
             r.hdel('post_clg_pair', post)
         
         # remove challenge detail from redis 
@@ -52,12 +79,12 @@ def remove_outdated_clg_and_post_from_redis() -> None:
 
 def add_new_ongoing_challenges_to_redis() -> None:
     """
-    This function iterate through all newly created challenges,
-    It extract category, is_public and date information of each new challenge 
-    from CHALLENGE table and store into redis.
-    Finally, it updates CHALLENGE table's length variable in redis. 
+    For every new challenges, this function add {challenge_id: 'category,is_public,
+    duration,done_by' as field value pair to redis object called on_clg_info/
+
+    Record the updated table length in the end. 
     """
-    clg_len  = decoding(r.hget('db_len', 'clg'), ifError = 0)      # challenge 
+    clg_len  = byte_to_utf8(r.hget('db_len', 'clg'), ifError = 0)      # challenge 
     CHALLENGE = session.query(models.Challenge).offset(clg_len)
 
     clg_count = 0 
@@ -74,19 +101,19 @@ def add_new_ongoing_challenges_to_redis() -> None:
         r.hset('on_clg_info', challenge_id, f'{category},{isPublic},{duration},{done_by}')
 
     # update table CHALLENGE's length 
-    r.hincrby('db_len', 'clg', clg_len)
+    r.hincrby('db_len', 'clg', clg_count)
 
 
 def update_challenge_distribution_for_users() -> None: 
     """
-    Whenever new challenge(s) is/are created, one or more members' contribution 
-    to challenge categories is/are changed. 
-    This function iterates through the MEMBER table and check on_clg_info (redis) 
-    to update members' contributions. 
-    Finally, it updates MEMBER table's length variable in redis. 
+    This function iterate through new records in GroupChallengeMembers. 
+    For users with new challenges, update his/her contribution on challenge 
+    categories based on the duration of the new challenge. 
+    
+    Record the updated table length in the end. 
     """
 
-    mmbr_len = decoding(r.hget('db_len', 'mmbr'), ifError = 0) 
+    mmbr_len = byte_to_utf8(r.hget('db_len', 'mmbr'), ifError = 0) 
     MEMBER = session.query(models.GroupChallengeMembers).offset(mmbr_len)
 
     mmbr_count = 0
@@ -95,21 +122,22 @@ def update_challenge_distribution_for_users() -> None:
         mmbr_count += 1
 
         clg_id = instance.challenge_id
-        clg_detail = decoding(r.hget('on_clg_info', clg_id), StrToSplit=',',ifError=[])
+        clg_detail = byte_to_utf8(r.hget('on_clg_info', clg_id), StrToSplit=',',ifError=[])
         
         if not clg_detail: continue 
 
-        category = int(clg_detail[0])
-        duration = int(clg_detail[2])
+        category = clg_detail[0]
+        duration = clg_detail[2]
         
         user_id = instance.user_id
 
 
         # get user's current contribution
-        contribution = decoding(r.hget('user_contribution',user_id), StrToSplit=',', ifError=['0']*5)
+        contribution = byte_to_utf8(r.hget('user_contribution',user_id), StrToSplit=',', ifError=[0]*5)
 
         # modify user contribution according to the challenge's category
-        contribution[category] = str( int(contribution[category]) + duration )
+        contribution[category] += duration
+        contribution = [str(num) for num in contribution]
         contribution = ','.join(contribution)
         
         # update change to redis 
@@ -125,19 +153,18 @@ def classifiy_newPosts() -> None:
     This function examines newly created posts. If a post is public and not mean to be break, 
     its post_id will be recorded in three places in Redis:
 
-    1. As an item in a Redis list named clg{challenge_id}posts.
-    2. As a member in a Redis sorted set named category{category_code}.
-    3. As a field in a Redis hash table, where the value is its post_id.
+    1. add to a list named clg{challenge_id}posts
+    2. add to a sorted set named category{category_code}post.
+    3. add to hash table named post_clg_pair, where the value is its post_id.
     """
 
     # remove posts that are older than max_post_age from redis. 
     for i in range(CLG_CATEGORY):
-        keyname = 'recent_posts_for_category' + str(i)
-        day = DAY_INDEX%MAX_POST_AGE
-        r.zremrangebyscore(keyname,day,day)
+        keyname = f'category{i}post'
+        r.zremrangebyscore(keyname,DAY_INDEX,DAY_INDEX)
 
     # retrieve new post records from data base 
-    post_len = decoding(r.hget('db_len', 'post'), ifError = 0)
+    post_len = byte_to_utf8(r.hget('db_len', 'post'), ifError = 0)
     POST = session.query(models.Post).offset(post_len)
 
     # record the number of posts being processed
@@ -153,25 +180,25 @@ def classifiy_newPosts() -> None:
 
         # check whether this post belong to an ongoing challenge 
         try: # retrieve challenge data 
-            category, isPublic, duration, doneby = decoding(r.hget('on_clg_info', challenge_id), StrToSplit=',')
-            category, isPublic, duration = int(category), int(isPublic), int(duration)
+            category, isPublic, duration, doneby = byte_to_utf8(r.hget('on_clg_info', challenge_id), StrToSplit=',')
         except (TypeError, ValueError):
             raise KeyError(f'post_id: {post_id}, challenge_id: {challenge_id}.\nThis challenge is not ongoing.')
         
         # if breaking day, decrement user's contribution
         if instance.written_text == 'I have a break today.':
-            contribution = decoding(r.hget('user_contribution',user_id), StrToSplit=',', ifError=['0']*5)
+            contribution = byte_to_utf8(r.hget('user_contribution',user_id), StrToSplit=',', ifError=[0]*5)
             try: 
-                contribution[category] = str(int(contribution[category])-1)
+                contribution[category]-=1
             except IndexError:
                 raise IndexError(f'challenge category are from 0 to 4 includive, got {category}')
             else:
+                contribution = [str(num) for num in contribution]
                 r.hset('user_contribution',user_id,','.join(contribution)) 
                 continue
 
         # if not breaking day and public, add post_id to redis
         if isPublic:
-            r.zadd(f'category{category}', {post_id: DAY_INDEX})
+            r.zadd(f'category{category}post', {post_id: DAY_INDEX})
             r.hset('post_clg_pair', post_id, challenge_id)
             r.lpush(f'clg{challenge_id}posts', post_id)
         
@@ -179,13 +206,13 @@ def classifiy_newPosts() -> None:
         # so we can remove related posts from recommended_post_pool soon. 
         if datetime.datetime.strptime(doneby[:], '%Y-%m-%d').date() <= DATE_TODAY:
             if duration <= 14: 
-                due_day_index = (DAY_INDEX + 20) % MAX_POST_AGE
+                due_day_index = (DAY_INDEX + MAX_POST_AGE//5) % MAX_POST_AGE
             elif duration <= 35:
-                due_day_index = (DAY_INDEX + 40) % MAX_POST_AGE
+                due_day_index = (DAY_INDEX + MAX_POST_AGE//4) % MAX_POST_AGE
             elif duration <= 49:
-                due_day_index = (DAY_INDEX + 60) % MAX_POST_AGE
+                due_day_index = (DAY_INDEX + MAX_POST_AGE//3) % MAX_POST_AGE
             else:
-                due_day_index = (DAY_INDEX + 80) % MAX_POST_AGE
+                due_day_index = (DAY_INDEX + MAX_POST_AGE//2) % MAX_POST_AGE
             r.zadd('completed_clg', {challenge_id: due_day_index})
 
     # update table POST's length 
@@ -199,7 +226,7 @@ def process_recent_reaction_data() -> None:
     """
 
     # read UserReactionLog table
-    reaction_len = decoding(r.hget('db_len', 'reaction'), ifError = 0)
+    reaction_len = byte_to_utf8(r.hget('db_len', 'reaction'), ifError = 0)
     REACTION = session.query(models.UserReactionLog).offset(reaction_len)
 
     reaction_count = 0 
@@ -209,21 +236,24 @@ def process_recent_reaction_data() -> None:
 
         # get post_id, challenge_id, user_id, reaction_status (is_cancelled)
         post_id = instance.post_id
-        try: 
-            challenge_id = int(decoding(r.hget('post_clg_pair',post_id)))
-        except TypeError:
-            continue 
+        challenge_id = byte_to_utf8(r.hget('post_clg_pair',post_id))
+        if challenge_id == None: continue 
         user_id = instance.user_id
         is_cancelled = instance.is_cancelled
 
         # recalling a reaction is something negative, so decrement challenge preference
         if is_cancelled: 
-            r.zincrby(str(user_id)+'_clgs_preference', -0.6, challenge_id)
+            r.zincrby(f'{user_id}_clgs_preference', -0.6, challenge_id)
         else: 
-            r.sadd(str(user_id)+'_reacted_post_pool', post_id)
-            r.zincrby(str(user_id)+'_clgs_preference', 1, challenge_id)
+            r.sadd(f'{user_id}_reacted_post_pool', post_id)
+            r.zincrby(f'{user_id}_clgs_preference', 1, challenge_id)
 
     r.hincrby('db_len', 'reaction', reaction_count)  
+
+
+
+
+
 
 
 if __name__ == "__main__":
@@ -251,7 +281,7 @@ if __name__ == "__main__":
     sydney_tz = pytz.timezone('Australia/Sydney')
     DATE_TODAY = datetime.datetime.now(sydney_tz).date()
 
-    DAY_INDEX = (int(decoding(r.get('day_index'),ifError='-1')) + 1) % MAX_POST_AGE
+    DAY_INDEX = (byte_to_utf8(r.get('day_index'), ifError = -1) + 1) % MAX_POST_AGE
     r.set('day_index', DAY_INDEX)
 
 
