@@ -10,8 +10,6 @@ import models, schemas
 from typing import List
 from datetime import datetime, timedelta
 import pytz
-import uuid
-import os
 import CRUD.course as course_crud
 import CRUD.post_reaction as reaction_crud
 import CRUD.post_content as post_content_crud

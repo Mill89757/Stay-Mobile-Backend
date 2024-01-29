@@ -94,8 +94,6 @@ def create_post(db: Session, post: schemas.PostCreate):
     else:
         return "Cannot create post, no days left for the challenge"
     
-    
-    
 
 # read post by post id
 def get_post(db:Session, post_id: int):

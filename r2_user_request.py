@@ -38,8 +38,6 @@ def top3categories(user_id:int) -> set:
     return  topCategories + random.sample(other_categories, 3-n)
 
 
-
-
 def filteredPosts_from_reacted_challenges(user_id:int) -> list:
     """
     user can interact with posts, each post belongs to 1 challenge.
