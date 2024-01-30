@@ -322,24 +322,23 @@ if __name__ == "__main__":
     except Exception as e:
         print(e)
 
-        r.delete('db_len')
-        r.delete('day_index')
-        for i in range(5):
-            r.delete(f'category{i}post')
-        r.delete('on_clg_info')
-        r.delete('user_contribution')
-        r.delete('post_clg_pair')
-        r.delete('completed_clg')
+        keys = ['db_len', 'day_index', 'on_clg_info', 'user_contribution', 'post_clg_pair', 'completed_clg']
+        for key in keys: r.delete(key)
+        for i in range(5): r.delete(f'category{i}post')
 
-        foldername = "./redis_output"
-        file_list = os.listdir(foldername )
-
+        folder = "./redis_output"
+        file_list = os.listdir(folder)
         for filename in file_list:
-            with open(f'{foldername}/{filename}', 'r') as f:
+            file = f'{folder}/{filename}'
+            with open(file, 'r') as f:
                 keys = f.readline().split(',')
                 for key in keys: 
                     if key: r.delete(key)
-
+            if os.path.exists(file):
+                os.remove(file)
+    
+    else: 
+        print('Automation process is completed!')
 
 
 
