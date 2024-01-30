@@ -147,7 +147,7 @@ def update_challenge_distribution_for_users() -> None:
     r.hincrby('db_len', 'mmbr', mmbr_count)  
 
 
-def classifiy_newPosts() -> None:
+def classify_newPosts() -> None:
     """
     Each post is associated with one challenge, and each challenge has a category code.
     This function examines newly created posts. If a post is public and not mean to be break, 
@@ -197,6 +197,8 @@ def classifiy_newPosts() -> None:
                 continue
         
         ##### testing #####
+        if not os.path.exists('redis_output'):
+            os.makedirs('redis_output')
         if not r.exists(f'clg{challenge_id}posts'):
             with open('./redis_output/clg_posts.txt', 'a') as f:
                 f.write(f'clg{challenge_id}posts')
@@ -250,6 +252,8 @@ def process_recent_reaction_data() -> None:
 
 
         ##### testing ##### 
+        if not os.path.exists('redis_output'):
+            os.makedirs('redis_output')
         if not r.exists(f'{user_id}_clgs_preference'):
             with open('./redis_output/user_clgs_preference.txt', 'a') as f:
                 f.write(f'{user_id}_clgs_preference')
@@ -312,9 +316,9 @@ if __name__ == "__main__":
         remove_outdated_clg_and_post_from_redis()
         add_new_ongoing_challenges_to_redis()
         update_challenge_distribution_for_users()
-        classifiy_newPosts()
+        classify_newPosts()
         process_recent_reaction_data()
-        
+
     except Exception as e:
         print(e)
 
@@ -327,7 +331,6 @@ if __name__ == "__main__":
         r.delete('post_clg_pair')
         r.delete('completed_clg')
 
-        import os
         foldername = "./redis_output"
         file_list = os.listdir(foldername )
 
