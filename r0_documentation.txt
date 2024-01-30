@@ -22,7 +22,7 @@ there are 10 records in the POST table as of last night
 
 # ---------- 
 
-redis_key =  category{1,2,3,4,or 5}post
+redis_key =  category{0, 1,2,3,or 4}post
 redis_type = sorted set (zset)
 zset_value = (post_id, score=DAY_INDEX) for all recent post_id belongs to the specified category
 

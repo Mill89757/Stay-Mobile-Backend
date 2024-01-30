@@ -195,6 +195,13 @@ def classifiy_newPosts() -> None:
                 contribution = [str(num) for num in contribution]
                 r.hset('user_contribution',user_id,','.join(contribution)) 
                 continue
+        
+        ##### testing #####
+        if not r.exists(f'clg{challenge_id}posts'):
+            with open('./redis_output/clg_posts.txt', 'a') as f:
+                f.write(f'clg{challenge_id}posts')
+                f.write(',')
+        ##### testing #####
 
         # if not breaking day and public, add post_id to redis
         if isPublic:
@@ -241,6 +248,18 @@ def process_recent_reaction_data() -> None:
         user_id = instance.user_id
         is_cancelled = instance.is_cancelled
 
+
+        ##### testing ##### 
+        if not r.exists(f'{user_id}_clgs_preference'):
+            with open('./redis_output/user_clgs_preference.txt', 'a') as f:
+                f.write(f'{user_id}_clgs_preference')
+                f.write(',')
+        if not r.exists(f'{user_id}_reacted_post_pool'):
+            with open('./redis_output/user_reacted_post_pool.txt', 'a') as f:
+                f.write(f'{user_id}_reacted_post_pool')
+                f.write(',')
+        ##### testing #####
+            
         # recalling a reaction is something negative, so decrement challenge preference
         if is_cancelled: 
             r.zincrby(f'{user_id}_clgs_preference', -0.6, challenge_id)
@@ -285,13 +304,42 @@ if __name__ == "__main__":
     r.set('day_index', DAY_INDEX)
 
 
-    remove_outdated_clg_and_post_from_redis()
-    add_new_ongoing_challenges_to_redis()
-    update_challenge_distribution_for_users()
-    classifiy_newPosts()
-    process_recent_reaction_data()
 
-    
+
+
+
+    try:
+        remove_outdated_clg_and_post_from_redis()
+        add_new_ongoing_challenges_to_redis()
+        update_challenge_distribution_for_users()
+        classifiy_newPosts()
+        process_recent_reaction_data()
+        
+    except Exception as e:
+        print(e)
+
+        r.delete('db_len')
+        r.delete('day_index')
+        for i in range(5):
+            r.delete(f'category{i}post')
+        r.delete('on_clg_info')
+        r.delete('user_contribution')
+        r.delete('post_clg_pair')
+        r.delete('completed_clg')
+
+        import os
+        foldername = "./redis_output"
+        file_list = os.listdir(foldername )
+
+        for filename in file_list:
+            with open(f'{foldername}/{filename}', 'r') as f:
+                keys = f.readline().split(',')
+                for key in keys: 
+                    if key: r.delete(key)
+
+
+
+
     # Close the session
     session.close()
 
