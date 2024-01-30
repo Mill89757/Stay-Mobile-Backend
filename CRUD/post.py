@@ -128,6 +128,28 @@ def get_posts(db: Session, skip: int = 0, limit: int = 100):
     posts = db.query(models.Post).order_by(desc(models.Post.created_time)).filter(models.Post.written_text != "I have a break").offset(skip).limit(limit).all()
     return posts
 
+
+def get_posts_by_ids(db: Session, post_ids: list, skip: int = 0, limit: int = 100):
+    """ Return posts by their IDs
+    
+    Args:
+        db (Session): Database session
+        post_ids (list): List of post IDs to fetch
+        skip (int): Number of records to skip
+        limit (int): Maximum number of records to fetch
+    
+    Returns:
+        list of post objects
+    """
+    posts = db.query(models.Post) \
+              .filter(models.Post.id.in_(post_ids)) \
+              .order_by(desc(models.Post.created_time)) \
+              .offset(skip) \
+              .limit(limit) \
+              .all()
+    return posts
+
+
 # read posts of one user by user id
 def get_posts_by_user_id(db: Session, user_id: int) -> List[models.Post]:
     """ Return the post by user id
