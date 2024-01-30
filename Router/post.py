@@ -200,8 +200,8 @@ def get_recommended_post(user_id):
     return filteredPosts_from_reacted_challenges(user_id) + filteredPosts_from_top3Categories(user_id)
 
 @router.get("/GetRecommendedPosts/{user_id}")
-async def get_recommended_posts(user_id: int):
+async def get_recommended_posts(user_id: int, db: Session = Depends(get_db)):
     """ Return the recommended posts for a user
     """
-    
-    return get_recommended_post(user_id)
+    recommended_post_ids = get_recommended_post(user_id)
+    return post_crud.get_posts_by_ids(db, recommended_post_ids)
