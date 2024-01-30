@@ -1,11 +1,9 @@
 # ---------- 
 
-redis_key = rs_param
-redis_type = hash table 
+redis_key = day_index 
+redis_type = str 
 
-r.get('rs_param', 'max_post_age') = age of oldest post (days) in our recommended post pool
-r.get('rs_param', 'distinct_category') = number of distinct and available challenge categories 
-r.get('rs_param', 'day_index') = an integer between 0 and max_post_age - 1 inclusive
+r.get('day_index') = an integer between 0 and max_post_age - 1 inclusive
 
 
 
@@ -24,12 +22,12 @@ there are 10 records in the POST table as of last night
 
 # ---------- 
 
-redis_key =  recent_posts_for_category{1,2,3,4,or 5}
+redis_key =  category{0, 1,2,3,or 4}post
 redis_type = sorted set (zset)
 zset_value = (post_id, score=DAY_INDEX) for all recent post_id belongs to the specified category
 
 i.e. 
-if r.zremrangebyscore('recent_posts_for_category1', 0, 10)
+if r.zremrangebyscore('category1', 0, 10)
 then item with score between 0 and 10 inclusive gets removed from the set
 
 
@@ -54,8 +52,8 @@ hash_field = user_id
 hash_value = 5 non-negative integers, separated by comma 
 
 i.e. 
-if r.hget('user_contribution', 111) == '1,0,0,0,0'
-then user 111 spent 1,0,0,0,0 days on challenge category 0,1,2,3,4 respectively.
+if r.hget('user_contribution', 111) == '1,0,10,0,20'
+then user 111 spent 1,0,10,0,20 days on challenge category 0,1,2,3,4 respectively.
 
 
 
@@ -70,8 +68,8 @@ hash_value = challenge_id of the post
 
 # ---------- 
 
-redis_key = {user_id}_liked_posts
-redis_type = set (zset)
+redis_key = {user_id}_reacted_post_pool
+redis_type = set
 set_value = {post_id} for which the user interacted with. 
 
 # ---------
@@ -84,3 +82,18 @@ i.e.
 r.zadd('123_clg_preference', {111: 100}) 
 user 123 has reacted to challenge 111 for 100 times 
 
+
+
+# ---------
+
+redis_key  = completed_clg
+redis_type = sorted set (zset)
+zset_value = {challenge_id, day_index_in which_it_becoems_outdated} 
+
+
+
+# ---------
+
+redis_key  = clg{challenge_id}posts
+redis_type = linked list
+list_items = post_id from specified challenge_id
