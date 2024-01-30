@@ -203,4 +203,5 @@ def get_recommended_post(user_id):
 async def get_recommended_posts(user_id: int):
     """ Return the recommended posts for a user
     """
-    return get_recommended_posts(user_id)
+    
+    return get_recommended_post(user_id)
