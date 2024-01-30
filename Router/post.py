@@ -22,6 +22,17 @@ async def create_post_router(post:schemas.PostCreate, db: Session = Depends(get_
 # read post by post id
 @router.get("/GetPost/{post_id}", response_model=schemas.PostRead)
 async def get_post_route(post_id: int, db: Session = Depends(get_db)):
+    """ Return the post by post id
+    
+    Args:
+        post_id (int): post id
+    
+    Returns:
+        post: post object    
+
+    Raises:
+        HTTPException: post not found
+    """
     post = post_crud.get_post(db=db, post_id=post_id)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
@@ -30,6 +41,18 @@ async def get_post_route(post_id: int, db: Session = Depends(get_db)):
 # read posts of one user by user id
 @router.get("/GetPostByUserID/{user_id}", response_model=List[schemas.PostRead])
 async def get_post_route_user_id(user_id: int, db: Session = Depends(get_db)):
+    """ Return the post by user id
+    
+    Args:
+        user_id (int): user id
+    
+    Returns:
+        post: post object
+        
+    Raises:
+        HTTPException: post not found
+        HTTPException: user not found
+    """
     post = post_crud.get_posts_by_user_id(db=db, user_id = user_id)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
@@ -38,16 +61,19 @@ async def get_post_route_user_id(user_id: int, db: Session = Depends(get_db)):
 # read posts by challenge id
 @router.get("/GetPostByChallengeID/{challenge_id}", response_model=List[schemas.PostRead])
 async def get_post_route_challenge_id(challenge_id: int, db: Session = Depends(get_db)):
-    post = post_crud.get_posts_by_challenge_id(db=db, challenge_id = challenge_id)
-    if post is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
-    return post
+    """ Return the post by challenge id
 
-# read post by post id
-# same as line 17
-@router.get("/GetPost/{post_id}", response_model=schemas.PostRead)
-async def get_post_route(post_id: int, db: Session = Depends(get_db)):
-    post = post_crud.get_post(db=db, post_id=post_id)
+    Args:
+        challenge_id (int): challenge id
+
+    Returns:
+        post: post object
+    
+    Raises:
+        HTTPException: post not found
+        HTTPException: challenge not found
+    """
+    post = post_crud.get_posts_by_challenge_id(db=db, challenge_id = challenge_id)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
     return post
@@ -55,6 +81,15 @@ async def get_post_route(post_id: int, db: Session = Depends(get_db)):
 # read all posts
 @router.get("/GetAllposts/", response_model=list[schemas.PostRead])
 async def get_posts_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """ Return all posts
+    
+    Args:
+        skip (int): skip
+        limit (int): limit
+    
+    Returns:
+        list of posts object
+    """
     return post_crud.get_posts(db=db, skip=skip, limit=limit)
 
 # update post by post id
@@ -75,4 +110,8 @@ async def delete_post_route(post_id: int, db: Session = Depends(get_db)):
 # read the recent post duration for a user
 @router.get("/GetRecentPostDuration/{user_id}")
 async def get_recent_post_duration(user_id: int, db: Session = Depends(get_db)):
+    """ Return the duration of posts in the last 5 days for a user
+    
+    Notes: the challenge id is added for testing otherwise is hard to locate the specific post
+    """
     return post_crud.get_recent_post_duration(db, user_id)
