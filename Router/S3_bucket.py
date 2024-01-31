@@ -52,7 +52,7 @@ def upload_user_avatar(user_id: int, file: UploadFile):
     compressed_size = compressed_output.tell()
 
     # 如果文件仍然大于1MB，进一步降低质量
-    while compressed_size > 1024 * 1024 and quality > 20:
+    while compressed_size > 2 * 1024 * 1024 and quality > 85:
         compressed_output.seek(0)
         quality -= 5  # 质量递减步长
         image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
@@ -105,7 +105,7 @@ def upload_challenger_cover(challenge_id: int, file: UploadFile):
     compressed_size = compressed_output.tell()
 
     # 如果文件仍然大于1MB，进一步降低质量
-    while compressed_size > 1024 * 1024 and quality > 20:
+    while compressed_size > 2 * 1024 * 1024 and quality > 85:
         compressed_output.seek(0)
         quality -= 5  # 质量递减步长
         image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
@@ -145,7 +145,7 @@ def upload_course_cover(challenge_id: int, file: UploadFile):
     compressed_size = compressed_output.tell()
 
     # 如果文件仍然大于1MB，进一步降低质量
-    while compressed_size > 1024 * 1024 and quality > 20:
+    while compressed_size > 2 * 1024 * 1024 and quality > 85:
         compressed_output.seek(0)
         quality -= 5  # 质量递减步长
         image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
@@ -188,7 +188,7 @@ def upload_post_cover(challenge_id: int, user_id: int, file: UploadFile):
     compressed_size = compressed_output.tell()
 
     # 如果文件仍然大于1MB，进一步降低质量
-    while compressed_size > 1024 * 1024 and quality > 20:
+    while compressed_size > 2 * 1024 * 1024 and quality > 85:
         compressed_output.seek(0)
         quality -= 5  # 质量递减步长
         image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
