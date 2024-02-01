@@ -20,6 +20,19 @@ def get_db():
 # create tracking
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_tracking(tracking: schemas.TrackingsRequest, db: Session = Depends(get_db)):
+    """create tracking
+    
+    Args:
+        tracking: tracking record
+        
+    Returns:
+        tracking record
+    
+    Raises:
+        HTTPException: challenge not found
+        HTTPException: follower not found
+        HTTPException: This user is not the owner of this challenge
+    """
     tracking = crud.create_tracking(db, tracking)
     return tracking
 
@@ -86,6 +99,21 @@ def get_activated_tracking_challenge_data_by_follower_id(follower_id: int, db: S
 # update tracking status
 @router.put("/")
 def update_tracking_status(challenge_id: int, follower_id: int, tracking: schemas.TrackingsResponse, db: Session = Depends(get_db)):
+    """update tracking status
+
+    Args:
+        challenge_id: id of challenge
+        follower_id: id of follower
+        tracking: tracking record
+    
+    Returns:
+        tracking record
+    
+    Raises:
+        HTTPException: challenge not found
+        HTTPException: follower not found
+        HTTPException: tracking not found
+    """
     res = crud.update_tracking_status(db, challenge_id, follower_id, tracking)
     return res
 
