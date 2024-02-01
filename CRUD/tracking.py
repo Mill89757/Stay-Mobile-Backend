@@ -7,7 +7,22 @@ from fastapi import HTTPException, status
 
 # create tracking
 def create_tracking(db: Session, tracking: schemas.TrackingsRequest):
+    """create tracking
+    
+    Args:
+        tracking: tracking record
+        
+    Returns:
+        tracking record
+    
+    Raises:
+        HTTPException: challenge not found
+        HTTPException: follower not found
+        HTTPException: This user is not the owner of this challenge
+    """
     db_challenge = db.query(models.Challenge).filter(models.Challenge.id == tracking.challenge_id).first()
+    if db_challenge.challenge_owner_id != tracking.owner_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This user is not the owner of this challenge")
     if db_challenge:  # avoid same record repeat in this table
         db_tracking = models.Tracking(created_time=tracking.created_time,
                                       terminated_time=tracking.terminated_time,
@@ -107,9 +122,26 @@ def read_activated_tracking_challenge_data_by_follower_id(db: Session, follower_
 
 # update tracking status
 def update_tracking_status(db: Session, challenge_id: int,follower_id:int, tracking: schemas.TrackingsRequest):
+    """update tracking status
+
+    Args:
+        challenge_id: id of challenge
+        follower_id: id of follower
+        tracking: tracking record
+    
+    Returns:
+        tracking record
+    
+    Raises:
+        HTTPException: challenge not found
+        HTTPException: follower not found
+        HTTPException: tracking not found
+    """
+    get_challenge(db, challenge_id)# check if challenge_id exists
+    read_user_by_id(db, follower_id)# check if follower_id exists
     db_tracking = db.query(models.Tracking).filter(models.Tracking.challenge_id == challenge_id).filter(models.Tracking.follower_id == follower_id).first()
     if db_tracking is None:
-        return None
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tracking not found")
     db.query(models.Tracking).filter(models.Tracking.challenge_id == challenge_id).filter(models.Tracking.follower_id == follower_id).update(
         {
             "created_time": tracking.created_time,
