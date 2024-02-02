@@ -5,15 +5,17 @@ from datetime import datetime
 # schemas.py is used to build pydantic models, which controls data validation, conversion, documentation classes and instances
 # define and validate whether the incoming data structure matches as expected
 
+
 # User 模型
 class UsersRequest(BaseModel):
     firebase_uid: str
     name: str
     username: str
     email_address: str
-    created_time:Optional[datetime] = None
+    created_time: Optional[datetime] = None
     avatar_location: Optional[str] = None
     is_completed: Optional[bool] = False#默认false
+    user_timezone: str
 
 class UsersResponse(BaseModel):
     id: int
@@ -21,9 +23,10 @@ class UsersResponse(BaseModel):
     name: str
     username: str
     email_address: str
-    created_time: datetime
+    created_time:  Optional[datetime] = None
     avatar_location: str
     is_completed: bool
+    user_timezone: str
 
     class Config:
         orm_mode = True
@@ -36,12 +39,13 @@ class ChallengeBase(BaseModel):
     duration: Optional[int] = None
     breaking_days: Optional[int] = None
     is_public: bool = False
-    is_finished: Optional[bool] = False
+    is_completed: Optional[bool] = False
+    is_completed: Optional[bool] = False
     created_time:Optional[datetime] = None
     category: Optional[int] = None
     cover_location: Optional[str] = None
     days_left: Optional[int] = None
-
+    is_group_challenge: bool
 
 class ChallengeCreate(BaseModel):
     title: str
@@ -51,22 +55,42 @@ class ChallengeCreate(BaseModel):
     is_public: bool = False
     category: Optional[int] = None
     cover_location: Optional[str] = None
-    days_left: Optional[int] = None
+    
     challenge_owner_id: int
-    course_id: Optional[int] = None
+    # course_id: Optional[int] = None
 
 class ChallengeRead(ChallengeBase):
     id: int
     title: str
     category: int
     duration: int
-    days_left: int
-    breaking_days_left: int
     cover_location: str
     finished_time: Optional[datetime] = None
-    is_finished: bool
-    user_id: int
+    is_completed: bool
+    challenge_owner_id: int
     course_id: Optional[int] = None
+
+    class Config:
+        orm_mode = True
+
+
+#Group Challenge 模型
+class GroupChallengeMembersBase(BaseModel):
+    challenge_id: int
+    user_id: int
+    days_left: Optional[int] = None
+    breaking_days_left: int
+    is_challenge_finished: bool
+
+class GroupChallengeMembersCreate(GroupChallengeMembersBase):
+    breaking_days_left: int
+    days_left: Optional[int] = None
+    is_challenge_finished: bool
+
+class GroupChallengeMembersRead(GroupChallengeMembersBase):
+    breaking_days_left: int
+    days_left: Optional[int] = None
+    is_challenge_finished: bool
 
     class Config:
         orm_mode = True
@@ -189,3 +213,8 @@ class PostReactionCreate(PostReactionBase):
     class Config:
         orm_mode = True
 
+# expo push token 模型
+class ExpoPushTokenBase(BaseModel):
+    expo_push_token: str
+    user_id: int
+    timestamp: datetime
