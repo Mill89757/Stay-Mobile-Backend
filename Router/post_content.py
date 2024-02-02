@@ -12,6 +12,14 @@ router = APIRouter()
 # create post content
 @router.post("/CreatePostContent/", response_model=schemas.PostContentRead, status_code=status.HTTP_201_CREATED)
 async def create_post_content_router(post_content:schemas.PostContentCreate, db: Session = Depends(get_db)):
+    """Create a new post content in the database.
+    Args:
+        post_content (schemas.PostContentCreate): post content data
+    Returns:
+        models.PostContent: post content data
+    Raises:
+        HTTPException: post not found
+    """
     return post_content_crud.create_post_content(db=db, post_content= post_content)
 
 # read post content by post content id
