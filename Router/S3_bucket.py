@@ -127,7 +127,7 @@ def upload_challenger_cover(challenge_id: int, file: UploadFile):
 
 
 @router.post("/Upload_course_covers/{course_id}")
-def upload_course_cover(challenge_id: int, file: UploadFile):
+def upload_course_cover(course_id: int, file: UploadFile):
 
     # 将上传的文件转换为Pillow图像
     image = Image.open(file.file).convert("RGB")  # 转换为RGB
@@ -156,7 +156,7 @@ def upload_course_cover(challenge_id: int, file: UploadFile):
 
     # 使用 boto3 上传到 S3
     s3 = boto3.resource("s3", aws_access_key_id=f"{os.environ['AWS_ACCESS_KEY_ID']}", aws_secret_access_key=f"{os.environ['AWS_SECRET_ACCESS_KEY']}")
-    user_id_as_file_name = f"course_covers/{challenge_id}/{file.filename.split('.')[0]}.jpeg"
+    user_id_as_file_name = f"course_covers/{course_id}/{file.filename.split('.')[0]}.jpeg"
     bucket = s3.Bucket(S3_BUCKET_NAME)
     bucket.put_object(Key=user_id_as_file_name, Body=compressed_image)
 
