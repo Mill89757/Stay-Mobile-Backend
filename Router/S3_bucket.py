@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 import CRUD.post as post_crud
 from database import SessionLocal
 import CRUD.user as user_crud
+import CRUD.challenge as challenge_crud
+import CRUD.course as course_crud
 import os
 from PIL import Image
 import io
@@ -34,8 +36,20 @@ def get_user_avatar(user_id: int, db: Session = Depends(get_db)):
 
 # upload files into AWS database by user id
 @router.post("/UploadAvatar/{user_id}")
-def upload_user_avatar(user_id: int, file: UploadFile):
-
+def upload_user_avatar(user_id: int, file: UploadFile, db: Session = Depends(get_db)):
+    """Upload user avatar to S3
+    
+    Args:
+        user_id (int): user id
+        file (UploadFile): file to upload
+    
+    Returns:
+        str: url of the uploaded file
+    
+    Raises:
+        HTTPException: user not found
+    """
+    user_crud.read_user_by_id(db, user_id)# check if user exists
    # 将上传的文件转换为Pillow图像
     image = Image.open(file.file).convert("RGB")  # 转换为RGB
 
@@ -87,7 +101,20 @@ def upload_photos(file: UploadFile):
 
 
 @router.post("/Upload_challenge_covers/{challenge_id}")
-def upload_challenger_cover(challenge_id: int, file: UploadFile):
+def upload_challenger_cover(challenge_id: int, file: UploadFile, db: Session = Depends(get_db)):
+    """Upload challenge cover to S3
+    
+    Args:
+        challenge_id (int): challenge id
+        file (UploadFile): file to upload
+    
+    Returns:
+        str: url of the uploaded file
+        
+    Raises:
+        HTTPException: challenge not found
+    """
+    challenge_crud.get_challenge(db, challenge_id)# check if challenge exists
 
     # 将上传的文件转换为Pillow图像
     image = Image.open(file.file).convert("RGB")  # 转换为RGB
@@ -127,7 +154,20 @@ def upload_challenger_cover(challenge_id: int, file: UploadFile):
 
 
 @router.post("/Upload_course_covers/{course_id}")
-def upload_course_cover(course_id: int, file: UploadFile):
+def upload_course_cover(course_id: int, file: UploadFile, db: Session = Depends(get_db)):
+    """Upload course cover to S3
+    
+    Args:
+        course_id (int): course id
+        file (UploadFile): file to upload
+    
+    Returns:
+        str: url of the uploaded file
+        
+    Raises:
+        HTTPException: course not found
+    """
+    course_crud.read_course_by_id(db, course_id)# check if course exists
 
     # 将上传的文件转换为Pillow图像
     image = Image.open(file.file).convert("RGB")  # 转换为RGB
@@ -168,7 +208,23 @@ def upload_course_cover(course_id: int, file: UploadFile):
 
 #post cover
 @router.post("/Upload_post_covers/")#用challenge_id来标记post
-def upload_post_cover(challenge_id: int, user_id: int, file: UploadFile):
+def upload_post_cover(challenge_id: int, user_id: int, file: UploadFile, db: Session = Depends(get_db)):
+    """Upload post cover to S3
+    
+    Args:
+        challenge_id (int): challenge id
+        user_id (int): user id
+        file (UploadFile): file to upload
+        
+    Returns:
+        str: url of the uploaded file
+        
+    Raises:
+        HTTPException: challenge not found
+        HTTPException: user not found
+    """
+    challenge_crud.get_challenge(db, challenge_id)# check if challenge exists
+    user_crud.read_user_by_id(db, user_id)# check if user exists
 
     # usage example: http://Upload_post_covers?challenge_id=1&user_id=1
 
