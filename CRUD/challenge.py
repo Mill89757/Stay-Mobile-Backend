@@ -326,6 +326,7 @@ def delete_group_challenge_member(db: Session, challenge_id: int, user_id: int):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found or member not found")
     db.delete(db_group_challenge_member)
     db.commit()
+    return True
 
 
 #拿到所有follower的头像
