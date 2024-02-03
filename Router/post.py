@@ -8,6 +8,7 @@ import CRUD.post as post_crud
 import random
 from r1_automation import decoding
 from redis_client import redis_client
+from CRUD.user import read_user_by_id
 
 
 # create routes for posts operations and functions
@@ -202,6 +203,9 @@ def get_recommended_post(user_id):
 @router.get("/GetRecommendedPosts/{user_id}")
 async def get_recommended_posts(user_id: int, db: Session = Depends(get_db)):
     """ Return the recommended posts for a user
+
+    raise HTTPException: user not found
     """
+    read_user_by_id(db, user_id)#handle user not found
     recommended_post_ids = get_recommended_post(user_id)
     return post_crud.get_posts_by_ids(db, recommended_post_ids)
