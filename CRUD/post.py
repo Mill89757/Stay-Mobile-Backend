@@ -227,7 +227,10 @@ def get_recent_post_duration(db: Session, user_id: int):
     """ Return the duration of posts in the last 5 days for a user
     
     Notes: the challenge id is added for testing otherwise is hard to locate the specific post
+
+    raise HTTPException: user not found
     """
+    read_user_by_id(db, user_id)#handle user not found
     RECENT_DAYS = 5
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=RECENT_DAYS)
