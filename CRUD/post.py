@@ -143,6 +143,7 @@ def get_posts_by_ids(db: Session, post_ids: list, skip: int = 0, limit: int = 10
     """
     posts = db.query(models.Post) \
               .filter(models.Post.id.in_(post_ids)) \
+              .filter(models.Post.written_text != "I have a break today!") \
               .order_by(desc(models.Post.created_time)) \
               .offset(skip) \
               .limit(limit) \
