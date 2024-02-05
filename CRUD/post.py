@@ -125,7 +125,7 @@ def get_posts(db: Session, skip: int = 0, limit: int = 100):
     Returns:
         list of posts object
     """
-    posts = db.query(models.Post).order_by(desc(models.Post.created_time)).filter(models.Post.written_text != "I have a break").offset(skip).limit(limit).all()
+    posts = db.query(models.Post).order_by(desc(models.Post.created_time)).filter(models.Post.written_text != "I have a break today!").offset(skip).limit(limit).all()
     return posts
 
 
