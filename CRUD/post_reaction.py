@@ -20,7 +20,7 @@ def creat_post_reaction(db: Session, post_reaction: schemas.PostReactionCreate):
 def get_post_reactions_by_postid(db:Session, post_id: int) -> List[models.PostReaction]:
     post_crud.get_post(db=db, post_id=post_id)# check if post exists
     postid_post_reactions = db.query(models.PostReaction).filter(models.PostReaction.post_id == post_id).all()
-    if postid_post_reactions == []:
+    if postid_post_reactions is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post Reaction not found")
     return postid_post_reactions
 
@@ -51,7 +51,7 @@ def get_post_reactions_by_emoji_image(db: Session, emoji_image: str) -> List[mod
         .filter(models.PostReaction.emoji_image == emoji_image)
         .all()
     )
-    if emoji_image_post_reactions == []:
+    if emoji_image_post_reactions is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post reaction not found")
     return emoji_image_post_reactions
 
