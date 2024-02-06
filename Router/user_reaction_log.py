@@ -25,7 +25,7 @@ async def get_all_log(db:Session=Depends(get_db)):
     return all_log_data
 
 # read user reaction log by log id
-@router.get("/GetByLogId/{log_id}", response_model=schemas.UserReactionLogRead)
+@router.get("/GetByLogId/{log_id}", response_model=List[schemas.UserReactionLogRead])
 async def get_log_by_log_id(log_id:int, db:Session=Depends(get_db)):
     log = crud.get_user_reaction_log_by_log_id(db=db, log_id=log_id)
     return log

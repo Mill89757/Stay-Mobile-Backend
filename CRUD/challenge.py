@@ -413,6 +413,7 @@ def update_challenge_course_id(db:Session, challenge_id: int, course_id: int):
         HTTPException: challenge not found
         HTTPException: challenge has been already linked to course
     """
+    read_course_by_id(db, course_id)#handle course not found
     db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     if db_challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")

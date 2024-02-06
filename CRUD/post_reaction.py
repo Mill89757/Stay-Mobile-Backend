@@ -8,9 +8,21 @@ import models, schemas
 import CRUD.post as post_crud
 
 # create post reaction
-def creat_post_reaction(db: Session, post_reaction: schemas.PostReactionCreate):
+def create_post_reaction(db: Session, post_reaction: schemas.PostReactionCreate):
+    """Create a new post reaction
+    
+    Args:
+    db (Session): database session
+    post_reaction (schemas.PostReactionCreate): post reaction schema
+    
+    Returns:
+    models.PostReaction: post reaction model
+    
+    Raises:
+    HTTPException: if post is not found
+    """
+    post_crud.get_post(db, post_reaction.post_id)# check if post exists
     db_post_reaction = models.PostReaction(**post_reaction.dict())
-
     db.add(db_post_reaction)
     db.commit()
     db.refresh(db_post_reaction)
@@ -18,7 +30,7 @@ def creat_post_reaction(db: Session, post_reaction: schemas.PostReactionCreate):
 
 # read post reaction by post id
 def get_post_reactions_by_postid(db:Session, post_id: int) -> List[models.PostReaction]:
-    post_crud.get_post(db=db, post_id=post_id)# check if post exists
+    post_crud.get_post(db, post_id)# check if post exists
     postid_post_reactions = db.query(models.PostReaction).filter(models.PostReaction.post_id == post_id).all()#return empty list if not found
     if postid_post_reactions is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post Reaction not found")
@@ -30,7 +42,7 @@ def get_post_reactions(db: Session, skip: int = 0, limit: int = 100):
 
 # read post reaction by post id and emoji image
 def get_post_reaction_by_post_emoji(db:Session, post_id:int, emoji_image:str):
-    post_crud.get_post(db=db, post_id=post_id)# check if post exists
+    post_crud.get_post(db, post_id)# check if post exists
     if emoji_image.isascii():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Emoji image must be an emoji")
     if db.query(models.PostReaction).filter(models.PostReaction.emoji_image == emoji_image).all() == []:
