@@ -23,8 +23,8 @@ def create_user_reaction_log(db:Session, log:schemas.UserReactionLogCreate):
     HTTPException: if post does not exist
     HTTPException: if emoji is invalid
     """
-    user_crud.read_user_by_id(db=db, user_id=log.user_id)# check if user exists
-    post_crud.get_post(db=db, post_id=log.post_id)# check if post exists
+    user_crud.read_user_by_id(db, log.user_id)# check if user exists
+    post_crud.get_post(db, log.post_id)# check if post exists
     if log.emoji_image.isascii():# check if emoji is valid
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Emoji image must be an emoji")
     existing_log = get_recent_user_reaction_log_by_user_id(db=db,user_id=log.user_id, post_id=log.post_id)
@@ -73,6 +73,10 @@ def get_user_reaction_log_by_emoji(db:Session, emoji_image:str) -> List[models.U
 
 # update user reaction log by log id
 def update_user_reaction_log(db:Session, log_id:int, log:schemas.UserReactionLogCreate):
+    user_crud.read_user_by_id(db, log.user_id)# check if user exists
+    post_crud.get_post(db, log.post_id)# check if post exists
+    if log.emoji_image.isascii():# check if emoji is valid
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Emoji image must be an emoji")
     db_log = db.query(models.UserReactionLog).filter(models.UserReactionLog.log_id == log_id).first()
     if db_log is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No user reaction log found")
@@ -91,5 +95,9 @@ def delete_user_reaction_log(db:Session, log_id:int):
 
 # read most recently user reaction log by user id, post id and datetime
 def get_recent_user_reaction_log_by_user_id(db:Session, user_id:int, post_id:int):
+    user_crud.read_user_by_id(db, user_id)# check if user exists
+    post_crud.get_post(db, post_id)# check if post exists
+    if post_crud.get_post(db, post_id).user_id != user_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This post does not belong to the user")
     user_reaction_log = db.query(models.UserReactionLog).filter(models.UserReactionLog.user_id == user_id, models.UserReactionLog.post_id==post_id).order_by(models.UserReactionLog.created_datetime.desc()).first()
     return user_reaction_log
