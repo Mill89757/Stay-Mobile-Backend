@@ -14,7 +14,7 @@ router = APIRouter(prefix="/post_reaction")
 # create post reaction log
 @router.post("/Create", response_model=schemas.PostReactionCreate, status_code=status.HTTP_201_CREATED)
 async def create_post_reaction(post_reaction:schemas.PostReactionCreate, db:Session=Depends(get_db)):
-    return crud.creat_post_reaction(db=db, post_reaction=post_reaction)
+    return crud.create_post_reaction(db=db, post_reaction=post_reaction)
 
 # read all post reaction
 @router.get("", response_model=List[schemas.PostReactionCreate])

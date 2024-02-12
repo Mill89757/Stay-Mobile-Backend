@@ -42,10 +42,10 @@ TIMEZONE_MAPPING = {
 # update breaking days for specific challenges
 @router.post("/test/update_breaking_days/{timezone}")
 def test_update_breaking_days(timezone: str, db: Session = Depends(get_db)):
-    specific_challenge_ids = [10007, 10022, 10025, 10004]
+    
     # 使用映射表来获取正确的时区字符串
     full_timezone_str = TIMEZONE_MAPPING.get(timezone, "UTC")
-    challenge_crud.update_breaking_days_for_specific_challenges(db, full_timezone_str, specific_challenge_ids)
+    challenge_crud.update_breaking_days_for_specific_challenges(db, full_timezone_str)
     return {"message": f"Breaking days updated successfully for timezone {timezone}"}
 
 

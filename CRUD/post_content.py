@@ -8,6 +8,15 @@ from CRUD.post import get_post
 
 # crate post content
 def create_post_content(db: Session, post_content: schemas.PostContentCreate):
+    """Create a new post content in the database.
+    Args:
+        post_content (schemas.PostContentCreate): post content data
+    Returns:
+        models.PostContent: post content data
+    Raises:
+        HTTPException: post not found
+    """
+    get_post(db, post_content.post_id)#handle post not found
     db_post_content = models.PostContent(**post_content.dict())
     db.add(db_post_content)
     db.commit()

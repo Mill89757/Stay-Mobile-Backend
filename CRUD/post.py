@@ -125,7 +125,7 @@ def get_posts(db: Session, skip: int = 0, limit: int = 100):
     Returns:
         list of posts object
     """
-    posts = db.query(models.Post).order_by(desc(models.Post.created_time)).filter(models.Post.written_text != "I have a break").offset(skip).limit(limit).all()
+    posts = db.query(models.Post).order_by(desc(models.Post.created_time)).filter(models.Post.written_text != "I have a break today!").offset(skip).limit(limit).all()
     return posts
 
 
@@ -143,6 +143,7 @@ def get_posts_by_ids(db: Session, post_ids: list, skip: int = 0, limit: int = 10
     """
     posts = db.query(models.Post) \
               .filter(models.Post.id.in_(post_ids)) \
+              .filter(models.Post.written_text != "I have a break today!") \
               .order_by(desc(models.Post.created_time)) \
               .offset(skip) \
               .limit(limit) \
@@ -227,7 +228,10 @@ def get_recent_post_duration(db: Session, user_id: int):
     """ Return the duration of posts in the last 5 days for a user
     
     Notes: the challenge id is added for testing otherwise is hard to locate the specific post
+
+    raise HTTPException: user not found
     """
+    read_user_by_id(db, user_id)#handle user not found
     RECENT_DAYS = 5
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=RECENT_DAYS)

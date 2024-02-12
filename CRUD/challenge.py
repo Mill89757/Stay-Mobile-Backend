@@ -77,7 +77,7 @@ TIMEZONE_MAPPING = {
 }
 
 
-def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str, specific_challenge_ids: list):
+def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str):
      # 使用映射表转换时区字符串
     user_timezone = pytz.timezone(TIMEZONE_MAPPING.get(timezone_str, "UTC"))
     # 获取当前时间
@@ -91,45 +91,44 @@ def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str,
     posted_combinations = {combo.decode('utf-8') for combo in redis_client.smembers(redis_key)}
     
    
-    # 遍历所有challenge_id
-    for challenge_id in specific_challenge_ids:
-        group_challenge_members = db.query(models.GroupChallengeMembers).filter(
-            models.GroupChallengeMembers.challenge_id == challenge_id
-        ).all()
-        
-        # 遍历所有group_challenge_members
-        for group_member in group_challenge_members:
-            # 生成组合键，用于检查是否存在于 Redis 中
-            combo_key = f"{challenge_id}_{group_member.user_id}"
-            check_user_timezone = db.query(models.User).filter(models.User.id == group_member.user_id).first()
 
-            # 如果组合键不在 Redis 集合中，则减少 breaking_days_left, days_left, 并生成一条用户的帖子记录
-            if combo_key not in posted_combinations: 
-                if check_user_timezone.user_timezone == timezone_str:
-                    if group_member.breaking_days_left > 0:
-                        if group_member.days_left > 0:
-                            group_member.breaking_days_left -= 1
-                            group_member.days_left -= 1
-                            #generate a post record for the user called "I have a break"
-                            db_post = models.Post(
-                                user_id=group_member.user_id,
-                                challenge_id=challenge_id,
-                                #change the start time to today at 23:59:59
-                                start_time=datetime.now().replace(hour=23, minute=59, second=59),
-                                end_time=datetime.now().replace(hour=23, minute=59, second=59),
-                                written_text="I have a break",
-                            )
-                            db.add(db_post)
-                            db.commit()
-                # 如果 breaking_days_left 为0，则标记挑战为完成
-                elif group_member.breaking_days_left == 0:
-                    challenge_to_completed = db.query(models.Challenge).filter_by(id=challenge_id).first()
-                    challenge_to_finished = db.query(models.GroupChallengeMembers).filter_by(challenge_id=challenge_id).filter_by(user_id=group_member.user_id).first()
-                    if challenge_to_completed and not challenge_to_completed.is_completed:
-                        challenge_to_completed.is_completed = False
-                        challenge_to_finished.is_challenge_finished = True
-                        challenge_to_completed.finished_time = datetime.now()
+         # 查询所有挑战
+    all_challenge_members = db.query(models.GroupChallengeMembers).all()
+
+    
+    # 遍历所有group_challenge_members
+    for group_member in all_challenge_members:
+        challenge_id = group_member.challenge_id
+        # 生成组合键，用于检查是否存在于 Redis 中
+        combo_key = f"{challenge_id}_{group_member.user_id}"
+        check_user_timezone = db.query(models.User).filter(models.User.id == group_member.user_id).first()
+
+        # 如果组合键不在 Redis 集合中，则减少 breaking_days_left, days_left, 并生成一条用户的帖子记录
+        if combo_key not in posted_combinations: 
+            if check_user_timezone.user_timezone == timezone_str:
+                if group_member.breaking_days_left > 0:
+                    if group_member.days_left > 0:
+                        group_member.breaking_days_left -= 1
+                        group_member.days_left -= 1
+                        #generate a post record for the user called "I have a break"
+                        db_post = models.Post(
+                            user_id=group_member.user_id,
+                            challenge_id=challenge_id,
+                            #change the start time to today at 23:59:59
+                            start_time=datetime.now().replace(hour=23, minute=59, second=59),
+                            end_time=datetime.now().replace(hour=23, minute=59, second=59),
+                            written_text="I have a break today!",
+                        )
+                        db.add(db_post)
                         db.commit()
+            # 如果 breaking_days_left 为0，则标记挑战为完成
+            elif group_member.breaking_days_left == 0:
+                challenge_to_completed = db.query(models.Challenge).filter_by(id=challenge_id).first()
+                challenge_to_finished = db.query(models.GroupChallengeMembers).filter_by(challenge_id=challenge_id).filter_by(user_id=group_member.user_id).first()
+                if challenge_to_completed and not challenge_to_completed.is_completed:
+                    challenge_to_finished.is_challenge_finished = True
+                    challenge_to_completed.finished_time = datetime.now()
+                    db.commit()
 
     # 提交所有更改到数据库
     db.commit()
@@ -153,7 +152,7 @@ def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.
         db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
         .filter(models.GroupChallengeMembers.user_id == user_id)
-        .filter(models.Challenge.finished_time == None)
+        .filter(models.GroupChallengeMembers.is_challenge_finished == True)
         .all()
     )
     active_challenges = []
@@ -195,7 +194,7 @@ def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[schema
         db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
         .filter(models.GroupChallengeMembers.user_id == user_id)
-        .filter(models.Challenge.finished_time != None)
+        .filter(models.GroupChallengeMembers.is_challenge_finished == False)
         .all()
     )
     finished_challenges = []
@@ -355,6 +354,7 @@ def delete_group_challenge_member(db: Session, challenge_id: int, user_id: int):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found or member not found")
     db.delete(db_group_challenge_member)
     db.commit()
+    return True
 
 
 #拿到所有follower的头像
@@ -413,6 +413,7 @@ def update_challenge_course_id(db:Session, challenge_id: int, course_id: int):
         HTTPException: challenge not found
         HTTPException: challenge has been already linked to course
     """
+    read_course_by_id(db, course_id)#handle course not found
     db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     if db_challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
@@ -583,9 +584,6 @@ def generate_invitation_code(db : Session, challenge_id : int):
         redis_client.set(challenge_id, redis_key)
         redis_client.expire(redis_key, int(remaining_time))
         redis_client.expire(challenge_id, int(remaining_time))
-    elif redis_client.get(challenge_id) and compare_created_time_by_challenge_id(db, challenge_id):
-        exist_token = redis_client.get(challenge_id)
-        return exist_token
     else:
         today = datetime.now(pytz.utc)
         print(today)
