@@ -194,7 +194,7 @@ def get_finished_challenges_by_user_id(db: Session, user_id: int) -> List[schema
         db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
         .filter(models.GroupChallengeMembers.user_id == user_id)
-        .filter(models.GroupChallengeMembers.is_challenge_finished == False)
+        .filter(models.GroupChallengeMembers.is_challenge_finished == True)
         .all()
     )
     finished_challenges = []
