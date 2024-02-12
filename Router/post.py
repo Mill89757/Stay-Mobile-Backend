@@ -6,7 +6,7 @@ import schemas
 from database import get_db  
 import CRUD.post as post_crud
 import random
-from r1_automation import decoding
+from r1_automation import byte_to_utf8
 from redis_client import redis_client
 from CRUD.user import read_user_by_id
 
@@ -128,7 +128,7 @@ def top3categories(user_id:int) -> set:
     """
     
     # retrive uer's challenge contribution data.
-    contribution = decoding( redis_client.hget('user_contribution',user_id), StrToSplit=',', ifError=['0']*5)
+    contribution = byte_to_utf8( redis_client.hget('user_contribution',user_id), StrToSplit=',', ifError=['0']*5)
     contribution = [int(num) for num in contribution]
 
     topCategories = []
@@ -170,12 +170,12 @@ def filteredPosts_from_reacted_challenges(user_id:int) -> list:
 
     for post_id in recent_posts:
         clg_id = redis_client.hget('post_clg_pair', post_id)
-        category = int(decoding(redis_client.hget('on_clg_info', clg_id), StrToSplit=',')[0])
+        category = int(byte_to_utf8(redis_client.hget('on_clg_info', clg_id), StrToSplit=',')[0])
         if category not in top3:
             interacted_post = redis_client.sismember(f'{user_id}_liked_posts', post_id)
             interacted_clg = redis_client.zscore(f'{user_id}_clgs_preference',post_id)
             if not interacted_post or interacted_clg:
-                postPool.append(int(decoding(post_id)))
+                postPool.append(int(byte_to_utf8(post_id)))
     
     return postPool
 
