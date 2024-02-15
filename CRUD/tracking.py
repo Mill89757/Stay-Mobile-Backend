@@ -91,34 +91,33 @@ def read_activated_tracking_challenge_data_by_follower_id(db: Session, follower_
     Raises:
         HTTPException: follower not found
     """
-    read_user_by_id(db, follower_id)# check if follower_id exists
-    follower = db.query(models.Tracking).filter(models.Tracking.follower_id == follower_id).first()
-    if follower is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This user haven't followed any challenge")
     db_activated_tracking = db.query(models.Tracking).filter(
         models.Tracking.follower_id == follower_id).filter(models.Tracking.is_terminated == False).all()
-    result = []
-    for tracking_record in db_activated_tracking:
-        challenge_owner = read_user_by_id(db, tracking_record.owner_id)
-        challenge = get_challenge(db, tracking_record.challenge_id)
-        result.append({
-            "id": tracking_record.id,
-            "created_time": tracking_record.created_time,
-            "terminated_time": tracking_record.terminated_time,
-            "is_terminated": tracking_record.is_terminated,
-            "follower_id": tracking_record.follower_id,
-            "challenge_id": tracking_record.challenge_id,
-            "challenge_title": challenge.title,
-            "challenge_description": challenge.description,
-            "challenge_duration": challenge.duration,
-            "challenge_breaking_days": challenge.breaking_days,
-            "challenge_category": challenge.category,
-            "challenge_created_time": challenge.created_time,
-            "challenge_cover_location": challenge.cover_location,
-            "challenge_owner_name": challenge_owner.name,
-            "challenge_owner_avatar_location": challenge_owner.avatar_location,
-        })
-    return result
+    if db_activated_tracking is None:
+        return []
+    else:
+        result = []
+        for tracking_record in db_activated_tracking:
+            challenge_owner = read_user_by_id(db, tracking_record.owner_id)
+            challenge = get_challenge(db, tracking_record.challenge_id)
+            result.append({
+                "id": tracking_record.id,
+                "created_time": tracking_record.created_time,
+                "terminated_time": tracking_record.terminated_time,
+                "is_terminated": tracking_record.is_terminated,
+                "follower_id": tracking_record.follower_id,
+                "challenge_id": tracking_record.challenge_id,
+                "challenge_title": challenge.title,
+                "challenge_description": challenge.description,
+                "challenge_duration": challenge.duration,
+                "challenge_breaking_days": challenge.breaking_days,
+                "challenge_category": challenge.category,
+                "challenge_created_time": challenge.created_time,
+                "challenge_cover_location": challenge.cover_location,
+                "challenge_owner_name": challenge_owner.name,
+                "challenge_owner_avatar_location": challenge_owner.avatar_location,
+            })
+        return result
 
 # update tracking status
 def update_tracking_status(db: Session, challenge_id: int,follower_id:int, tracking: schemas.TrackingsRequest):
