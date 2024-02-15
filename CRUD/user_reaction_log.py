@@ -97,7 +97,7 @@ def delete_user_reaction_log(db:Session, log_id:int):
 def get_recent_user_reaction_log_by_user_id(db:Session, user_id:int, post_id:int):
     user_crud.read_user_by_id(db, user_id)# check if user exists
     post_crud.get_post(db, post_id)# check if post exists
-    if post_crud.get_post(db, post_id).user_id != user_id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This post does not belong to the user")
+    # if post_crud.get_post(db, post_id).user_id != user_id:
+    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This post does not belong to the user")
     user_reaction_log = db.query(models.UserReactionLog).filter(models.UserReactionLog.user_id == user_id, models.UserReactionLog.post_id==post_id).order_by(models.UserReactionLog.created_datetime.desc()).first()
     return user_reaction_log
