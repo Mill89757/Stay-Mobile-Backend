@@ -5,6 +5,11 @@ from sqlalchemy.orm import Session
 import schemas  
 from database import get_db  
 import CRUD.post as post_crud
+import random
+from r1_automation import decoding
+from redis_client import redis_client
+from CRUD.user import read_user_by_id
+
 
 # create routes for posts operations and functions
 router = APIRouter()
@@ -22,6 +27,17 @@ async def create_post_router(post:schemas.PostCreate, db: Session = Depends(get_
 # read post by post id
 @router.get("/GetPost/{post_id}", response_model=schemas.PostRead)
 async def get_post_route(post_id: int, db: Session = Depends(get_db)):
+    """ Return the post by post id
+    
+    Args:
+        post_id (int): post id
+    
+    Returns:
+        post: post object    
+
+    Raises:
+        HTTPException: post not found
+    """
     post = post_crud.get_post(db=db, post_id=post_id)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
@@ -30,6 +46,18 @@ async def get_post_route(post_id: int, db: Session = Depends(get_db)):
 # read posts of one user by user id
 @router.get("/GetPostByUserID/{user_id}", response_model=List[schemas.PostRead])
 async def get_post_route_user_id(user_id: int, db: Session = Depends(get_db)):
+    """ Return the post by user id
+    
+    Args:
+        user_id (int): user id
+    
+    Returns:
+        post: post object
+        
+    Raises:
+        HTTPException: post not found
+        HTTPException: user not found
+    """
     post = post_crud.get_posts_by_user_id(db=db, user_id = user_id)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
@@ -38,16 +66,19 @@ async def get_post_route_user_id(user_id: int, db: Session = Depends(get_db)):
 # read posts by challenge id
 @router.get("/GetPostByChallengeID/{challenge_id}", response_model=List[schemas.PostRead])
 async def get_post_route_challenge_id(challenge_id: int, db: Session = Depends(get_db)):
-    post = post_crud.get_posts_by_challenge_id(db=db, challenge_id = challenge_id)
-    if post is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
-    return post
+    """ Return the post by challenge id
 
-# read post by post id
-# same as line 17
-@router.get("/GetPost/{post_id}", response_model=schemas.PostRead)
-async def get_post_route(post_id: int, db: Session = Depends(get_db)):
-    post = post_crud.get_post(db=db, post_id=post_id)
+    Args:
+        challenge_id (int): challenge id
+
+    Returns:
+        post: post object
+    
+    Raises:
+        HTTPException: post not found
+        HTTPException: challenge not found
+    """
+    post = post_crud.get_posts_by_challenge_id(db=db, challenge_id = challenge_id)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
     return post
@@ -55,6 +86,15 @@ async def get_post_route(post_id: int, db: Session = Depends(get_db)):
 # read all posts
 @router.get("/GetAllposts/", response_model=list[schemas.PostRead])
 async def get_posts_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """ Return all posts
+    
+    Args:
+        skip (int): skip
+        limit (int): limit
+    
+    Returns:
+        list of posts object
+    """
     return post_crud.get_posts(db=db, skip=skip, limit=limit)
 
 # update post by post id
@@ -75,4 +115,97 @@ async def delete_post_route(post_id: int, db: Session = Depends(get_db)):
 # read the recent post duration for a user
 @router.get("/GetRecentPostDuration/{user_id}")
 async def get_recent_post_duration(user_id: int, db: Session = Depends(get_db)):
+    """ Return the duration of posts in the last 5 days for a user
+    
+    Notes: the challenge id is added for testing otherwise is hard to locate the specific post
+    """
     return post_crud.get_recent_post_duration(db, user_id)
+
+def top3categories(user_id:int) -> set:
+    """
+    the 'user_contribution' key in redis is a hash table that record user's contribution to each challenge category.
+    this function takes user_id as input and return 3 categories where the user has spent the most time contributing.
+    """
+    
+    # retrive uer's challenge contribution data.
+    contribution = decoding( redis_client.hget('user_contribution',user_id), StrToSplit=',', ifError=['0']*5)
+    contribution = [int(num) for num in contribution]
+
+    topCategories = []
+
+    for category in range(5):
+
+        # if user did not contribute to category i, then move on to the next category
+        if contribution[category] == 0: continue 
+
+        # otherwise, see if user's contribution is one of the top 3 cateogries. 
+        for i in range(len(topCategories)):
+            if contribution[category] > contribution[topCategories[i]]: 
+                topCategories.insert(i, category)
+                continue
+        if len(topCategories) < 3: 
+            contribution.append(category)
+        elif len(topCategories) > 3:
+            contribution.pop()
+
+    # if user contributed to less than 3 categories, 
+    # then randomly pick some other categories for this user
+    n = len(topCategories)
+    if n == 3:
+        return topCategories
+    other_categories = [item for item in [0,1,2,3,4] if item not in topCategories]
+    return  topCategories + random.sample(other_categories, 3-n)
+
+
+def filteredPosts_from_reacted_challenges(user_id:int) -> list:
+    """
+    user can interact with posts, each post belongs to 1 challenge.
+    so reacting to recent post is equivalent to react to a challenge.
+    this function allocates new posts to users based on their interacted challenges.
+    """
+    postPool = []
+    recent_posts = redis_client.hkeys('post_clg_pair')
+    recent_posts = random.sample(recent_posts, min(len(recent_posts),200))
+    top3 = top3categories(user_id)
+
+    for post_id in recent_posts:
+        clg_id = redis_client.hget('post_clg_pair', post_id)
+        category = int(decoding(redis_client.hget('on_clg_info', clg_id), StrToSplit=',')[0])
+        if category not in top3:
+            interacted_post = redis_client.sismember(f'{user_id}_liked_posts', post_id)
+            interacted_clg = redis_client.zscore(f'{user_id}_clgs_preference',post_id)
+            if not interacted_post or interacted_clg:
+                postPool.append(int(decoding(post_id)))
+    
+    return postPool
+
+
+def filteredPosts_from_top3Categories(user_id:int) -> list:
+    top3 = top3categories(user_id)
+    postPool = []
+
+    for category_code in top3:
+
+        # get all recent post from specified category
+        raw_post_pool = redis_client.zrangebyscore(f'recent_posts_for_category{category_code}', 0, float('inf'))
+        raw_post_pool = [int(post) for post in raw_post_pool]
+        raw_post_pool = random.sample(raw_post_pool, min(len(raw_post_pool), 100))
+        
+        for post_id in raw_post_pool: 
+            if not redis_client.sismember(f'{user_id}_liked_posts', post_id): postPool.append(post_id)
+    
+    return postPool
+
+
+def get_recommended_post(user_id):
+    return filteredPosts_from_reacted_challenges(user_id) + filteredPosts_from_top3Categories(user_id)
+
+@router.get("/GetRecommendedPosts/{user_id}")
+async def get_recommended_posts(user_id: int, db: Session = Depends(get_db)):
+    """ Return the recommended posts for a user
+
+    raise HTTPException: user not found
+    """
+    read_user_by_id(db, user_id)#handle user not found
+    recommended_post_ids = get_recommended_post(user_id)
+    return post_crud.get_posts_by_ids(db, recommended_post_ids)

@@ -11,6 +11,7 @@ from Router.post_content import router as post_content_router
 from Router.S3_bucket import router as S3_bucket_router
 from Router.post_reaction import router as post_reaction_router
 from Router.user_reaction_log import router as user_reaction_log_router
+from Router.automation import router as automation_router
 
 #connect to router
 from Router.user import router as user_router 
@@ -27,6 +28,7 @@ app.include_router(post_content_router)
 app.include_router(S3_bucket_router)
 app.include_router(post_reaction_router)
 app.include_router(user_reaction_log_router)
+app.include_router(automation_router)
 
 # Testing 2
 

@@ -7,6 +7,7 @@ import models, schemas
 from sqlalchemy import desc, func
 import redis
 from datetime import datetime, timedelta
+from CRUD.user import read_user_by_id
 redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 
@@ -94,11 +95,20 @@ def create_post(db: Session, post: schemas.PostCreate):
     else:
         return "Cannot create post, no days left for the challenge"
     
-    
-    
 
 # read post by post id
 def get_post(db:Session, post_id: int):
+    """ Return the post by post id
+    
+    Args:
+        post_id (int): post id
+    
+    Returns:
+        post: post object    
+
+    Raises:
+        HTTPException: post not found
+    """
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
@@ -106,10 +116,55 @@ def get_post(db:Session, post_id: int):
 
 # read all posts
 def get_posts(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Post).order_by(desc(models.Post.created_time)).offset(skip).limit(limit).all()
+    """ Return all posts
+    
+    Args:
+        skip (int): skip
+        limit (int): limit
+    
+    Returns:
+        list of posts object
+    """
+    posts = db.query(models.Post).order_by(desc(models.Post.created_time)).filter(models.Post.written_text != "I have a break").offset(skip).limit(limit).all()
+    return posts
+
+
+def get_posts_by_ids(db: Session, post_ids: list, skip: int = 0, limit: int = 100):
+    """ Return posts by their IDs
+    
+    Args:
+        db (Session): Database session
+        post_ids (list): List of post IDs to fetch
+        skip (int): Number of records to skip
+        limit (int): Maximum number of records to fetch
+    
+    Returns:
+        list of post objects
+    """
+    posts = db.query(models.Post) \
+              .filter(models.Post.id.in_(post_ids)) \
+              .order_by(desc(models.Post.created_time)) \
+              .offset(skip) \
+              .limit(limit) \
+              .all()
+    return posts
+
 
 # read posts of one user by user id
 def get_posts_by_user_id(db: Session, user_id: int) -> List[models.Post]:
+    """ Return the post by user id
+    
+    Args:
+        user_id (int): user id
+    
+    Returns:
+        post: post object
+        
+    Raises:
+        HTTPException: post not found
+        HTTPException: user not found
+    """
+    read_user_by_id(db, user_id)#handle user not found
     user_id_posts = (
         db.query(models.Post)
         .filter(models.Post.user_id == user_id)
@@ -119,6 +174,21 @@ def get_posts_by_user_id(db: Session, user_id: int) -> List[models.Post]:
 
 # read posts by challenge id
 def get_posts_by_challenge_id(db: Session, challenge_id: int) -> List[models.Post]:
+    """ Return the post by challenge id
+
+    Args:
+        challenge_id (int): challenge id
+
+    Returns:
+        post: post object
+    
+    Raises:
+        HTTPException: post not found
+        HTTPException: challenge not found
+    """
+    challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
+    if challenge is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     challenge_id_posts = (
         db.query(models.Post)
         .filter(models.Post.challenge_id == challenge_id)
@@ -157,7 +227,10 @@ def get_recent_post_duration(db: Session, user_id: int):
     """ Return the duration of posts in the last 5 days for a user
     
     Notes: the challenge id is added for testing otherwise is hard to locate the specific post
+
+    raise HTTPException: user not found
     """
+    read_user_by_id(db, user_id)#handle user not found
     RECENT_DAYS = 5
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=RECENT_DAYS)
