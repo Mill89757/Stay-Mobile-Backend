@@ -23,7 +23,7 @@ async def get_token_by_user_id(user_id: int, db:Session=Depends(get_db)):
     return token
 
 # udpate to latest version
-@router.put("/updateToken", response_model=schemas.ExpoPushTokenBase)
+@router.put("/updateToken/{token}", response_model=schemas.ExpoPushTokenBase)
 async def update_expo_push_token(token:str, tokenInfo:schemas.ExpoPushTokenBase, db:Session=Depends(get_db)):
     updated_token = crud.update_expo_push_token(db=db, token=token, tokenInfo=tokenInfo)
     return updated_token
