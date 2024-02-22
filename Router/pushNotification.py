@@ -29,8 +29,6 @@ session.headers.update(
     }
 )
 
-
-
 # get expo push tokens for user who do not complete daily post
 def get_push_tokens(db:Session, challenge_id_list:list):
     user_id_list = crud_challenge.check_user_activity(db=db,challenge_id_list=challenge_id_list)
@@ -100,8 +98,8 @@ def send_notification(user_id_list):
    push_messages = push_message_array(tokens=tokens)
    push_tickets = send_push_notification(push_messages=push_messages)
 
-   time.sleep(1800)
-   validate_receipts(push_tickets=push_tickets)
+   #time.sleep(1800)
+   #validate_receipts(push_tickets=push_tickets)
 
 
 TIMEZONE_MAPPING = {
@@ -118,15 +116,15 @@ async def test_sendNotification( db: Session=Depends(get_db)):
     tokens = get_push_tokens(db=db, challenge_id_list=challenge_list)
     push_messages = push_message_array(tokens=tokens)
     push_tickets = send_push_notification(push_messages=push_messages, db=db)
-    time.sleep(1800)
-    validate_receipts(push_tickets=push_tickets,db=db)
+    #time.sleep(1800)
+    #validate_receipts(push_tickets=push_tickets,db=db)
     
         
 '''Below function only for test send notification from backend to device'''
 
 # get expo push tokens for user who do not complete daily post
 def get_push_token_test(db:Session):
-    user_id_list = [10002]
+    user_id_list = [10002,10009]
     tokens = []
     for id in user_id_list:
         token = crud_token.get_expo_push_token(db=db, user_id=id).expo_push_token
@@ -199,7 +197,7 @@ TIMEZONE_MAPPING = {
     "Beijing": "Asia/Shanghai"
 }
  # router to test 
-@router.post("/test/SendNotificationTest/")
+@router.post("/test/SendNotificationTest")
 async def test_sendNotification_test(db: Session=Depends(get_db)):
     
     tokens = get_push_token_test(db=db)
