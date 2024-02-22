@@ -6,6 +6,7 @@ from datetime import datetime
 # schemas.py is used to build pydantic models, which controls data validation, conversion, documentation classes and instances
 # define and validate whether the incoming data structure matches as expected
 
+
 # User 模型
 class UsersRequest(BaseModel):
     firebase_uid: str
@@ -272,3 +273,8 @@ class GroupChallengesMember(BaseModel):
 
     class Config:
         orm_mode = True
+# expo push token 模型
+class ExpoPushTokenBase(BaseModel):
+    expo_push_token: str
+    user_id: int
+    timestamp: datetime

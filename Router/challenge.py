@@ -1,3 +1,4 @@
+from cmath import asin
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -296,4 +297,10 @@ async def get_group_challenge_members(challenge_id: int, db:Session = Depends(ge
         HTTPException: challenge not found
     """
     result = challenge_crud.get_group_challenge_members(db, challenge_id)
+    return result
+
+# check if user is the challenge owner or not
+@router.get("/CheckOwner/{challenge_id}")
+async def check_challenge_owner(challenge_id: int, user_id: int, db: Session=Depends(get_db)):
+    result = challenge_crud.check_challenge_onwer(challenge_id=challenge_id, user_id=user_id, db=db)
     return result

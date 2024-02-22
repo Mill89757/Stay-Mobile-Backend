@@ -12,7 +12,8 @@ from Router.S3_bucket import router as S3_bucket_router
 from Router.post_reaction import router as post_reaction_router
 from Router.user_reaction_log import router as user_reaction_log_router
 from Router.automation import router as automation_router
-
+from Router.expo_push_token import router as expo_push_token_router
+from Router.pushNotification import router as send_notification
 #connect to router
 from Router.user import router as user_router 
 from Router.course import router as course_router
@@ -29,6 +30,8 @@ app.include_router(S3_bucket_router)
 app.include_router(post_reaction_router)
 app.include_router(user_reaction_log_router)
 app.include_router(automation_router)
+app.include_router(expo_push_token_router)
+app.include_router(send_notification)
 
 # Testing 2
 

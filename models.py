@@ -1,5 +1,6 @@
 from ast import For
 from datetime import datetime
+from sqlite3 import Timestamp, TimestampFromTicks
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -125,3 +126,11 @@ class PostReaction(Base):
     emoji_image = Column(ForeignKey("emoji.emoji_image"), primary_key=True, index=True)
     count = Column(Integer, nullable= False)
 
+# create Expo Push Token class iherited from Base class
+class ExpoPushToken(Base):
+    __tablename__ = "expo_push_token"
+
+    expo_push_token = Column(String, primary_key=True, index=False)
+    user_id = Column(ForeignKey("User.id"), nullable=False)
+    timestamp = Column(DateTime, default=func.now(), nullable = False)
+    
