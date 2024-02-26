@@ -19,8 +19,7 @@ from sqlalchemy import func
 from CRUD.user import read_user_by_id
 from CRUD.course import read_course_by_id
 from datetime import datetime, timedelta
-import pytz
-import redis_client
+
 # create challenge
 def create_challenge(db: Session, challenge: schemas.ChallengeCreate):
     db_challenge = models.Challenge(
