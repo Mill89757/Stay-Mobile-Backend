@@ -253,5 +253,5 @@ def get_recent_post_duration(db: Session, user_id: int):
         if 0 <= day_index < RECENT_DAYS:
             duration_data[day_index].append({"value": duration, "category": category, "challenge id": challenge_obj.id})
     
-    duration_data = duration_data.reverse()
+    duration_data.reverse()
     return duration_data
