@@ -12,7 +12,6 @@ redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 
 def create_post(db: Session, post: schemas.PostCreate):
-    
     challenge = db.query(models.Challenge).filter(models.Challenge.id == post.challenge_id).first()
     current_challenge_member_DL_and_BDL = (db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).filter(models.GroupChallengeMembers.user_id == post.user_id).first())
     if not challenge:
