@@ -586,6 +586,11 @@ def generate_invitation_code(db : Session, challenge_id : int):
         redis_client.set(challenge_id, redis_key)
         redis_client.expire(redis_key, int(remaining_time))
         redis_client.expire(challenge_id, int(remaining_time))
+
+    elif redis_client.get(challenge_id) and compare_created_time_by_challenge_id(db, challenge_id):
+        exist_token = redis_client.get(challenge_id)
+        return exist_token
+    
     else:
         today = datetime.now(pytz.utc)
         print(today)
