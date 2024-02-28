@@ -746,14 +746,9 @@ def check_challenge_onwer(db:Session, challenge_id:int, user_id):
         else:
             return False
 
-TIMEZONE_MAPPING = {
-    "Sydney": "Australia/Sydney",
-    "Perth": "Australia/Perth",
-    "Brisbane": "Australia/Brisbane",
-    "Beijing": "Asia/Shanghai"
-}
+
 # check user activity at 12pm and 6pm
-def check_user_activity(db:Session, challenge_id_list: list):
+def check_user_activity(db:Session):
     # user_timezone = pytz.timezone(TIMEZONE_MAPPING.get(timezone_str, "UTC"))
     current_time = datetime.now()
 
@@ -763,19 +758,16 @@ def check_user_activity(db:Session, challenge_id_list: list):
     redis_key = f"posted_challenges:{current_date_str}"
     posted_combinations = {combo.decode('utf-8') for combo in redis_client.smembers(redis_key)}
 
-    for challenge_id in challenge_id_list:
-        group_challenge_members = db.query(models.GroupChallengeMembers).filter(
-            models.GroupChallengeMembers.challenge_id == challenge_id
-        ).all()
+    # get all challenges members 
+    all_challenge_members = db.query(models.GroupChallengeMembers).all()
+    for group_member in all_challenge_members:
+        challenge_id = group_member.challenge_id
+        combo_key = f"{challenge_id}_{group_member.user_id}"
+        #check_user_timezone = db.query(models.User).filter(models.User.id == group_member.user_id).first()
 
-        for group_member in group_challenge_members:
-            combo_key = f"{challenge_id}_{group_member.user_id}"
-            check_user_timezone = db.query(models.User).filter(models.User.id == group_member.user_id).first()
-
-            if combo_key not in posted_combinations:
-                #if check_user_timezone.user_timezone == timezone_str:
-                if group_member.breaking_days_left > 0:
-                    remind_user_list.append(check_user_timezone.id)
-            
+        if combo_key not in posted_combinations:
+            #if check_user_timezone.user_timezone == timezone_str:
+            if group_member.breaking_days_left > 0:
+                remind_user_list.append(group_member.user_id)
     return remind_user_list
 

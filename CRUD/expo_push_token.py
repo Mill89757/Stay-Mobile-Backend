@@ -16,6 +16,12 @@ def create_expo_push_token(db:Session, expo_push_token: schemas.ExpoPushTokenBas
     db.refresh(db_token)
     return db_token
 
+def get_tokens(db:Session):
+    expo_tokens = db.query(models.ExpoPushToken).all()
+    if expo_tokens is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expo push token not found")
+    return expo_tokens
+
 def get_expo_push_token(db:Session, user_id:int):
     expo_push_token = db.query(models.ExpoPushToken).filter(models.ExpoPushToken.user_id == user_id).first()
     if expo_push_token is None:
@@ -24,9 +30,6 @@ def get_expo_push_token(db:Session, user_id:int):
 
 def update_expo_push_token(db:Session, token: str, tokenInfo: schemas.ExpoPushTokenBase):
     db_token = db.query(models.ExpoPushToken).filter(models.ExpoPushToken.expo_push_token == token).first()
-    if db_token is None:
-        db_token = create_expo_push_token(db=db, expo_push_token=tokenInfo)
-    
     if db_token.timestamp < tokenInfo.timestamp:
         for key, value in tokenInfo.dict(exclude_unset=True).items():
             setattr(db_token, key, value)
