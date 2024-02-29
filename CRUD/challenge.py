@@ -137,8 +137,35 @@ def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str)
 
 # read all challenges
 def get_challenges(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Challenge).offset(skip).limit(limit).all()
+    query_result = (
+        db.query(models.Challenge, models.GroupChallengeMembers)
+        .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
+        .filter(models.GroupChallengeMembers.user_id == models.Challenge.challenge_owner_id)
+        .all()
+    )
+    print(query_result)
+    results = []
+    for challenge_obj, groupChallengeMember_obj in query_result:
+        current_challenge = {
+            "breaking_days": challenge_obj.breaking_days, 
+            "category": challenge_obj.category, 
+            "challenge_owner_id": challenge_obj.challenge_owner_id, 
+            "course_id": challenge_obj.course_id, 
+            "cover_location": challenge_obj.cover_location,
+            "created_time": challenge_obj.created_time, 
+            "days_left": groupChallengeMember_obj.days_left, 
+            "description": challenge_obj.description, 
+            "duration": challenge_obj.duration, 
+            "finished_time": challenge_obj.finished_time, 
+            "id": challenge_obj.id, 
+            "is_completed": challenge_obj.is_completed, 
+            "is_group_challenge": challenge_obj.is_group_challenge, 
+            "is_public": challenge_obj.is_public, 
+            "title": challenge_obj.title
+            }
+        results.append(current_challenge)
 
+    return results
 # read active challenges list of one user by user id
 def get_active_challenges_by_user_id(db: Session, user_id: int) -> List[schemas.ChallengeWithBreakingDays]:
     """read active challenges list of one user by user id
