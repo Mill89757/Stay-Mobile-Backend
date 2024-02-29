@@ -203,6 +203,12 @@ async def generate_invitation_code(challenge_id: int, db: Session = Depends(get_
     return result
 
 
+@router.get("/GetChallengeInfoByInvitationCode/{unique_token}")
+async def get_challenge_info_by_invitation_code(unique_token: str, db: Session = Depends(get_db)):
+    result = challenge_crud.get_challenge_info_by_code(db=db, unique_token = unique_token)
+    return result
+
+
 @router.post("/JoinGroupChallengeByInvite/{user_id}/{token}")
 async def invitation(token: str, user_id:int, db: Session = Depends(get_db)):
     result = challenge_crud.join_group_challenge_by_token_and_user_id(db=db, unique_token=token, user_id=user_id)

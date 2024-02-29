@@ -659,6 +659,21 @@ def get_challenge_category_distribution(db: Session, user_id: int):
     result = [category_amounts[i] for i in range(5)]  # Assuming 5 categories
     return result
 
+def get_challenge_info_by_code(db: Session, unique_token: str):
+
+    request_challenge_id_bytes = redis_client.get(unique_token)
+
+    if request_challenge_id_bytes is not None:
+        request_challenge_id_str = request_challenge_id_bytes.decode('utf-8')  # 解码字节字符串
+        request_challenge_id = int(request_challenge_id_str)  # 转换成整数
+    else:
+        return "Can not find the token in redis"
+
+    request_challenge = db.query(models.Challenge).filter(models.Challenge.id == request_challenge_id).first()
+
+    return request_challenge
+    
+
 def join_group_challenge_by_token_and_user_id(db: Session, unique_token : str, user_id: str):
     
     request_challenge_id_bytes = redis_client.get(unique_token)
@@ -685,9 +700,9 @@ def join_group_challenge_by_token_and_user_id(db: Session, unique_token : str, u
             request_challenge.is_group_challenge = True
             db.commit()
             db.refresh(request_challenge)
-            return request_challenge
+            return "New group challenge memeber has join"
         else:
-            return request_challenge
+            return "New group challenge memeber has join"
     elif request_challenge_id and db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.user_id == user_id).filter(models.GroupChallengeMembers.challenge_id == request_challenge_id).first():
         return "User already joined the group challenge"
     else:
