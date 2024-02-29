@@ -657,9 +657,9 @@ def join_group_challenge_by_token_and_user_id(db: Session, unique_token : str, u
         if request_challenge.is_group_challenge is False:
             request_challenge.is_group_challenge = True
             db.commit()
-            return "New group member has joined!"
+            return request_challenge
         else:
-            return "New group member has joined!"
+            return request_challenge
     elif request_challenge_id and db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.user_id == user_id).filter(models.GroupChallengeMembers.challenge_id == request_challenge_id).first():
         return "User already joined the group challenge"
     else:
