@@ -124,8 +124,25 @@ def get_posts(db: Session, skip: int = 0, limit: int = 100):
     Returns:
         list of posts object
     """
-    posts = db.query(models.Post).order_by(desc(models.Post.created_time)).filter(models.Post.written_text != "I have a break today!").offset(skip).limit(limit).all()
-    return posts
+    posts = db.query(models.Post, models.Challenge).join(models.Challenge, models.Challenge.id == models.Post.challenge_id).order_by(desc(models.Post.created_time)).filter(models.Challenge.is_public == True).filter(models.Post.written_text != "I have a break today!").offset(skip).limit(limit).all()
+    
+    final_post_list =[]
+
+    for post_obj, challenge_obj in posts:
+
+        post_unit = {
+            "created_time": post_obj.created_time,
+            "start_time": post_obj.start_time,
+            "end_time": post_obj.end_time,
+            "written_text": post_obj.written_text,
+            "id": post_obj.id,
+            "user_id": post_obj.user_id,
+            "challenge_id": post_obj.challenge_id
+        }
+
+        final_post_list.append(post_unit)
+
+    return final_post_list
 
 
 def get_posts_by_ids(db: Session, post_ids: list, skip: int = 0, limit: int = 100):
