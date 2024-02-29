@@ -657,7 +657,6 @@ def join_group_challenge_by_token_and_user_id(db: Session, unique_token : str, u
         if request_challenge.is_group_challenge is False:
             request_challenge.is_group_challenge = True
             db.commit()
-            db.refresh(request_challenge)
             return request_challenge
         else:
             return request_challenge
