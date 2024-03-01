@@ -68,6 +68,48 @@ def get_challenge(db: Session, challenge_id: int):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
 
+# read challenge by user id and challenge id
+def get_challenge_by_user_id_and_challenge_id(db: Session, user_id: int,challenge_id: int):
+    """read challenge by user id and challenge id
+    
+    Args:
+        user_id: id of user
+        challenge_id: id of challenge
+
+    Returns:
+        challenge
+    
+    Raises:
+        HTTPException: challenge not found
+    """
+    query_result = (
+        db.query(models.Challenge, models.GroupChallengeMembers)
+        .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
+        .filter(models.GroupChallengeMembers.user_id == user_id)
+        .filter(models.Challenge.id == challenge_id)
+        .first()
+    )
+    challenge_obj, groupChallengeMember_obj= query_result[0], query_result[1]
+    current_challenge = {
+            "title": challenge_obj.title,
+            "description": challenge_obj.description, 
+            "duration": challenge_obj.duration, 
+            "breaking_days": challenge_obj.breaking_days, 
+            "is_public": challenge_obj.is_public, 
+            "is_completed": challenge_obj.is_completed, 
+            "category": challenge_obj.category, 
+            "created_time": challenge_obj.created_time, 
+            "cover_location": challenge_obj.cover_location,
+            "days_left": groupChallengeMember_obj.days_left,
+            "is_group_challenge": challenge_obj.is_group_challenge, 
+            "id": challenge_obj.id, 
+            "finished_time": challenge_obj.finished_time, 
+            "challenge_owner_id": challenge_obj.challenge_owner_id, 
+            "course_id": challenge_obj.course_id, 
+            }
+        
+    return current_challenge
+
 
 TIMEZONE_MAPPING = {
     "Sydney": "Australia/Sydney",

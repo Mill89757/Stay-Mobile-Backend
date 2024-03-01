@@ -33,6 +33,25 @@ async def get_challenge_route(challenge_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
 
+@router.get("/GetChallengeByUserIdAndChallengeId/{user_id}/{challenge_id}", response_model=schemas.ChallengeRead)
+async def get_challenge_by_user_and_challenge_route(user_id: int, challenge_id: int, db: Session = Depends(get_db)):
+    """read challenge by challenge id and user id
+    
+    Args:
+        user_id: id of user
+        challenge_id: id of challenge
+
+    Returns:
+        challenge
+    
+    Raises:
+        HTTPException: challenge not found
+    """
+    challenge = challenge_crud.get_challenge_by_user_id_and_challenge_id(db=db, user_id=user_id,challenge_id=challenge_id)
+    if challenge is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
+    return challenge
+
 TIMEZONE_MAPPING = {
     "Sydney": "Australia/Sydney",
     "Perth": "Australia/Perth",
