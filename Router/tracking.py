@@ -54,8 +54,6 @@ def get_tracking_by_challenge_id(challenge_id: int, db: Session = Depends(get_db
     tracking = crud.read_tracking_by_challenge_id(db, challenge_id)
     if tracking is None:
         raise HTTPException(status_code=404, detail="challenge not found")
-    elif len(tracking) == 0:
-        raise HTTPException(status_code=404, detail="no tracking found")
     return tracking
 
 @router.get("/challenge/follower/{challenge_id}")
