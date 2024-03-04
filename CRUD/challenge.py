@@ -114,19 +114,22 @@ def get_challenge_by_user_id_and_challenge_id(db: Session, user_id: int,challeng
 
 
 TIMEZONE_MAPPING = {
-    "Sydney": "Australia/Sydney",
-    "Perth": "Australia/Perth",
-    "Brisbane": "Australia/Brisbane",
-    "Beijing": "Asia/Shanghai"
+    "Sydney": ["Australia/Sydney", "Australia/Melbourne"],
+    "Perth": ["Australia/Perth"],
+    "Brisbane": ["Australia/Brisbane"],
+    "Beijing": ["Asia/Shanghai"],
+    
 }
 
 
 def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str):
      # 使用映射表转换时区字符串
     user_timezone = pytz.timezone(TIMEZONE_MAPPING.get(timezone_str, "UTC"))
+    timezones = TIMEZONE_MAPPING.get(timezone_str, ["UTC"])
     # 获取当前时间
-    current_time = datetime.now(user_timezone)
+    current_time = datetime.now(pytz.timezone(timezones[0]))
   
+    
     # 获取当前时间的日期字符串
     current_date_str = current_time.strftime('%Y-%m-%d')
 
@@ -149,7 +152,7 @@ def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str)
 
         # 如果组合键不在 Redis 集合中，则减少 breaking_days_left, days_left, 并生成一条用户的帖子记录
         if combo_key not in posted_combinations: 
-            if check_user_timezone.user_timezone == timezone_str:
+            if check_user_timezone.user_timezone in timezones:
                 if group_member.breaking_days_left > 0:
                     if group_member.days_left > 0:
                         group_member.breaking_days_left -= 1

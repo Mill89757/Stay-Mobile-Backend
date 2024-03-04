@@ -54,17 +54,26 @@ async def get_challenge_by_user_and_challenge_route(user_id: int, challenge_id: 
     return challenge
 
 TIMEZONE_MAPPING = {
-    "Sydney": "Australia/Sydney",
-    "Perth": "Australia/Perth",
-    "Brisbane": "Australia/Brisbane",
-    "Beijing": "Asia/Shanghai"
+    "Sydney": ["Australia/Sydney", "Australia/Melbourne"],
+    "Perth": ["Australia/Perth"],
+    "Brisbane": ["Australia/Brisbane"],
+    "Beijing": ["Asia/Shanghai"],
+    # ... 其他映射
 }
 # update breaking days for specific challenges
 @router.post("/test/update_breaking_days/{timezone}")
 def test_update_breaking_days(timezone: str, db: Session = Depends(get_db)):
     
-    # 使用映射表来获取正确的时区字符串
-    full_timezone_str = TIMEZONE_MAPPING.get(timezone, "UTC")
+    # Attempt to get the list of timezones from the mapping
+    timezones = TIMEZONE_MAPPING.get(timezone)
+    
+    # If the timezone is not found, use "UTC" as default
+    if not timezones:
+        full_timezone_str = "UTC"
+    else:
+        # If the timezone is found and it is a list, use the first entry
+        full_timezone_str = timezones[0]
+
     challenge_crud.update_breaking_days_for_specific_challenges(db, full_timezone_str)
     return {"message": f"Breaking days updated successfully for timezone {timezone}"}
 
