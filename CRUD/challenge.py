@@ -183,6 +183,7 @@ def get_challenges(db: Session, skip: int = 0, limit: int = 100):
         db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
         .filter(models.GroupChallengeMembers.user_id == models.Challenge.challenge_owner_id)
+        .filter(models.Challenge.is_public == True)
         .all()
     )
     print(query_result)
