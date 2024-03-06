@@ -8,7 +8,7 @@ from sqlalchemy import desc, func
 import redis
 from datetime import datetime, timedelta
 from CRUD.user import read_user_by_id
-redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
+from redis_client import redis_client
 
 
 def create_post(db: Session, post: schemas.PostCreate):
