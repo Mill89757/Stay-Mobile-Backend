@@ -72,7 +72,7 @@ def test_update_breaking_days(timezone: str, db: Session = Depends(get_db)):
         full_timezone_str = "UTC"
     else:
         # If the timezone is found and it is a list, use the first entry
-        full_timezone_str = timezones[0]
+        full_timezone_str = timezones
 
     challenge_crud.update_breaking_days_for_specific_challenges(db, full_timezone_str)
     return {"message": f"Breaking days updated successfully for timezone {timezone}"}

@@ -124,8 +124,8 @@ TIMEZONE_MAPPING = {
 
 def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str):
      # 使用映射表转换时区字符串
-    user_timezone = pytz.timezone(TIMEZONE_MAPPING.get(timezone_str, "UTC"))
-    timezones = TIMEZONE_MAPPING.get(timezone_str, ["UTC"])
+    user_timezone = pytz.timezone(TIMEZONE_MAPPING.get(timezone_str[0], "UTC"))
+    timezones = TIMEZONE_MAPPING.get(timezone_str[0], ["UTC"])
     # 获取当前时间
     current_time = datetime.now(pytz.timezone(timezones[0]))
   
@@ -152,7 +152,7 @@ def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str)
 
         # 如果组合键不在 Redis 集合中，则减少 breaking_days_left, days_left, 并生成一条用户的帖子记录
         if combo_key not in posted_combinations: 
-            if check_user_timezone.user_timezone in TIMEZONE_MAPPING[timezone_str]:
+            if check_user_timezone.user_timezone in timezone_str:
                 if group_member.breaking_days_left > 0:
                     if group_member.days_left > 0:
                         group_member.breaking_days_left -= 1
