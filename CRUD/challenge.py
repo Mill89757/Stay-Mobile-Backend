@@ -152,7 +152,7 @@ def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str)
 
         # 如果组合键不在 Redis 集合中，则减少 breaking_days_left, days_left, 并生成一条用户的帖子记录
         if combo_key not in posted_combinations: 
-            if check_user_timezone.user_timezone in timezones:
+            if check_user_timezone.user_timezone in TIMEZONE_MAPPING[timezone_str]:
                 if group_member.breaking_days_left > 0:
                     if group_member.days_left > 0:
                         group_member.breaking_days_left -= 1
