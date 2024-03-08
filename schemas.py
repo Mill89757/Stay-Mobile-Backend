@@ -206,7 +206,7 @@ class CourseResponse(BaseModel):
     course_name:str
     category:int
     description:str
-    cover_location:str
+    cover_location: Optional[str] = None
     source_link:str
     short_intro:str
 

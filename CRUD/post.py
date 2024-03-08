@@ -1,4 +1,6 @@
 from typing import List
+from zoneinfo import ZoneInfo
+import pytz
 from sqlalchemy.orm import Session
 import models, schemas  
 from fastapi import HTTPException, status
@@ -14,6 +16,15 @@ from redis_client import redis_client
 def create_post(db: Session, post: schemas.PostCreate):
     challenge = db.query(models.Challenge).filter(models.Challenge.id == post.challenge_id).first()
     current_challenge_member_DL_and_BDL = (db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == post.challenge_id).filter(models.GroupChallengeMembers.user_id == post.user_id).first())
+    
+    usertimezone = get_usertimezone_by_user_id(db, post.user_id)
+    location_date = datetime.now().astimezone(pytz.timezone(usertimezone)).date()
+
+    if get_posts_by_challenge_id(db, challenge_id=post.challenge_id)[0].created_time.astimezone(pytz.timezone(usertimezone)).date() == location_date:
+
+        return "Cannot create post, you has post today!"
+    
+    
     if not challenge:
         return "Cannot create post, Challenge not found"
 
@@ -94,6 +105,26 @@ def create_post(db: Session, post: schemas.PostCreate):
     else:
         return "Cannot create post, no days left for the challenge"
     
+def get_usertimezone_by_user_id(db: Session, user_id: int):
+    """read challenges list by course id
+    
+    Args:
+        course_id: id of course
+        
+    Returns:
+        challenges_with_course_id: list of challenges
+    
+    Raises:
+        HTTPException: Course not found
+    """
+    usertimezone_with_course_id = (
+        db.query(models.User)
+        .filter(models.User.id == user_id)
+        .first().user_timezone
+    )
+    return usertimezone_with_course_id
+
+
 
 # read post by post id
 def get_post(db:Session, post_id: int):
@@ -208,7 +239,7 @@ def get_posts_by_challenge_id(db: Session, challenge_id: int) -> List[models.Pos
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     challenge_id_posts = (
         db.query(models.Post)
-        .filter(models.Post.challenge_id == challenge_id)
+        .filter(models.Post.challenge_id == challenge_id).order_by(desc(models.Post.created_time))
         .all()
     )
     return challenge_id_posts

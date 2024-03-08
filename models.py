@@ -96,7 +96,7 @@ class Course(Base):
     course_name = Column(String, nullable= False)
     category = Column(Integer, nullable= False)
     description = Column(String, nullable=False)
-    cover_location = Column(String, nullable=False)
+    cover_location = Column(String, nullable=True)
     source_link = Column(String, nullable=False)
     short_intro = Column(String, nullable=False)
 
