@@ -20,7 +20,7 @@ def create_post(db: Session, post: schemas.PostCreate):
     usertimezone = get_usertimezone_by_user_id(db, post.user_id)
     location_date = datetime.now().astimezone(pytz.timezone(usertimezone)).date()
 
-    if get_posts_by_challenge_id(db, challenge_id=post.challenge_id)[0].created_time.astimezone(pytz.timezone(usertimezone)).date() == location_date:
+    if get_posts_by_challenge_id(db, challenge_id=post.challenge_id) and get_posts_by_challenge_id(db, challenge_id=post.challenge_id)[0].created_time.astimezone(pytz.timezone(usertimezone)).date() == location_date :
 
         return "Cannot create post, you has post today!"
     
