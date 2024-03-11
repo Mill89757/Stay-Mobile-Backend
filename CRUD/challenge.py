@@ -182,9 +182,9 @@ def get_challenges(db: Session, skip: int = 0, limit: int = 100):
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
         .filter(models.GroupChallengeMembers.user_id == models.Challenge.challenge_owner_id)
         .filter(models.Challenge.is_public == True)
+        .order_by(models.Challenge.created_time.desc())#order by created time, descending
         .all()
     )
-    print(query_result)
     results = []
     for challenge_obj, groupChallengeMember_obj in query_result:
         current_challenge = {
