@@ -406,11 +406,40 @@ def update_challenge(db: Session, challenge_id: int, challenge: schemas.Challeng
 
 # delete challenge by id
 def delete_challenge(db: Session, challenge_id: int):
-    db_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
-    if db_challenge is None:
+    target_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
+    
+    # 如果找不到挑战，返回False表示删除失败。
+    if target_challenge is None:
         return False
-    db.delete(db_challenge)
+    
+    db.query(models.UserReactionLog).filter(
+        models.UserReactionLog.post_id.in_(
+            db.query(models.Post.id).filter(models.Post.challenge_id == challenge_id)
+        )
+    ).delete(synchronize_session=False)
+    
+    db.query(models.PostReaction).filter(
+        models.PostReaction.post_id.in_(
+            db.query(models.Post.id).filter(models.Post.challenge_id == challenge_id)
+        )
+    ).delete(synchronize_session=False)
+    
+    db.query(models.PostContent).filter(
+        models.PostContent.post_id.in_(
+            db.query(models.Post.id).filter(models.Post.challenge_id == challenge_id)
+        )
+    ).delete(synchronize_session=False)
+    
+    db.query(models.Post).filter(models.Post.challenge_id == challenge_id).delete(synchronize_session=False)
+    
+    db.query(models.GroupChallengeMembers).filter(models.GroupChallengeMembers.challenge_id == challenge_id).delete(synchronize_session=False)
+    
+    db.query(models.Tracking).filter(models.Tracking.challenge_id == challenge_id).delete(synchronize_session=False)
+    
+    db.delete(target_challenge)
+    
     db.commit()
+    
     return True
 
 # 中途退出group challenge
