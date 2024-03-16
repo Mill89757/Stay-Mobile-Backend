@@ -12,25 +12,25 @@ from firebase_admin import credentials, auth, initialize_app
 # create routes for challenges operations and functions
 router = APIRouter()
 
-# 初始化Firebase Admin SDK
-cred = credentials.Certificate('./stay-mobile-b2c29-firebase-adminsdk-rg9km-1de89e262d.json')
-initialize_app(cred)
+# # 初始化Firebase Admin SDK
+# cred = credentials.Certificate('./stay-mobile-b2c29-firebase-adminsdk-rg9km-1de89e262d.json')
+# initialize_app(cred)
 
-# 设置OAuth2的Bearer类型认证模式
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+# # 设置OAuth2的Bearer类型认证模式
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# 依赖项: 解析并验证JWT
-def verify_token(token: str = Depends(oauth2_scheme)):
-    try:
-        # 验证JWT
-        payload = auth.verify_id_token(token)
-        return payload
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Could not validate credentials',
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+# # 依赖项: 解析并验证JWT
+# def verify_token(token: str = Depends(oauth2_scheme)):
+#     try:
+#         # 验证JWT
+#         payload = auth.verify_id_token(token)
+#         return payload
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail='Could not validate credentials',
+#             headers={"WWW-Authenticate": "Bearer"},
+#         )
 
 # create challenge
 @router.post("/CreateChallenge/", response_model=schemas.ChallengeRead, status_code=status.HTTP_201_CREATED)
@@ -378,23 +378,23 @@ async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db))
     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
     return [active_challenges, finished_challenges]
 
-# read all challenges of one user by user id 
-@router.get("/GetUserChallengesWithtoken_testing/{user_id}", response_model=List[List[schemas.ChallengeWithBreakingDays]])
-async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db), current_user: dict = Depends(verify_token)):
-    """read all challenges of one user by user id
+# # read all challenges of one user by user id 
+# @router.get("/GetUserChallengesWithtoken_testing/{user_id}", response_model=List[List[schemas.ChallengeWithBreakingDays]])
+# async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db), current_user: dict = Depends(verify_token)):
+#     """read all challenges of one user by user id
     
-    Args:
-        user_id: id of user
+#     Args:
+#         user_id: id of user
     
-    Returns:
-        list of active challenges and finished challenges
+#     Returns:
+#         list of active challenges and finished challenges
     
-    Raises:
-        HTTPException: user not found
-    """
+#     Raises:
+#         HTTPException: user not found
+#     """
 
-    print(current_user)
+#     print(current_user)
 
-    active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
-    finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
-    return [active_challenges, finished_challenges]
+#     active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
+#     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
+#     return [active_challenges, finished_challenges]
