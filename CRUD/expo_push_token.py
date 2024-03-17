@@ -15,7 +15,11 @@ def create_expo_push_token(db:Session, new_token: schemas.ExpoPushTokenBase):
     print(db_token)
     if db_token is None:
         print("Creating new token")
-        token = models.ExpoPushToken(**new_token)
+        token = models.ExpoPushToken(
+            expo_push_token = new_token.expo_push_token,
+            user_id = new_token.user_id,
+            timestamp = new_token.timestamp
+        )
         db.add(token)
         db.commit()
         db.refresh(token)
