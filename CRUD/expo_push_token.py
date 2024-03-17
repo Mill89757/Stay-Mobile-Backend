@@ -10,11 +10,13 @@ import models, schemas
 from datetime import datetime as dt
 
 def create_expo_push_token(db:Session, expo_push_token: schemas.ExpoPushTokenBase):
-    db_token = models.ExpoPushToken(**expo_push_token.dict())
-    db.add(db_token)
-    db.commit()
-    db.refresh(db_token)
-    return db_token
+    """ User may delete their app and reinstall it, so we need to update the token"""
+    db_token = db.query(models.ExpoPushToken).filter(models.ExpoPushToken.expo_push_token == expo_push_token).first()
+    if db_token is None:
+        db.add(db_token)
+        db.commit()
+        db.refresh(db_token)
+        return db_token
 
 def get_tokens(db:Session):
     expo_tokens = db.query(models.ExpoPushToken).all()
