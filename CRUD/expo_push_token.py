@@ -9,14 +9,20 @@ from sqlalchemy.orm import Session
 import models, schemas
 from datetime import datetime as dt
 
-def create_expo_push_token(db:Session, expo_push_token: schemas.ExpoPushTokenBase):
+def create_expo_push_token(db:Session, new_token: schemas.ExpoPushTokenBase):
     """ User may delete their app and reinstall it, so we need to update the token"""
-    db_token = db.query(models.ExpoPushToken).filter(models.ExpoPushToken.expo_push_token == expo_push_token).first()
+    db_token = db.query(models.ExpoPushToken).filter(models.ExpoPushToken.expo_push_token == new_token.expo_push_token).first()
+    print(db_token)
     if db_token is None:
-        db.add(db_token)
+        print("Creating new token")
+        token = models.ExpoPushToken(**new_token)
+        db.add(token)
         db.commit()
-        db.refresh(db_token)
-    return db_token
+        db.refresh(token)
+        return token
+    else:
+        print("Updating token")
+        return db_token
 
 
 def get_tokens(db:Session):

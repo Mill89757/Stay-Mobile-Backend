@@ -13,7 +13,7 @@ router = APIRouter(prefix="/expo_token")
 # create expo push token info
 @router.post("/create", response_model=schemas.ExpoPushTokenBase,  status_code=status.HTTP_201_CREATED)
 async def create_expo_token(token:schemas.ExpoPushTokenBase, db:Session=Depends(get_db)):
-    token = crud.create_expo_push_token(db=db, expo_push_token=token)
+    token = crud.create_expo_push_token(db=db, new_token=token)
     return token
 
 # get token via user id
