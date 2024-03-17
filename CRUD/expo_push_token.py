@@ -16,7 +16,8 @@ def create_expo_push_token(db:Session, expo_push_token: schemas.ExpoPushTokenBas
         db.add(db_token)
         db.commit()
         db.refresh(db_token)
-        return db_token
+    return db_token
+
 
 def get_tokens(db:Session):
     expo_tokens = db.query(models.ExpoPushToken).all()
