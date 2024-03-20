@@ -30,7 +30,7 @@ session.headers.update(
 )
 
 # get expo push tokens for user who do not complete daily post
-def get_push_tokens(db:Session, challenge_id_list:list):
+def get_push_tokens(db:Session):
     user_id_list = crud_challenge.check_user_activity(db=db)
     tokens = []
     for id in user_id_list:
@@ -92,22 +92,14 @@ def validate_receipts(push_tickets, db: Session):
             raise exc.push_response
     return 
 
-# Send notification
-def send_notification(user_id_list):
-   tokens = get_push_tokens(user_id_list=user_id_list)
-   push_messages = push_message_array(tokens=tokens)
-   push_tickets = send_push_notification(push_messages=push_messages)
-   #time.sleep(1800)
-   #validate_receipts(push_tickets=push_tickets)
 
 
 
  # router to test 
 @router.post("/test/SendNotification/")
 async def test_sendNotification( db: Session=Depends(get_db)):
-    challenge_list = []
-    #full_timezone_str = TIMEZONE_MAPPING.get(timezone, "UTC")
-    tokens = get_push_tokens(db=db, challenge_id_list=challenge_list)
+
+    tokens = get_push_tokens(db=db)
     push_messages = push_message_array(tokens=tokens)
     push_tickets = send_push_notification(push_messages=push_messages, db=db)
     #time.sleep(1800)
@@ -184,7 +176,6 @@ def send_notification(user_id_list):
    tokens = get_push_tokens(user_id_list=user_id_list)
    push_messages = push_message_array(tokens=tokens)
    push_tickets = send_push_notification(push_messages=push_messages)
-
 
  # router to test 
 @router.post("/test/SendNotificationTest")

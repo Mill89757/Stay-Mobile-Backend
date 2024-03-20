@@ -7,7 +7,7 @@ from sqlalchemy.sql import func
 
 from database import Base
 
-# create User class inherited from Base class 
+
 class User(Base):
     __tablename__ = "User"
 
@@ -21,7 +21,6 @@ class User(Base):
     is_completed = Column(Boolean, default=False)
     user_timezone = Column(String, nullable=False)
 
-# create Tracking class inherited from Base class
 class Tracking(Base):
     __tablename__ = "tracking"
 
@@ -58,9 +57,9 @@ class GroupChallengeMembers(Base):
     breaking_days_left = Column(Integer,nullable=False)
     is_challenge_finished = Column(Boolean, default=False, nullable=False)
     days_left = Column(Integer, nullable=False)
-    
 
-# create Post class inherited from Base class
+
+
 class Post(Base):
     __tablename__ = "post"
 
@@ -72,7 +71,6 @@ class Post(Base):
     end_time = Column(DateTime)
     written_text = Column(String(1000))
 
-# create PostContent class inherited from Base class
 class PostContent(Base):
     __tablename__ = "post_content"
 
@@ -82,7 +80,6 @@ class PostContent(Base):
     image_location = Column(String)
     voice_location = Column(String)
 
-# create Reaction class inherited from Base class
 class Reaction(Base):
     __tablename__ = "reaction"
 
@@ -92,7 +89,6 @@ class Reaction(Base):
     post_id = Column(ForeignKey("post.id"), nullable=False)
     user_id = Column(ForeignKey("User.id"), nullable=False)
 
-# create Course class inherited from Base class
 class Course(Base):
     __tablename__ = "course"
 
@@ -100,7 +96,9 @@ class Course(Base):
     course_name = Column(String, nullable= False)
     category = Column(Integer, nullable= False)
     description = Column(String, nullable=False)
-    cover_location = Column(String, nullable=False)
+    cover_location = Column(String, nullable=True)
+    source_link = Column(String, nullable=False)
+    short_intro = Column(String, nullable=False)
 
 # craete User_reaction_log class inherited from Base class
 class UserReactionLog(Base):
