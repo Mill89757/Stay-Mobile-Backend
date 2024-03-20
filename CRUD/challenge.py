@@ -865,9 +865,8 @@ def check_challenge_onwer(db:Session, challenge_id:int, user_id):
             return False
 
 
-# check user activity at 12pm and 6pm
+# check user activity at 9am, 3pm, and 9pm
 def check_user_activity(db:Session):
-    # user_timezone = pytz.timezone(TIMEZONE_MAPPING.get(timezone_str, "UTC"))
     current_time = datetime.now()
 
     current_date_str = current_time.strftime('%Y-%m-%d')
@@ -881,10 +880,8 @@ def check_user_activity(db:Session):
     for group_member in all_challenge_members:
         challenge_id = group_member.challenge_id
         combo_key = f"{challenge_id}_{group_member.user_id}"
-        #check_user_timezone = db.query(models.User).filter(models.User.id == group_member.user_id).first()
 
         if combo_key not in posted_combinations:
-            #if check_user_timezone.user_timezone == timezone_str:
             if group_member.breaking_days_left > 0:
                 remind_user_list.append(group_member.user_id)
     return remind_user_list
