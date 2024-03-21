@@ -9,24 +9,48 @@ import random
 from r1_automation import byte_to_utf8
 from redis_client import redis_client
 from CRUD.user import read_user_by_id
+from fastapi.security import OAuth2PasswordBearer
+from firebase_admin import credentials, auth, initialize_app
 
 
 # create routes for posts operations and functions
 router = APIRouter()
+# 初始化Firebase Admin SDK
+cred = credentials.Certificate('./stay-mobile-b2c29-firebase-adminsdk-rg9km-1de89e262d.json')
+initialize_app(cred)
+
+# 设置OAuth2的Bearer类型认证模式
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+# 依赖项: 解析并验证JWT
+def verify_token(token: str = Depends(oauth2_scheme)):
+    try:
+        print(token)
+        # 验证JWT
+        payload = auth.verify_id_token(token)
+        print(payload)
+        return payload
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Could not validate credentials',
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 # create post 
 @router.post("/CreatePost/", response_model=schemas.PostRead, status_code=status.HTTP_201_CREATED)
-async def create_post_router(post:schemas.PostCreate, db: Session = Depends(get_db)):
+async def create_post_router(post:schemas.PostCreate, db: Session = Depends(get_db),current_user: dict = Depends(verify_token)):
 
     result = post_crud.create_post(db=db, post = post)
     if isinstance(result, str) and "Cannot create post" in result:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result)
-
+    
+    print(current_user)
     return result
 
 # read post by post id
 @router.get("/GetPost/{post_id}", response_model=schemas.PostRead)
-async def get_post_route(post_id: int, db: Session = Depends(get_db)):
+async def get_post_route(post_id: int, db: Session = Depends(get_db),current_user: dict = Depends(verify_token)):
     """ Return the post by post id
     
     Args:
@@ -39,13 +63,14 @@ async def get_post_route(post_id: int, db: Session = Depends(get_db)):
         HTTPException: post not found
     """
     post = post_crud.get_post(db=db, post_id=post_id)
+    print(current_user)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
     return post
 
 # read posts of one user by user id
 @router.get("/GetPostByUserID/{user_id}", response_model=List[schemas.PostRead])
-async def get_post_route_user_id(user_id: int, db: Session = Depends(get_db)):
+async def get_post_route_user_id(user_id: int, db: Session = Depends(get_db),current_user: dict = Depends(verify_token)):
     """ Return the post by user id
     
     Args:
@@ -59,13 +84,14 @@ async def get_post_route_user_id(user_id: int, db: Session = Depends(get_db)):
         HTTPException: user not found
     """
     post = post_crud.get_posts_by_user_id(db=db, user_id = user_id)
+    print(current_user)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
     return post
 
 # read posts by challenge id
 @router.get("/GetPostByChallengeID/{challenge_id}", response_model=List[schemas.PostRead])
-async def get_post_route_challenge_id(challenge_id: int, db: Session = Depends(get_db)):
+async def get_post_route_challenge_id(challenge_id: int, db: Session = Depends(get_db),current_user: dict = Depends(verify_token)):
     """ Return the post by challenge id
 
     Args:
@@ -79,13 +105,14 @@ async def get_post_route_challenge_id(challenge_id: int, db: Session = Depends(g
         HTTPException: challenge not found
     """
     post = post_crud.get_posts_by_challenge_id(db=db, challenge_id = challenge_id)
+    print(current_user)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
     return post
 
 # read all posts
 @router.get("/GetAllposts/", response_model=list[schemas.PostRead])
-async def get_posts_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+async def get_posts_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db),current_user: dict = Depends(verify_token)):
     """ Return all posts
     
     Args:
@@ -95,30 +122,34 @@ async def get_posts_route(skip: int = 0, limit: int = 100, db: Session = Depends
     Returns:
         list of posts object
     """
+    print(current_user)
     return post_crud.get_posts(db=db, skip=skip, limit=limit)
 
 # update post by post id
 @router.put("/Updatepost/{post_id}", response_model=schemas.PostRead)
-async def update_post_route(post_id: int, post: schemas.PostCreate, db: Session = Depends(get_db)):
+async def update_post_route(post_id: int, post: schemas.PostCreate, db: Session = Depends(get_db),current_user: dict = Depends(verify_token)):
     updated_post = post_crud.update_post(db=db, post_id=post_id, post=post)
+    print(current_user)
     if updated_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
     return updated_post
 
 # delete post by post id
 @router.delete("/Deletepost/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_post_route(post_id: int, db: Session = Depends(get_db)):
+async def delete_post_route(post_id: int, db: Session = Depends(get_db),current_user: dict = Depends(verify_token)):
+    print(current_user)
     if not post_crud.delete_post(db=db, post_id=post_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found or has been deleted")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Post deleted successfully"})
 
 # read the recent post duration for a user
 @router.get("/GetRecentPostDuration/{user_id}")
-async def get_recent_post_duration(user_id: int, db: Session = Depends(get_db)):
+async def get_recent_post_duration(user_id: int, db: Session = Depends(get_db),current_user: dict = Depends(verify_token)):
     """ Return the duration of posts in the last 5 days for a user
     
     Notes: the challenge id is added for testing otherwise is hard to locate the specific post
     """
+    print(current_user)
     return post_crud.get_recent_post_duration(db, user_id)
 
 def top3categories(user_id:int) -> set:
@@ -201,11 +232,12 @@ def get_recommended_post(user_id):
     return filteredPosts_from_reacted_challenges(user_id) + filteredPosts_from_top3Categories(user_id)
 
 @router.get("/GetRecommendedPosts/{user_id}")
-async def get_recommended_posts(user_id: int, db: Session = Depends(get_db)):
+async def get_recommended_posts(user_id: int, db: Session = Depends(get_db),current_user: dict = Depends(verify_token)):
     """ Return the recommended posts for a user
 
     raise HTTPException: user not found
     """
+    print(current_user)
     read_user_by_id(db, user_id)#handle user not found
     recommended_post_ids = get_recommended_post(user_id)
     return post_crud.get_posts_by_ids(db, recommended_post_ids)
