@@ -36,9 +36,12 @@ def get_tokens(db:Session):
     return expo_tokens
 
 def get_expo_push_token(db:Session, user_id:int):
-    expo_push_token = db.query(models.ExpoPushToken).filter(models.ExpoPushToken.user_id == user_id).first()
-    if expo_push_token is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expo push token not found")
+    try:
+        expo_push_token = db.query(models.ExpoPushToken).filter(models.ExpoPushToken.user_id == user_id).first()
+        if expo_push_token is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expo push token not found")
+    except HTTPException as exc:
+        print ("An exception error occured: ", exc )
     return expo_push_token
 
 def update_expo_push_token(db:Session, token: str, tokenInfo: schemas.ExpoPushTokenBase):
