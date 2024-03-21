@@ -35,9 +35,9 @@ def get_push_tokens(db:Session):
     tokens = []
     for id in user_id_list:
         token = crud_token.get_expo_push_token(db=db, user_id=id)
-        if token:
-            tokens.append(token)
-    return tokens
+        if token is not None:
+            tokens.append(token.expo_push_token)
+    return token
 
 # Build PushMessage array to store push noticiation chunks
 def push_message_array(tokens):
@@ -96,7 +96,7 @@ def validate_receipts(push_tickets, db: Session):
 
  # router to test 
 @router.post("/test/SendNotification/")
-async def test_sendNotification( db: Session=Depends(get_db)):
+async def test_sendNotification(db: Session=Depends(get_db)):
     
     tokens = get_push_tokens(db=db)
     push_messages = push_message_array(tokens=tokens)
@@ -183,3 +183,23 @@ async def test_sendNotification( db: Session=Depends(get_db)):
 #     #time.sleep(1800)
 #     #validate_receipts(push_tickets=push_tickets,db=db)
     
+'''Test for get token'''
+# get expo push tokens for user who do not complete daily post
+# def get_push_tokens(db:Session):
+#     user_id_list = crud_challenge.test_get_user_list(db=db)
+#     tokens = []
+#     for id in user_id_list:
+#         token = crud_token.get_expo_push_token(db=db, user_id=id)
+#         if token is not None:
+#             tokens.append(token.expo_push_token)
+#     return tokens
+
+# @router.get("/TestUserId")
+# async def test_get_user_id(db:Session=Depends(get_db)):
+#     user_list = crud_challenge.test_get_user_list(db=db)
+#     return user_list
+
+# @router.get("/TestGetToken")
+# async def get_token(db:Session=Depends(get_db)):
+#     tokens = get_push_tokens(db=db)
+#     return tokens

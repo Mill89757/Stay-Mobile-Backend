@@ -886,3 +886,10 @@ def check_user_activity(db:Session):
                 remind_user_list.append(group_member.user_id)
     return remind_user_list
 
+
+# def test_get_user_list(db: Session):
+#     remind_user_list =[]
+#     all_members = db.query(models.GroupChallengeMembers).all()
+#     for group_member in all_members:
+#         remind_user_list.append(group_member.user_id)
+#     return remind_user_list
