@@ -8,13 +8,10 @@ import CRUD.challenge as challenge_crud
 from typing import List
 from fastapi.security import OAuth2PasswordBearer
 from firebase_admin import credentials, auth, initialize_app
+from firebase_setup import firebase_app
 
 # create routes for challenges operations and functions
 router = APIRouter()
-
-# 初始化Firebase Admin SDK
-cred = credentials.Certificate('./stay-mobile-b2c29-firebase-adminsdk-rg9km-1de89e262d.json')
-initialize_app(cred)
 
 # 设置OAuth2的Bearer类型认证模式
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
