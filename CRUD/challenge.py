@@ -884,6 +884,7 @@ def check_user_activity(db:Session):
         if combo_key not in posted_combinations:
             if group_member.breaking_days_left > 0:
                 remind_user_list.append(group_member.user_id)
+    print(f"Reminder Debug: {remind_user_list}")
     return remind_user_list
 
 

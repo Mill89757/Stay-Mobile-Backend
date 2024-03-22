@@ -32,12 +32,12 @@ session.headers.update(
 # get expo push tokens for user who do not complete daily post
 def get_push_tokens(db:Session):
     user_id_list = crud_challenge.check_user_activity(db=db)
-    tokens = []
+    tokens = set()
     for id in user_id_list:
         token = crud_token.get_expo_push_token(db=db, user_id=id)
         if token is not None:
-            tokens.append(token.expo_push_token)
-    return token
+            tokens.add(token.expo_push_token)
+    return tokens
 
 # Build PushMessage array to store push noticiation chunks
 def push_message_array(tokens):
