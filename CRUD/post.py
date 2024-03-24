@@ -34,6 +34,9 @@ def create_post(db: Session, post: schemas.PostCreate):
     if new_days_left < 0 or new_breaking_days_left < 0:
         return "Cannot create post as it would result in negative days left or breaking days left"
     
+    if challenge.is_completed == True or challenge.finished_time != None:
+        return "The challenge has finished or completed"
+    
     def create_post_action(db: Session, post: schemas.PostCreate):
         db_post = models.Post(
             user_id=post.user_id,
