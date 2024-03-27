@@ -9,6 +9,9 @@ from typing import List
 from fastapi.security import OAuth2PasswordBearer
 from firebase_admin import credentials, auth, initialize_app
 from firebase_setup import firebase_app
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # create routes for challenges operations and functions
 router = APIRouter()
@@ -30,6 +33,19 @@ def verify_token(token: str = Depends(oauth2_scheme)):
             detail='Could not validate credentials',
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+
+# 创建一个conditional_depends函数
+def conditional_depends(depends=Depends):
+    def dependency_override():
+        # 检查是否为测试环境
+        if os.environ['MODE'] == 'test':
+            # 测试环境下，跳过实际的依赖项
+            return lambda: {"user_id": "test_user_id"}
+        else:
+            # 生产环境下，返回实际的依赖项
+            return depends
+    return Depends(dependency_override())
 
 # create challenge
 @router.post("/CreateChallenge/", response_model=schemas.ChallengeRead, status_code=status.HTTP_201_CREATED)
@@ -105,7 +121,7 @@ def test_update_breaking_days(timezone: str, db: Session = Depends(get_db)):
 
 # read all challenges of one user by user id 
 @router.get("/GetUserChallenges/{user_id}", response_model=List[List[schemas.ChallengeWithBreakingDays]])
-async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db),current_user: dict = Depends(verify_token)):
+async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     """read all challenges of one user by user id
     
     Args:
@@ -119,7 +135,7 @@ async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db),
     """
     active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
-    print(current_user)
+    # print(current_user)
     return [active_challenges, finished_challenges]
 
 # read last challenge of one user by user id
