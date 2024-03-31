@@ -10,6 +10,9 @@ import CRUD.course as course_crud
 import os
 from PIL import Image
 import io
+from fastapi.security import OAuth2PasswordBearer
+from firebase_admin import credentials, auth, initialize_app
+from auth_dependencies import verify_token, conditional_depends
 from dotenv import load_dotenv
 # load env file
 load_dotenv()
@@ -28,15 +31,16 @@ def get_db():
 
 # read user from AWS database by user id 
 @router.get("/avatar/{user_id}")
-def get_user_avatar(user_id: int, db: Session = Depends(get_db)):
+def get_user_avatar(user_id: int, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     user = user_crud.read_user_by_id(db, user_id)
+    print(current_user)
     if user and user.avatar_location:
         return user.avatar_location
     raise HTTPException(status_code=404, detail="User or avatar not found")
 
 # upload files into AWS database by user id
 @router.post("/UploadAvatar/{user_id}")
-def upload_user_avatar(user_id: int, file: UploadFile, db: Session = Depends(get_db)):
+def upload_user_avatar(user_id: int, file: UploadFile, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     """Upload user avatar to S3
     
     Args:
@@ -81,6 +85,7 @@ def upload_user_avatar(user_id: int, file: UploadFile, db: Session = Depends(get
     bucket = s3.Bucket(S3_BUCKET_NAME)
     bucket.put_object(Key=user_id_as_file_name, Body=compressed_image)
 
+    print(current_user)
     upload_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{user_id_as_file_name}"
 
     return upload_file_url
@@ -101,7 +106,7 @@ def upload_photos(file: UploadFile):
 
 
 @router.post("/Upload_challenge_covers/{challenge_id}")
-def upload_challenger_cover(challenge_id: int, file: UploadFile, db: Session = Depends(get_db)):
+def upload_challenger_cover(challenge_id: int, file: UploadFile, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     """Upload challenge cover to S3
     
     Args:
@@ -148,13 +153,14 @@ def upload_challenger_cover(challenge_id: int, file: UploadFile, db: Session = D
     bucket.put_object(Key=user_id_as_file_name, Body=compressed_image)
 
     upload_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{user_id_as_file_name}"
+    print(current_user)
 
     return upload_file_url
 
 
 
 @router.post("/Upload_course_covers/{course_id}")
-def upload_course_cover(course_id: int, file: UploadFile, db: Session = Depends(get_db)):
+def upload_course_cover(course_id: int, file: UploadFile, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     """Upload course cover to S3
     
     Args:
@@ -201,6 +207,7 @@ def upload_course_cover(course_id: int, file: UploadFile, db: Session = Depends(
     bucket.put_object(Key=user_id_as_file_name, Body=compressed_image)
 
     upload_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{user_id_as_file_name}"
+    print(current_user)
 
     return upload_file_url
 
@@ -208,7 +215,7 @@ def upload_course_cover(course_id: int, file: UploadFile, db: Session = Depends(
 
 #post cover
 @router.post("/Upload_post_covers/")#用challenge_id来标记post
-def upload_post_cover(challenge_id: int, user_id: int, file: UploadFile, db: Session = Depends(get_db)):
+def upload_post_cover(challenge_id: int, user_id: int, file: UploadFile, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     """Upload post cover to S3
     
     Args:
@@ -263,5 +270,6 @@ def upload_post_cover(challenge_id: int, user_id: int, file: UploadFile, db: Ses
     bucket.put_object(Key=post_id_as_file_name, Body=compressed_image)
 
     upload_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{post_id_as_file_name}"
+    print(current_user)
 
     return upload_file_url
