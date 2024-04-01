@@ -878,13 +878,14 @@ def check_user_activity(db:Session):
     # get all challenges members 
     all_challenge_members = db.query(models.GroupChallengeMembers).all()
     for group_member in all_challenge_members:
-        challenge_id = group_member.challenge_id
-        combo_key = f"{challenge_id}_{group_member.user_id}"
+        if not group_member.is_challenge_finished:
+            challenge_id = group_member.challenge_id
+            combo_key = f"{challenge_id}_{group_member.user_id}"
 
-        if combo_key not in posted_combinations:
-            if group_member.breaking_days_left > 0:
-                remind_user_list.append(group_member.user_id)
-    print(f"Reminder Debug: {remind_user_list}")
+            if combo_key not in posted_combinations:
+                if group_member.breaking_days_left > 0:
+                    remind_user_list.append(group_member.user_id)
+        print(f"Reminder Debug: {remind_user_list}")
     return remind_user_list
 
 
