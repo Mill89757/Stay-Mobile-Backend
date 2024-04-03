@@ -4,11 +4,33 @@ import schemas
 import CRUD.tracking as crud
 from sqlalchemy.orm import Session
 from typing import List
+from fastapi.security import OAuth2PasswordBearer
+from firebase_admin import credentials, auth, initialize_app
+from firebase_setup import firebase_app
+from auth_dependencies import verify_token, conditional_depends
 
 # create routes for tracking operations and functions
 router = APIRouter(
     prefix="/tracking"
 )
+
+# # 设置OAuth2的Bearer类型认证模式
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+# # 依赖项: 解析并验证JWT
+# def verify_token(token: str = Depends(oauth2_scheme)):
+#     try:
+#         print(token)
+#         # 验证JWT
+#         payload = auth.verify_id_token(token)
+#         print(payload)
+#         return payload
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail='Could not validate credentials',
+#             headers={"WWW-Authenticate": "Bearer"},
+#         )
 
 def get_db():
     db = SessionLocal()
@@ -19,7 +41,7 @@ def get_db():
 
 # create tracking
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_tracking(tracking: schemas.TrackingsRequest, db: Session = Depends(get_db)):
+def create_tracking(tracking: schemas.TrackingsRequest, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
     """create tracking
     
     Args:
@@ -34,11 +56,12 @@ def create_tracking(tracking: schemas.TrackingsRequest, db: Session = Depends(ge
         HTTPException: This user is not the owner of this challenge
     """
     tracking = crud.create_tracking(db, tracking)
+    print(current_user)
     return tracking
 
 # read tracking by challenge_id
 @router.get("/challenge/{challenge_id}", response_model=List[schemas.TrackingsResponse])
-def get_tracking_by_challenge_id(challenge_id: int, db: Session = Depends(get_db)):
+def get_tracking_by_challenge_id(challenge_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
     """read tracking by challenge_id
 
     Args: 
@@ -52,12 +75,13 @@ def get_tracking_by_challenge_id(challenge_id: int, db: Session = Depends(get_db
         HTTPException: no tracking found
     """
     tracking = crud.read_tracking_by_challenge_id(db, challenge_id)
+    print(current_user)
     if tracking is None:
         raise HTTPException(status_code=404, detail="challenge not found")
     return tracking
 
 @router.get("/challenge/follower/{challenge_id}")
-def get_tracking_by_challenge_id(challenge_id: int, db: Session = Depends(get_db)):
+def get_tracking_by_challenge_id(challenge_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
     """read all follower avatar_location by challenge_id, is_terminated is False/True
 
     Args:
@@ -71,12 +95,13 @@ def get_tracking_by_challenge_id(challenge_id: int, db: Session = Depends(get_db
     """
     
     tracking = crud.read_follower_by_challenge_id(db, challenge_id)
+    print(current_user)
     if tracking is None:
         raise HTTPException(status_code=404, detail="challenge not found")
     return tracking
 
 @router.get("/follower/data/{follower_id}")
-def get_activated_tracking_challenge_data_by_follower_id(follower_id: int, db: Session = Depends(get_db)):
+def get_activated_tracking_challenge_data_by_follower_id(follower_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
     """
     read all activated tracking by user_id
 
@@ -90,13 +115,14 @@ def get_activated_tracking_challenge_data_by_follower_id(follower_id: int, db: S
         HTTPException: follower not found
     """
     tracking = crud.read_activated_tracking_challenge_data_by_follower_id(db, follower_id)
+    print(current_user)
     if tracking is None:
         raise HTTPException(status_code=404, detail="follower not found")
     return tracking
 
 # update tracking status
 @router.put("/")
-def update_tracking_status(challenge_id: int, follower_id: int, tracking: schemas.TrackingsResponse, db: Session = Depends(get_db)):
+def update_tracking_status(challenge_id: int, follower_id: int, tracking: schemas.TrackingsResponse, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
     """update tracking status
 
     Args:
@@ -113,11 +139,13 @@ def update_tracking_status(challenge_id: int, follower_id: int, tracking: schema
         HTTPException: tracking not found
     """
     res = crud.update_tracking_status(db, challenge_id, follower_id, tracking)
+    print(current_user)
     return res
 
 # delete tracking by id
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
-def delete_tracking(id: int, db: Session = Depends(get_db)):
+def delete_tracking(id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
     res = crud.delete_tracking(db, id)
+    print(current_user)
     if res is None:
         raise HTTPException(status_code=404, detail="tracking not found")
