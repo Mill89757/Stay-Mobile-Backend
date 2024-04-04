@@ -13,8 +13,5 @@ encoded_key = str(encoded_key)[2:-1]
 # decode
 original_firebase_key= json.loads(base64.b64decode(encoded_key).decode('utf-8'))
 
-print("++++++++++++++++++++++++++++++++++++++++")
-print(original_firebase_key)
-
 cred = credentials.Certificate(original_firebase_key)
 firebase_app = initialize_app(cred)
