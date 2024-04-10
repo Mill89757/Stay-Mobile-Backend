@@ -283,7 +283,7 @@ def get_recent_post_duration(db: Session, user_id: int):
     """
     read_user_by_id(db, user_id)#handle user not found
     RECENT_DAYS = 5
-    end_date = datetime.now().date()
+    end_date = datetime.utcnow().date()
     start_date = end_date - timedelta(days=RECENT_DAYS)
 
     query_result = db.query(models.Post, models.Challenge, models.GroupChallengeMembers)\
