@@ -19,6 +19,7 @@ def create_post(db: Session, post: schemas.PostCreate):
     
     usertimezone = get_usertimezone_by_user_id(db, post.user_id)
     location_date = datetime.now().astimezone(pytz.timezone(usertimezone)).date()
+    localtion_datetime = datetime.now().astimezone(pytz.timezone(usertimezone))
 
     if get_posts_by_challenge_id(db, challenge_id=post.challenge_id) and get_posts_by_challenge_id(db, challenge_id=post.challenge_id)[0].created_time.astimezone(pytz.timezone(usertimezone)).date() == location_date :
 
@@ -52,10 +53,10 @@ def create_post(db: Session, post: schemas.PostCreate):
         db.commit()
         db.refresh(db_post)
         # 生成唯一组合键和当天的帖子跟踪键
-        today = datetime.now()
+        today = localtion_datetime
         end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
         remaining_time = end_of_day - today
-        today_str = datetime.now().strftime('%Y-%m-%d')
+        today_str = today.strftime('%Y-%m-%d')
         unique_key = f"challenge_user:{post.challenge_id}_{post.user_id}_{today_str}"
         daily_key = f"posted_challenges:{today_str}"
 
