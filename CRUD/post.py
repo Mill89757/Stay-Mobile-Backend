@@ -54,7 +54,11 @@ def create_post(db: Session, post: schemas.PostCreate):
         db.refresh(db_post)
         # 生成唯一组合键和当天的帖子跟踪键
         today = localtion_datetime
-        end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59)
+        end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59,tzinfo=today.tzinfo)
+        print("+++++++++++++++++++++++++++++++++++++++")
+        print(end_of_day)
+        print(today)
+        print("++++++++++++++++++++++++++++++++++++++++")
         remaining_time = end_of_day - today
         today_str = today.strftime('%Y-%m-%d')
         unique_key = f"challenge_user:{post.challenge_id}_{post.user_id}_{today_str}"
