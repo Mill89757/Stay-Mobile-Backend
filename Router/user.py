@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 import schemas
 from database import SessionLocal
 import CRUD.user as crud
+from auth_dependencies import verify_token, conditional_depends
 
 # create routes for users' operations and functions
 router = APIRouter(prefix="/user")
@@ -45,8 +46,9 @@ def get_user_by_firebase_uid(firebase_uid: str, db: Session = Depends(get_db)):
 
 #update user
 @router.put("/{id}")
-def update_user(id: int, user: schemas.UsersRequest, db: Session = Depends(get_db)):
+def update_user(id: int, user: schemas.UsersRequest, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     user = crud.update_user(db, id, user)
+    print(current_user)
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
     return user
