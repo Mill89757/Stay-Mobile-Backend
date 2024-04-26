@@ -867,7 +867,7 @@ def check_challenge_onwer(db:Session, challenge_id:int, user_id):
 
 # check user activity at 9am, 3pm, and 9pm
 def check_user_activity(db:Session):
-    current_time = datetime.now()
+    current_time = datetime.now().astimezone(pytz.timezone("Australia/Melbourne")).date()
 
     current_date_str = current_time.strftime('%Y-%m-%d')
     remind_user_list = []
@@ -885,7 +885,10 @@ def check_user_activity(db:Session):
             if combo_key not in posted_combinations:
                 if group_member.breaking_days_left > 0:
                     remind_user_list.append(group_member.user_id)
+                    print(f"Combo_key: {combo_key}")
         print(f"Reminder Debug: {remind_user_list}")
+        
+        print(f"Redis data:{posted_combinations}")
     return remind_user_list
 
 
