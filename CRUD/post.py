@@ -59,7 +59,10 @@ def create_post(db: Session, post: schemas.PostCreate):
         print(end_of_day)
         print(today)
         print("++++++++++++++++++++++++++++++++++++++++")
-        remaining_time = end_of_day - today
+        remaining_time = (end_of_day - today) + timedelta(minutes=10)
+        print("+++++++++++++++++++++++++++++++++++++++")
+        print(remaining_time)
+        print("++++++++++++++++++++++++++++++++++++++++")
         today_str = today.strftime('%Y-%m-%d')
         unique_key = f"challenge_user:{post.challenge_id}_{post.user_id}_{today_str}"
         daily_key = f"posted_challenges:{today_str}"
