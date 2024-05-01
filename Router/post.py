@@ -12,6 +12,8 @@ from CRUD.user import read_user_by_id
 from fastapi.security import OAuth2PasswordBearer
 from firebase_admin import credentials, auth, initialize_app
 from auth_dependencies import verify_token, conditional_depends
+from datetime import datetime
+import os
 
 
 # create routes for posts operations and functions
@@ -235,7 +237,56 @@ async def get_recommended_posts(user_id: int, db: Session = Depends(get_db),curr
 
     raise HTTPException: user not found
     """
-    print(current_user)
+    # print(current_user)
     read_user_by_id(db, user_id)#handle user not found
     recommended_post_ids = get_recommended_post(user_id)
     return post_crud.get_posts_by_ids(db, recommended_post_ids)
+
+REPORT_FILE_PATH = "report_content.csv"
+
+def create_empty_csv():
+    """ Create an empty csv file with headers
+    """
+    with open(REPORT_FILE_PATH, "w") as file:
+        file.write("ID, time, user_id, post_id, report_reason\n")
+
+
+def add_record_to_csv(input_data: dict):
+    """ Add a record at the end of csv file
+
+    input_data: a dictionary with keys: user_id, post_id, report_reason
+    """
+    file = open(REPORT_FILE_PATH, "r")
+    number_of_lines = len(file.read().split("\n"))
+    id = number_of_lines - 1
+    file.close()
+    time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    record = f"{id}, {time}, {input_data['user_id']}, {input_data['post_id']}, {input_data['report_reason']}"
+    with open(REPORT_FILE_PATH, "a") as file:
+        file.write(record + "\n") 
+
+@router.post("/reportPost/")
+async def create_report_post(post_id:int ,user_id: int, report_reason:str, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
+    """ Return the report post for a user
+
+    raise HTTPException: user not found
+    """
+    read_user_by_id(db, user_id)#handle user not found
+    new_data = {}
+    if not os.path.exists(REPORT_FILE_PATH):
+        create_empty_csv()
+        new_data = {
+            "user_id": user_id,
+            "post_id": post_id,
+            "report_reason": report_reason
+        }
+        add_record_to_csv(new_data)
+    else:
+        new_data = {
+            "user_id": user_id,
+            "post_id": post_id,
+            "report_reason": report_reason
+        }
+        add_record_to_csv(new_data)
+    
+    return new_data
