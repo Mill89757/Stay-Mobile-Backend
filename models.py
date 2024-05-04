@@ -20,6 +20,7 @@ class User(Base):
     avatar_location = Column(String)
     is_completed = Column(Boolean, default=False)
     user_timezone = Column(String, nullable=False)
+    is_blocked = Column(Boolean, nullable=False, default=False)
 
 class Tracking(Base):
     __tablename__ = "tracking"

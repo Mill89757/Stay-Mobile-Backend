@@ -17,6 +17,7 @@ class UsersRequest(BaseModel):
     avatar_location: Optional[str] = None
     is_completed: Optional[bool] = False#默认false
     user_timezone: str
+    is_blocked: Optional[bool] = False
 
 class UsersResponse(BaseModel):
     id: int
@@ -28,6 +29,7 @@ class UsersResponse(BaseModel):
     avatar_location: str
     is_completed: bool
     user_timezone: str
+    is_blocked: Optional[bool] = False
 
     class Config:
         orm_mode = True
