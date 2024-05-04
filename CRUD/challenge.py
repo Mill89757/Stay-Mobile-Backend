@@ -442,6 +442,30 @@ def delete_challenge(db: Session, challenge_id: int):
     
     return True
 
+def delete_user_account(db: Session, user_id: int):
+    # 获取所有属于该用户的挑战
+    challenges = db.query(models.Challenge).filter(models.Challenge.challenge_owner_id == user_id).all()
+
+    # 遍历所有挑战，并删除每一个
+    for challenge in challenges:
+        delete_challenge(db, challenge.id)
+
+    db.query(models.Tracking).filter(models.Tracking.owner_id == user_id).delete(synchronize_session=False)
+    
+    db.query(models.Tracking).filter(models.Tracking.follower_id == user_id).delete(synchronize_session=False)
+    
+    # 删除用户
+    target_user = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    if target_user is None:
+        return False
+    
+    db.delete(target_user)
+    db.commit()
+    
+    return True
+
+
 # 中途退出group challenge
 def delete_group_challenge_member(db: Session, challenge_id: int, user_id: int):
     """delete group challenge member by challenge id and user id
