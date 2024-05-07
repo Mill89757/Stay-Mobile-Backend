@@ -443,6 +443,9 @@ def delete_challenge(db: Session, challenge_id: int):
     return True
 
 def delete_user_account(db: Session, user_id: int):
+
+    db.query(models.UserReactionLog).filter(models.UserReactionLog.user_id == user_id).delete(synchronize_session=False)
+
     # 获取所有属于该用户的挑战
     challenges = db.query(models.Challenge).filter(models.Challenge.challenge_owner_id == user_id).all()
 
