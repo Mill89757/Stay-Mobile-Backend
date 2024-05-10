@@ -85,7 +85,7 @@ def upload_user_avatar(user_id: int, file: UploadFile, db: Session = Depends(get
     bucket = s3.Bucket(S3_BUCKET_NAME)
     bucket.put_object(Key=user_id_as_file_name, Body=compressed_image)
 
-    print(current_user)
+    # print(current_user)
     upload_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{user_id_as_file_name}"
 
     return upload_file_url
