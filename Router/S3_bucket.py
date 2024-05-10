@@ -40,7 +40,7 @@ def get_user_avatar(user_id: int, db: Session = Depends(get_db),current_user: di
 
 # upload files into AWS database by user id
 @router.post("/UploadAvatar/{user_id}")
-def upload_user_avatar(user_id: int, file: UploadFile, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
+def upload_user_avatar(user_id: int, file: UploadFile, db: Session = Depends(get_db)):
     """Upload user avatar to S3
     
     Args:
