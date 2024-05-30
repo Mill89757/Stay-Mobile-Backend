@@ -161,9 +161,10 @@ def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str)
                         db_post = models.Post(
                             user_id=group_member.user_id,
                             challenge_id=challenge_id,
+                            created_time=(datetime.now() - timedelta(days=1)),
                             #change the start time to today at 23:59:59
-                            start_time=datetime.now().replace(hour=23, minute=59, second=59),
-                            end_time=datetime.now().replace(hour=23, minute=59, second=59),
+                            start_time=(datetime.now() - timedelta(days=1)).replace(hour=23, minute=59, second=59),
+                            end_time=(datetime.now() - timedelta(days=1)).replace(hour=23, minute=59, second=59),
                             written_text="I have a break today!",
                         )
                         db.add(db_post)
