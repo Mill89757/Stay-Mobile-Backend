@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 import schemas  
 from database import get_db  
 import CRUD.post as post_crud
+import CRUD.blocked_user_list as block_crud
 import random
 from r1_automation import byte_to_utf8
 from redis_client import redis_client
@@ -89,9 +90,14 @@ async def get_post_route_user_id(user_id: int, db: Session = Depends(get_db),cur
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
     return post
 
+# # get blocked user list by user id
+# def get_blocked_user_list(user_id: int):
+#     read_user_by_id(user_id)
+#     return block_crud.get_blocked_user_list(db, user_id)
+
 # read posts by challenge id
-@router.get("/GetPostByChallengeID/{challenge_id}", response_model=List[schemas.PostRead])
-async def get_post_route_challenge_id(challenge_id: int, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
+@router.get("/GetPostByChallengeID/{challenge_id}/{user_id}", response_model=List[schemas.PostRead])
+async def get_post_route_challenge_id(challenge_id: int, user_id:int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
     """ Return the post by challenge id
 
     Args:
@@ -104,15 +110,17 @@ async def get_post_route_challenge_id(challenge_id: int, db: Session = Depends(g
         HTTPException: post not found
         HTTPException: challenge not found
     """
-    post = post_crud.get_posts_by_challenge_id(db=db, challenge_id = challenge_id)
+    blocked_user_list = block_crud.get_blocked_user_list(db=db, blocker_user_id=user_id)
+    post = post_crud.get_posts_by_challenge_id(db=db, challenge_id = challenge_id, blocked_user_list=blocked_user_list)
     print(current_user)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
+    
     return post
 
 # read all posts
-@router.get("/GetAllposts/", response_model=list[schemas.PostRead])
-async def get_posts_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
+@router.get("/GetAllposts/{user_id}", response_model=list[schemas.PostRead])
+async def get_posts_route(user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     """ Return all posts
     
     Args:
@@ -123,9 +131,10 @@ async def get_posts_route(skip: int = 0, limit: int = 100, db: Session = Depends
         list of posts object
     """
     print(current_user)
-    return post_crud.get_posts(db=db, skip=skip, limit=limit)
+    blocked_user_list = block_crud.get_blocked_user_list(db=db, blocker_user_id=user_id)
+    return post_crud.get_posts(db=db, blocked_user_list=blocked_user_list, skip=skip, limit=limit)
 
-# update post by post id
+# update post by post id 
 @router.put("/Updatepost/{post_id}", response_model=schemas.PostRead)
 async def update_post_route(post_id: int, post: schemas.PostCreate, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     updated_post = post_crud.update_post(db=db, post_id=post_id, post=post)
@@ -240,7 +249,12 @@ async def get_recommended_posts(user_id: int, db: Session = Depends(get_db),curr
     # print(current_user)
     read_user_by_id(db, user_id)#handle user not found
     recommended_post_ids = get_recommended_post(user_id)
-    return post_crud.get_posts_by_ids(db, recommended_post_ids)
+    blocked_user_list = block_crud.get_blocked_user_list(db=db, blocker_user_id=user_id)
+    final_post_ids = []
+    for id in recommended_post_ids:
+        if id not in blocked_user_list:
+            final_post_ids.append(id)
+    return post_crud.get_posts_by_ids(db, final_post_ids)
 
 REPORT_FILE_PATH = "report_content.csv"
 

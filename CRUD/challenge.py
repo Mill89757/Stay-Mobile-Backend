@@ -181,7 +181,7 @@ def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str)
     db.commit()
 
 # read all challenges
-def get_challenges(db: Session, skip: int = 0, limit: int = 100):
+def get_challenges(db: Session, blocked_user_list: List, skip: int = 0, limit: int = 100):
     query_result = (
         db.query(models.Challenge, models.GroupChallengeMembers)
         .join(models.GroupChallengeMembers, models.GroupChallengeMembers.challenge_id == models.Challenge.id)
@@ -192,24 +192,26 @@ def get_challenges(db: Session, skip: int = 0, limit: int = 100):
     )
     results = []
     for challenge_obj, groupChallengeMember_obj in query_result:
-        current_challenge = {
-            "breaking_days": challenge_obj.breaking_days, 
-            "category": challenge_obj.category, 
-            "challenge_owner_id": challenge_obj.challenge_owner_id, 
-            "course_id": challenge_obj.course_id, 
-            "cover_location": challenge_obj.cover_location,
-            "created_time": challenge_obj.created_time, 
-            "days_left": groupChallengeMember_obj.days_left, 
-            "description": challenge_obj.description, 
-            "duration": challenge_obj.duration, 
-            "finished_time": challenge_obj.finished_time, 
-            "id": challenge_obj.id, 
-            "is_completed": challenge_obj.is_completed, 
-            "is_group_challenge": challenge_obj.is_group_challenge, 
-            "is_public": challenge_obj.is_public, 
-            "title": challenge_obj.title
-            }
-        results.append(current_challenge)
+        if challenge_obj.challenge_owner_id not in blocked_user_list:
+            current_challenge = {
+                "breaking_days": challenge_obj.breaking_days, 
+                "category": challenge_obj.category, 
+                "challenge_owner_id": challenge_obj.challenge_owner_id, 
+                "course_id": challenge_obj.course_id, 
+                "cover_location": challenge_obj.cover_location,
+                "created_time": challenge_obj.created_time, 
+                "days_left": groupChallengeMember_obj.days_left, 
+                "description": challenge_obj.description, 
+                "duration": challenge_obj.duration, 
+                "finished_time": challenge_obj.finished_time, 
+                "challenge_owner_id": challenge_obj.challenge_owner_id,
+                "id": challenge_obj.id, 
+                "is_completed": challenge_obj.is_completed, 
+                "is_group_challenge": challenge_obj.is_group_challenge, 
+                "is_public": challenge_obj.is_public, 
+                "title": challenge_obj.title
+                }
+            results.append(current_challenge)
 
     return results
 # read active challenges list of one user by user id
@@ -818,7 +820,7 @@ def challenge_card_by_challengeID(db: Session, challenge_id: int):
     }
     return challenge_details
 
-def get_group_challenge_members(db: Session, challenge_id: int):
+def get_group_challenge_members(db: Session, challenge_id: int, blocked_user_list: List):
     """read group challenge members by challenge_id
 
     Args:
@@ -840,16 +842,17 @@ def get_group_challenge_members(db: Session, challenge_id: int):
     )
     group_members_details = []
     for challenge, group_challenge_members,user in results:
-        data = schemas.GroupChallengesMember(
-            user_id = group_challenge_members.user_id,
-            breaking_days_left = group_challenge_members.breaking_days_left,
-            days_left = group_challenge_members.days_left,
-            is_challenge_finished = group_challenge_members.is_challenge_finished,
-            challenge_id = group_challenge_members.challenge_id,
-            user_name = user.name,
-            challenge_category = challenge.category,
-            )
-        group_members_details.append(data)
+        if group_challenge_members.user_id not in blocked_user_list:
+            data = schemas.GroupChallengesMember(
+                user_id = group_challenge_members.user_id,
+                breaking_days_left = group_challenge_members.breaking_days_left,
+                days_left = group_challenge_members.days_left,
+                is_challenge_finished = group_challenge_members.is_challenge_finished,
+                challenge_id = group_challenge_members.challenge_id,
+                user_name = user.name,
+                challenge_category = challenge.category,
+                )
+            group_members_details.append(data)
     return group_members_details
 
 

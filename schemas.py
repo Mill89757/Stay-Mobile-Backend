@@ -278,3 +278,8 @@ class ExpoPushTokenBase(BaseModel):
     expo_push_token: str
     user_id: int
     timestamp: datetime
+
+# blocker user list 
+class BlockUserListBase(BaseModel):
+    blocker_user_id: int
+    blocked_user_id: int

@@ -133,4 +133,10 @@ class ExpoPushToken(Base):
     expo_push_token = Column(String, primary_key=True, index=False)
     user_id = Column(ForeignKey("User.id"), nullable=False)
     timestamp = Column(DateTime, default=func.now(), nullable = False)
-    
+
+# creat blocker suer list class iherited from base class
+class BlockedUserList(Base):
+    __tablename__ = "blocked_user_list"
+
+    blocker_user_id =  Column(Integer, primary_key=True)
+    blocked_user_id = Column(Integer, primary_key=True)

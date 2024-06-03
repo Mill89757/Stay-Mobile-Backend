@@ -18,6 +18,7 @@ from Router.pushNotification import router as send_notification
 from Router.user import router as user_router 
 from Router.course import router as course_router
 from Router.tracking import router as tracking_router
+from Router.blocked_user_list import router as blocked_user_router
 
 app = FastAPI()
 app.include_router(user_router)
@@ -32,6 +33,7 @@ app.include_router(user_reaction_log_router)
 app.include_router(automation_router)
 app.include_router(expo_push_token_router)
 app.include_router(send_notification)
+app.include_router(blocked_user_router)
 
 # Testing 2
 

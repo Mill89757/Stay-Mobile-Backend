@@ -11,6 +11,7 @@ import redis
 from datetime import datetime, timedelta
 from CRUD.user import read_user_by_id
 from redis_client import redis_client
+from typing import List
 
 
 def create_post(db: Session, post: schemas.PostCreate):
@@ -156,7 +157,7 @@ def get_post(db:Session, post_id: int):
     return post
 
 # read all posts
-def get_posts(db: Session, skip: int = 0, limit: int = 100):
+def get_posts(db: Session,  blocked_user_list: List, skip: int = 0, limit: int = 100,):
     """ Return all posts
     
     Args:
@@ -171,18 +172,20 @@ def get_posts(db: Session, skip: int = 0, limit: int = 100):
     final_post_list =[]
 
     for post_obj, challenge_obj in posts:
+        # check if post in current user's blocked user list
+        if post_obj.user_id not in blocked_user_list:
 
-        post_unit = {
-            "created_time": post_obj.created_time,
-            "start_time": post_obj.start_time,
-            "end_time": post_obj.end_time,
-            "written_text": post_obj.written_text,
-            "id": post_obj.id,
-            "user_id": post_obj.user_id,
-            "challenge_id": post_obj.challenge_id
-        }
+            post_unit = {
+                "created_time": post_obj.created_time,
+                "start_time": post_obj.start_time,
+                "end_time": post_obj.end_time,
+                "written_text": post_obj.written_text,
+                "id": post_obj.id,
+                "user_id": post_obj.user_id,
+                "challenge_id": post_obj.challenge_id
+            }
 
-        final_post_list.append(post_unit)
+            final_post_list.append(post_unit)
 
     return final_post_list
 
@@ -232,7 +235,7 @@ def get_posts_by_user_id(db: Session, user_id: int) -> List[models.Post]:
     return user_id_posts
 
 # read posts by challenge id
-def get_posts_by_challenge_id(db: Session, challenge_id: int) -> List[models.Post]:
+def get_posts_by_challenge_id(db: Session, challenge_id: int, blocked_user_list: List) -> List[models.Post]:
     """ Return the post by challenge id
 
     Args:
@@ -248,12 +251,16 @@ def get_posts_by_challenge_id(db: Session, challenge_id: int) -> List[models.Pos
     challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     if challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
+    final_post_list =[]
     challenge_id_posts = (
         db.query(models.Post)
         .filter(models.Post.challenge_id == challenge_id).order_by(desc(models.Post.created_time))
         .all()
     )
-    return challenge_id_posts
+    for post_obj in challenge_id_posts:
+        if post_obj.user_id not in blocked_user_list:
+            final_post_list.append(post_obj)
+    return final_post_list
 
 # update post by post id
 def update_post(db: Session, post_id: int, post: schemas.PostCreate):

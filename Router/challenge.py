@@ -2,9 +2,11 @@ from cmath import asin
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
+from models import BlockedUserList
 import schemas  
 from database import get_db  
 import CRUD.challenge as challenge_crud
+import CRUD.blocked_user_list as block_crud
 from typing import List
 from fastapi.security import OAuth2PasswordBearer
 from firebase_admin import credentials, auth, initialize_app
@@ -180,10 +182,12 @@ async def get_user_finished_challenges_route(user_id: int, db: Session = Depends
     print(current_user)
     return finished_challenges
 
-@router.get("/GetAllChallenges/", response_model=list[schemas.ChallengeRead])
-async def get_challenges_route(skip: int = 0, limit: int = 100, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
+@router.get("/GetAllChallenges/{user_id}", response_model=list[schemas.ChallengeRead])
+async def get_challenges_route(user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     print(current_user)
-    return challenge_crud.get_challenges(db=db, skip=skip, limit=limit)
+    blocked_user_list = block_crud.get_blocked_user_list(db=db, blocker_user_id=user_id)
+
+    return challenge_crud.get_challenges(db=db,blocked_user_list=blocked_user_list,  skip=skip, limit=limit)
 
 @router.get("/GetBreakingDaysLeftByUserIdAndChallengeId/{user_id}/{challenge_id}", response_model=schemas.GroupChallengeMembersRead)
 async def get_challenge_breaking_days_left(user_id: int, challenge_id:int ,db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
@@ -345,8 +349,8 @@ async def get_challenge_card(challenge_id: int, db:Session = Depends(get_db), cu
     result = challenge_crud.challenge_card_by_challengeID(db, challenge_id)
     return result
 
-@router.get("/GetGroupChallengeMembers/{challenge_id}")
-async def get_group_challenge_members(challenge_id: int, db:Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
+@router.get("/GetGroupChallengeMembers/{challenge_id}/{user_id}")
+async def get_group_challenge_members(challenge_id: int, user_id:int, db:Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
     """read group challenge members by challenge_id
 
     Args:
@@ -358,7 +362,10 @@ async def get_group_challenge_members(challenge_id: int, db:Session = Depends(ge
     Raises:
         HTTPException: challenge not found
     """
-    result = challenge_crud.get_group_challenge_members(db, challenge_id)
+    blocked_user_list = block_crud.get_blocked_user_list(db=db, blocker_user_id=user_id)
+  
+    result = challenge_crud.get_group_challenge_members(db, challenge_id, blocked_user_list=blocked_user_list)
+    
     print(current_user)
     return result
 
