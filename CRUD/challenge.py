@@ -161,9 +161,10 @@ def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str)
                         db_post = models.Post(
                             user_id=group_member.user_id,
                             challenge_id=challenge_id,
+                            created_time=(datetime.now() - timedelta(days=1)),
                             #change the start time to today at 23:59:59
-                            start_time=datetime.now().replace(hour=23, minute=59, second=59),
-                            end_time=datetime.now().replace(hour=23, minute=59, second=59),
+                            start_time=(datetime.now() - timedelta(days=1)).replace(hour=23, minute=59, second=59),
+                            end_time=(datetime.now() - timedelta(days=1)).replace(hour=23, minute=59, second=59),
                             written_text="I have a break today!",
                         )
                         db.add(db_post)
@@ -443,6 +444,33 @@ def delete_challenge(db: Session, challenge_id: int):
     db.commit()
     
     return True
+
+def delete_user_account(db: Session, user_id: int):
+
+    db.query(models.UserReactionLog).filter(models.UserReactionLog.user_id == user_id).delete(synchronize_session=False)
+
+    # 获取所有属于该用户的挑战
+    challenges = db.query(models.Challenge).filter(models.Challenge.challenge_owner_id == user_id).all()
+
+    # 遍历所有挑战，并删除每一个
+    for challenge in challenges:
+        delete_challenge(db, challenge.id)
+
+    db.query(models.Tracking).filter(models.Tracking.owner_id == user_id).delete(synchronize_session=False)
+    
+    db.query(models.Tracking).filter(models.Tracking.follower_id == user_id).delete(synchronize_session=False)
+    
+    # 删除用户
+    target_user = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    if target_user is None:
+        return False
+    
+    db.delete(target_user)
+    db.commit()
+    
+    return True
+
 
 # 中途退出group challenge
 def delete_group_challenge_member(db: Session, challenge_id: int, user_id: int):

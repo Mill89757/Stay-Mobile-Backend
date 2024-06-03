@@ -223,6 +223,13 @@ async def delete_challenge_route(challenge_id: int, db: Session = Depends(get_db
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Challenge deleted successfully"})
 
+@router.delete("/DeleteUserAccount/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user_account (user_id: int, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
+    print(current_user)
+    if not challenge_crud.delete_user_account(db=db, user_id=user_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "User Account deleted successfully"})
+
 # 中途退出group challenge
 @router.delete("/DeleteGroupChallengeMember/{challenge_id}/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_group_challenge_member_route(challenge_id: int, user_id:int, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):

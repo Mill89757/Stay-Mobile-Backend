@@ -167,7 +167,7 @@ def get_posts(db: Session,  blocked_user_list: List, skip: int = 0, limit: int =
     Returns:
         list of posts object
     """
-    posts = db.query(models.Post, models.Challenge).join(models.Challenge, models.Challenge.id == models.Post.challenge_id).order_by(desc(models.Post.created_time)).filter(models.Challenge.is_public == True).filter(models.Post.written_text != "I have a break today!").offset(skip).limit(limit).all()
+    posts = db.query(models.Post, models.Challenge,models.User).join(models.Challenge, models.Challenge.id == models.Post.challenge_id).join(models.User,models.User.id == models.Challenge.challenge_owner_id).order_by(desc(models.Post.created_time)).filter(models.Challenge.is_public == True).filter(models.Post.written_text != "I have a break today!").filter(models.User.is_blocked == False).offset(skip).limit(limit).all()
     
     final_post_list =[]
 
