@@ -171,10 +171,9 @@ def get_posts(db: Session,  blocked_user_list: List, skip: int = 0, limit: int =
     
     final_post_list =[]
 
-    for post_obj, challenge_obj in posts:
-        # check if post in current user's blocked user list
+    for post_obj, challenge_obj, user_obj in posts:
+        # check if post is in current user's blocked user list
         if post_obj.user_id not in blocked_user_list:
-
             post_unit = {
                 "created_time": post_obj.created_time,
                 "start_time": post_obj.start_time,
@@ -184,7 +183,6 @@ def get_posts(db: Session,  blocked_user_list: List, skip: int = 0, limit: int =
                 "user_id": post_obj.user_id,
                 "challenge_id": post_obj.challenge_id
             }
-
             final_post_list.append(post_unit)
 
     return final_post_list
