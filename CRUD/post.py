@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from CRUD.user import read_user_by_id
 from redis_client import redis_client
 from typing import List
+import CRUD.blocked_user_list as block_crud
 
 
 def create_post(db: Session, post: schemas.PostCreate):
@@ -22,7 +23,9 @@ def create_post(db: Session, post: schemas.PostCreate):
     location_date = datetime.now().astimezone(pytz.timezone(usertimezone)).date()
     localtion_datetime = datetime.now().astimezone(pytz.timezone(usertimezone))
 
-    if get_posts_by_challenge_id(db, challenge_id=post.challenge_id) and get_posts_by_challenge_id(db, challenge_id=post.challenge_id)[0].created_time.astimezone(pytz.timezone(usertimezone)).date() == location_date :
+    blocked_user_list = block_crud.get_blocked_user_list(db=db, blocker_user_id=post.user_id)
+
+    if get_posts_by_challenge_id(db, challenge_id=post.challenge_id, blocked_user_list=blocked_user_list) and get_posts_by_challenge_id(db, challenge_id=post.challenge_id, blocked_user_list=blocked_user_list)[0].created_time.astimezone(pytz.timezone(usertimezone)).date() == location_date :
 
         return "Cannot create post, you has post today!"
     
