@@ -53,32 +53,32 @@ def upload_user_avatar(user_id: int, file: UploadFile, db: Session = Depends(get
         HTTPException: user not found
     """
     user_crud.read_user_by_id(db, user_id)# check if user exists
-   # 将上传的文件转换为Pillow图像
-    image = Image.open(file.file).convert("RGB")  # 转换为RGB
+   # 将上传的文件转换为Pillow图像(Convert uploaded files to Pillow images)
+    image = Image.open(file.file).convert("RGB")  # 转换为RGB(Convert to RGB)
 
-    # 可能的分辨率调整 - 根据需要调整这些值
+    # 可能的分辨率调整 - 根据需要调整这些值(Possible Resolution Adjustments - Adjust these values ​​as needed)
     max_size = (1080, 1080)
     image.thumbnail(max_size, Image.Resampling.LANCZOS)
 
-    # 初始化变量
+    # 初始化变量(Initialize variables)
     compressed_output = io.BytesIO()
-    quality = 85  # 初始质量值，可以调整
+    quality = 85  # 初始质量值，可以调整(Initial quality value, can be adjusted)
 
-    # 保存为JPEG
+    # 保存为JPEG(Save as JPEG)
     image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
     compressed_size = compressed_output.tell()
 
-    # 如果文件仍然大于1MB，进一步降低质量
+    # 如果文件仍然大于1MB，进一步降低质量(If the file is still larger than 1MB, further reduce the quality)
     while compressed_size > 2 * 1024 * 1024 and quality > 85:
         compressed_output.seek(0)
-        quality -= 5  # 质量递减步长
+        quality -= 5  # 质量递减步长(Quality decrement step)
         image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
         compressed_size = compressed_output.tell()
 
     compressed_output.seek(0)
     compressed_image = compressed_output.read()
 
-    # 使用 boto3 上传到 S3
+    # 使用 boto3 上传到 S3(Upload to S3 using boto3)
     s3 = boto3.resource("s3", aws_access_key_id=f"{os.environ['AWS_ACCESS_KEY_ID']}", aws_secret_access_key=f"{os.environ['AWS_SECRET_ACCESS_KEY']}")
     user_id_as_file_name = f"avatars/{user_id}/{file.filename.split('.')[0]}.jpeg"
     bucket = s3.Bucket(S3_BUCKET_NAME)
@@ -119,32 +119,32 @@ def upload_challenger_cover(challenge_id: int, file: UploadFile, db: Session = D
     """
     challenge_crud.get_challenge(db, challenge_id)# check if challenge exists
 
-    # 将上传的文件转换为Pillow图像
-    image = Image.open(file.file).convert("RGB")  # 转换为RGB
+    # 将上传的文件转换为Pillow图像(Convert uploaded files to Pillow images)
+    image = Image.open(file.file).convert("RGB")  # 转换为RGB(Convert to RGB)
 
-    # 可能的分辨率调整 - 根据需要调整这些值
+    # 可能的分辨率调整 - 根据需要调整这些值(Possible Resolution Adjustments - Adjust these values ​​as needed)
     max_size = (1080, 1080)
     image.thumbnail(max_size, Image.Resampling.LANCZOS)
 
-    # 初始化变量
+    # 初始化变量(Initialize variables)
     compressed_output = io.BytesIO()
-    quality = 85  # 初始质量值，可以调整
+    quality = 85  # 初始质量值，可以调整(Initial quality value, can be adjusted)
 
-    # 保存为JPEG
+    # 保存为JPEG(Save as JPEG)
     image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
     compressed_size = compressed_output.tell()
 
-    # 如果文件仍然大于1MB，进一步降低质量
+    # 如果文件仍然大于1MB，进一步降低质量(If the file is still larger than 1MB, further reduce the quality)
     while compressed_size > 2 * 1024 * 1024 and quality > 85:
         compressed_output.seek(0)
-        quality -= 5  # 质量递减步长
+        quality -= 5  # 质量递减步长(Quality decrement step)
         image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
         compressed_size = compressed_output.tell()
 
     compressed_output.seek(0)
     compressed_image = compressed_output.read()
 
-    # 使用 boto3 上传到 S3
+    # 使用 boto3 上传到 S3(Upload to S3 using boto3)
     s3 = boto3.resource("s3", aws_access_key_id=f"{os.environ['AWS_ACCESS_KEY_ID']}", aws_secret_access_key=f"{os.environ['AWS_SECRET_ACCESS_KEY']}")
     user_id_as_file_name = f"challenge_covers/{challenge_id}/{file.filename.split('.')[0]}.jpeg"
     bucket = s3.Bucket(S3_BUCKET_NAME)
@@ -172,32 +172,32 @@ def upload_course_cover(course_id: int, file: UploadFile, db: Session = Depends(
     """
     course_crud.read_course_by_id(db, course_id)# check if course exists
 
-    # 将上传的文件转换为Pillow图像
-    image = Image.open(file.file).convert("RGB")  # 转换为RGB
+    # 将上传的文件转换为Pillow图像(Convert uploaded files to Pillow images)
+    image = Image.open(file.file).convert("RGB")  # 转换为RGB(Convert to RGB)
 
-    # 可能的分辨率调整 - 根据需要调整这些值
+    # 可能的分辨率调整 - 根据需要调整这些值(Possible Resolution Adjustments - Adjust these values ​​as needed)
     max_size = (1080, 1080)
     image.thumbnail(max_size, Image.Resampling.LANCZOS)
 
-    # 初始化变量
+    # 初始化变量(Initialize variables)
     compressed_output = io.BytesIO()
-    quality = 85  # 初始质量值，可以调整
+    quality = 85  # 初始质量值，可以调整(Initial quality value, can be adjusted)
 
-    # 保存为JPEG
+    # 保存为JPEG(Save as JPEG)
     image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
     compressed_size = compressed_output.tell()
 
-    # 如果文件仍然大于1MB，进一步降低质量
+    # 如果文件仍然大于1MB，进一步降低质量(If the file is still larger than 1MB, further reduce the quality)
     while compressed_size > 2 * 1024 * 1024 and quality > 85:
         compressed_output.seek(0)
-        quality -= 5  # 质量递减步长
+        quality -= 5  # 质量递减步长(Quality decrement step)
         image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
         compressed_size = compressed_output.tell()
 
     compressed_output.seek(0)
     compressed_image = compressed_output.read()
 
-    # 使用 boto3 上传到 S3
+    # 使用 boto3 上传到 S3(Upload to S3 using boto3)
     s3 = boto3.resource("s3", aws_access_key_id=f"{os.environ['AWS_ACCESS_KEY_ID']}", aws_secret_access_key=f"{os.environ['AWS_SECRET_ACCESS_KEY']}")
     user_id_as_file_name = f"course_covers/{course_id}/{file.filename.split('.')[0]}.jpeg"
     bucket = s3.Bucket(S3_BUCKET_NAME)
@@ -231,32 +231,32 @@ def upload_post_cover(challenge_id: int, user_id: int, file: UploadFile, db: Ses
 
     # usage example: http://Upload_post_covers?challenge_id=1&user_id=1
 
-    # 将上传的文件转换为Pillow图像
-    image = Image.open(file.file).convert("RGB")  # 转换为RGB
+    # 将上传的文件转换为Pillow图像(Convert uploaded files to Pillow images)
+    image = Image.open(file.file).convert("RGB")  # 转换为RGB(Convert to RGB)
 
-    # 可能的分辨率调整 - 根据需要调整这些值
+    # 可能的分辨率调整 - 根据需要调整这些值(Possible Resolution Adjustments - Adjust these values ​​as needed)
     max_size = (1080, 1080)
     image.thumbnail(max_size, Image.Resampling.LANCZOS)
 
-    # 初始化变量
+    # 初始化变量(Initialize variables)
     compressed_output = io.BytesIO()
-    quality = 85  # 初始质量值，可以调整
+    quality = 85  # 初始质量值，可以调整(Initial quality value, can be adjusted)
 
-    # 保存为JPEG
+    # 保存为JPEG(Save as JPEG)
     image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
     compressed_size = compressed_output.tell()
 
-    # 如果文件仍然大于1MB，进一步降低质量
+    # 如果文件仍然大于1MB，进一步降低质量(If the file is still larger than 1MB, further reduce the quality)
     while compressed_size > 2 * 1024 * 1024 and quality > 85:
         compressed_output.seek(0)
-        quality -= 5  # 质量递减步长
+        quality -= 5  # 质量递减步长(Quality decrement step)
         image.save(compressed_output, format="JPEG", quality=quality, optimize=True)
         compressed_size = compressed_output.tell()
 
     compressed_output.seek(0)
     compressed_image = compressed_output.read()
 
-    # 使用 boto3 上传到 S3
+    # 使用 boto3 上传到 S3(Upload to S3 using boto3)
     s3 = boto3.resource("s3", aws_access_key_id=f"{os.environ['AWS_ACCESS_KEY_ID']}", aws_secret_access_key=f"{os.environ['AWS_SECRET_ACCESS_KEY']}")
     # post_id_as_file_name = f"post_covers/{challenge_id}/{file.filename.split('.')[0]}.jpeg"
     from datetime import datetime

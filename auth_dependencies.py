@@ -5,13 +5,13 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 import os
 
-# 设置OAuth2的Bearer类型认证模式
+# 设置OAuth2的Bearer类型认证模式(Set OAuth2 Bearer authentication mode)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def verify_token(token: str = Depends(oauth2_scheme)):
     try:
-        # 这里是模拟验证JWT的逻辑
-        # payload = {"user_id": "some_user_id"}  # 示例载荷
+        # 这里是模拟验证JWT的逻辑(Here is the logic to simulate the verification of JWT)
+        # payload = {"user_id": "some_user_id"}  # 示例载荷(Example payload)
         payload = auth.verify_id_token(token)
         return payload
     except Exception as e:
@@ -23,11 +23,11 @@ def verify_token(token: str = Depends(oauth2_scheme)):
 
 def conditional_depends(depends=Depends):
     def dependency_override():
-        # 检查是否为测试环境
+        # 检查是否为测试环境(Check if it is a test environment)
         if os.environ.get('MODE') == 'test':
-            # 测试环境下，跳过实际的依赖项
+            # 测试环境下，跳过实际的依赖项(Test environment, skip actual dependencies)
             return lambda: {"user_id": "test_user_id"}
         else:
-            # 生产环境下，返回实际的依赖项
+            # 生产环境下，返回实际的依赖项(Production environment, return actual dependencies)
             return depends
     return Depends(dependency_override())

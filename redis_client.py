@@ -11,7 +11,7 @@ else:
     # set up redis for local development
     redis_endpoint = "localhost"
 
-# 创建一个 Redis 客户端实例
+# 创建一个 Redis 客户端实例(Create a Redis client instance)
 redis_client = redis.StrictRedis(host=redis_endpoint, port=6379, db=0)
 
 

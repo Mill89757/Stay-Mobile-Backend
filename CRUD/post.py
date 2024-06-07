@@ -56,7 +56,7 @@ def create_post(db: Session, post: schemas.PostCreate):
         current_challenge_member_DL_and_BDL.breaking_days_left = new_breaking_days_left
         db.commit()
         db.refresh(db_post)
-        # 生成唯一组合键和当天的帖子跟踪键
+        # 生成唯一组合键和当天的帖子跟踪键(Generate a unique key combination and a post tracking key for the day)
         today = localtion_datetime
         end_of_day = datetime(today.year, today.month, today.day, 23, 59, 59,tzinfo=today.tzinfo)
         remaining_time = (end_of_day - today) + timedelta(minutes=10)
@@ -64,15 +64,15 @@ def create_post(db: Session, post: schemas.PostCreate):
         unique_key = f"challenge_user:{post.challenge_id}_{post.user_id}_{today_str}"
         daily_key = f"posted_challenges:{today_str}"
 
-        # 将唯一组合键添加到 Redis 并设置过期时间
+        # 将唯一组合键添加到 Redis 并设置过期时间(Add a unique composite key to Redis and set an expiration time)
         redis_client.set(unique_key, 'posted')
         redis_client.expire(unique_key, remaining_time.seconds)
 
-        # 同时将挑战ID和用户ID组合作为值添加到当天的帖子跟踪键中
+        # 同时将挑战ID和用户ID组合作为值添加到当天的帖子跟踪键中(Also add the challenge ID and user ID combination as a value to the day's post tracking key)
         redis_client.sadd(daily_key, f"{post.challenge_id}_{post.user_id}")
         redis_client.expire(daily_key, remaining_time.seconds)
 
-        # 打印 Redis
+        # 打印 Redis(Print Redis)
         print(f"Redis Key: {unique_key} and {daily_key}")
         print(f"Redis Values: {redis_client.get(unique_key)}, {redis_client.smembers(daily_key)}")
 

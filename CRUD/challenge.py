@@ -123,34 +123,31 @@ TIMEZONE_MAPPING = {
 
 
 def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str):
-     # 使用映射表转换时区字符串
+    # 使用映射表转换时区字符串(Convert time zone strings using a mapping table)
     user_timezone = pytz.timezone(TIMEZONE_MAPPING.get(timezone_str[0], "UTC"))
     timezones = TIMEZONE_MAPPING.get(timezone_str[0], ["UTC"])
-    # 获取当前时间
+    # 获取当前时间(Get the current time)
     current_time = datetime.now(pytz.timezone(timezones[0]))
   
-    
-    # 获取当前时间的日期字符串
+    # 获取当前时间的日期字符串(Get the current date string)
     current_date_str = current_time.strftime('%Y-%m-%d')
 
-    # 获取Redis中存储的帖子跟踪键
+    # 获取Redis中存储的帖子跟踪键(Get the post tracking key stored in Redis)
     redis_key = f"posted_challenges:{current_date_str}"
     posted_combinations = {combo.decode('utf-8') for combo in redis_client.smembers(redis_key)}
     
-   
-
-         # 查询所有挑战
+    # 查询所有挑战(Get all challenges)
     all_challenge_members = db.query(models.GroupChallengeMembers).all()
 
     
-    # 遍历所有group_challenge_members
+    # 遍历所有group_challenge_members(Iterate over all group_challenge_members)
     for group_member in all_challenge_members:
         challenge_id = group_member.challenge_id
-        # 生成组合键，用于检查是否存在于 Redis 中
+        # 生成组合键，用于检查是否存在于 Redis 中(Generates a composite key to check if it exists in Redis)
         combo_key = f"{challenge_id}_{group_member.user_id}"
         check_user_timezone = db.query(models.User).filter(models.User.id == group_member.user_id).first()
 
-        # 如果组合键不在 Redis 集合中，则减少 breaking_days_left, days_left, 并生成一条用户的帖子记录
+        # 如果组合键不在 Redis 集合中，则减少 breaking_days_left, days_left, 并生成一条用户的帖子记录(If the composite key is not in the Redis set, reduce breaking_days_left, days_left, and generate a post record for the user)
         if combo_key not in posted_combinations: 
             if check_user_timezone.user_timezone in timezone_str:
                 if group_member.breaking_days_left > 0:
@@ -169,7 +166,7 @@ def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str)
                         )
                         db.add(db_post)
                         db.commit()
-            # 如果 breaking_days_left 为0，则标记挑战为完成
+            # 如果 breaking_days_left 为0，则标记挑战为完成(If breaking_days_left is 0, mark the challenge as completed)
             elif group_member.breaking_days_left == 0:
                 challenge_to_completed = db.query(models.Challenge).filter_by(id=challenge_id).first()
                 challenge_to_finished = db.query(models.GroupChallengeMembers).filter_by(challenge_id=challenge_id).filter_by(user_id=group_member.user_id).first()
@@ -178,7 +175,7 @@ def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str)
                     challenge_to_completed.finished_time = datetime.now()
                     db.commit()
 
-    # 提交所有更改到数据库
+    # 提交所有更改到数据库(Commit all changes to the database)
     db.commit()
 
 # read all challenges
@@ -411,7 +408,7 @@ def update_challenge(db: Session, challenge_id: int, challenge: schemas.Challeng
 def delete_challenge(db: Session, challenge_id: int):
     target_challenge = db.query(models.Challenge).filter(models.Challenge.id == challenge_id).first()
     
-    # 如果找不到挑战，返回False表示删除失败。
+    # 如果找不到挑战，返回False表示删除失败。(If the challenge cannot be found, returns False indicating that the deletion failed.)
     if target_challenge is None:
         return False
     
@@ -449,10 +446,10 @@ def delete_user_account(db: Session, user_id: int):
 
     db.query(models.UserReactionLog).filter(models.UserReactionLog.user_id == user_id).delete(synchronize_session=False)
 
-    # 获取所有属于该用户的挑战
+    # 获取所有属于该用户的挑战(Get all challenges belonging to the user)
     challenges = db.query(models.Challenge).filter(models.Challenge.challenge_owner_id == user_id).all()
 
-    # 遍历所有挑战，并删除每一个
+    # 遍历所有挑战，并删除每一个(Iterate through all challenges and delete each one)
     for challenge in challenges:
         delete_challenge(db, challenge.id)
 
@@ -460,7 +457,7 @@ def delete_user_account(db: Session, user_id: int):
     
     db.query(models.Tracking).filter(models.Tracking.follower_id == user_id).delete(synchronize_session=False)
     
-    # 删除用户
+    # 删除用户(delete user)
     target_user = db.query(models.User).filter(models.User.id == user_id).first()
     
     if target_user is None:
@@ -472,7 +469,7 @@ def delete_user_account(db: Session, user_id: int):
     return True
 
 
-# 中途退出group challenge
+# 中途退出group challenge(Quit group challenge halfway)
 def delete_group_challenge_member(db: Session, challenge_id: int, user_id: int):
     """delete group challenge member by challenge id and user id
 
@@ -491,7 +488,7 @@ def delete_group_challenge_member(db: Session, challenge_id: int, user_id: int):
     return True
 
 
-#拿到所有follower的头像
+#拿到所有follower的头像(Get all followers' avatars)
 def get_all_follower_avatars(db: Session, challenge_id: int):
     tracking_objects = (db.query(models.Challenge, models.Tracking)
                         .join(models.Tracking, models.Tracking.challenge_id == models.Challenge.id)
@@ -503,12 +500,12 @@ def get_all_follower_avatars(db: Session, challenge_id: int):
         all_follower_avatars.append(read_user_by_id(db, i).avatar_location)
     return all_follower_avatars
 
-#拿到challenge的进度
+#拿到challenge的进度(get the challenge process)
 def get_challenge_process(duration, days_left):
     challenge_process = days_left / duration
     return challenge_process
 
-#用challenge_id拿到discover challenge的详细信息
+#用challenge_id拿到discover challenge的详细信息(Use challenge_id to get the details of the discover challenge)
 def get_discover_challenges_by_id(db: Session, id: int):
     challenge_query_result = db.query(models.Challenge, models.GroupChallengeMembers, models.User).join(models.User, models.Challenge.challenge_owner_id == models.User.id).join(
             models.GroupChallengeMembers, models.Challenge.id == models.GroupChallengeMembers.challenge_id).filter(models.Challenge.id == id).first()
@@ -525,7 +522,7 @@ def get_discover_challenges_by_id(db: Session, id: int):
                                  }
     return challenge_detail
 
-#返回一个list，包含所有discover challenge的详细信息
+#返回一个list，包含所有discover challenge的详细信息(Returns a list containing detailed information of all discover challenges.)
 def get_discover_challenges(db: Session):
     """read discover challenges"""
     discover_challenges = []
@@ -767,8 +764,8 @@ def get_challenge_info_by_code(db: Session, unique_token: str):
     request_challenge_id_bytes = redis_client.get(unique_token)
 
     if request_challenge_id_bytes is not None:
-        request_challenge_id_str = request_challenge_id_bytes.decode('utf-8')  # 解码字节字符串
-        request_challenge_id = int(request_challenge_id_str)  # 转换成整数
+        request_challenge_id_str = request_challenge_id_bytes.decode('utf-8')  # 解码字节字符串(Decoding a byte string)
+        request_challenge_id = int(request_challenge_id_str)  # 转换成整数(Convert to integer)
     else:
         return "Can not find the token in redis"
 
@@ -782,8 +779,8 @@ def join_group_challenge_by_token_and_user_id(db: Session, unique_token : str, u
     request_challenge_id_bytes = redis_client.get(unique_token)
 
     if request_challenge_id_bytes is not None:
-        request_challenge_id_str = request_challenge_id_bytes.decode('utf-8')  # 解码字节字符串
-        request_challenge_id = int(request_challenge_id_str)  # 转换成整数
+        request_challenge_id_str = request_challenge_id_bytes.decode('utf-8')  # 解码字节字符串(Decoding a byte string)
+        request_challenge_id = int(request_challenge_id_str)  # 转换成整数(Convert to integer)
     else:
         return "Can not find the token in redis"
 
@@ -900,7 +897,7 @@ def check_user_activity(db:Session):
 
     current_date_str = current_time.strftime('%Y-%m-%d')
     remind_user_list = []
-    # 获取Redis中存储的帖子跟踪键
+    # 获取Redis中存储的帖子跟踪键(Get the post tracking key stored in Redis)
     redis_key = f"posted_challenges:{current_date_str}"
     posted_combinations = {combo.decode('utf-8') for combo in redis_client.smembers(redis_key)}
 

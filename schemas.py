@@ -7,7 +7,7 @@ from datetime import datetime
 # define and validate whether the incoming data structure matches as expected
 
 
-# User 模型
+# User model
 class UsersRequest(BaseModel):
     firebase_uid: str
     name: str
@@ -35,7 +35,7 @@ class UsersResponse(BaseModel):
         orm_mode = True
 
 
-# Challenge 模型
+# Challenge model
 class ChallengeBase(BaseModel):
     title: str
     description: str
@@ -76,7 +76,7 @@ class ChallengeRead(ChallengeBase):
     class Config:
         orm_mode = True
 
-#Group Challenge 模型
+#Group Challenge model
 class GroupChallengeMembersBase(BaseModel):
     challenge_id: int
     user_id: int
@@ -116,7 +116,7 @@ class ChallengeWithBreakingDays(ChallengeRead):  # Assuming ChallengeRead is you
     breaking_days_left: int
 
 
-# Post 模型
+# Post model
 class PostBase(BaseModel):
     created_time: Optional[datetime] = None
     start_time: datetime
@@ -150,7 +150,7 @@ class PostRead(PostBase):
     class Config:
         orm_mode = True
 
-# Tracking 模型
+# Tracking model
 class TrackingsRequest(BaseModel):
     created_time: Optional[datetime] = None
     terminated_time: Optional[datetime] = None
@@ -171,7 +171,7 @@ class TrackingsResponse(BaseModel):
     class Config:
         orm_mode = True
 
-# PostContent 模型
+# PostContent model
 class PostContentBase(BaseModel):
     video_location: Optional[str]
     image_location: Optional[str]
@@ -187,7 +187,7 @@ class PostContentRead(PostContentBase):
     class Config:
         orm_mode = True
 
-# Reaction 模型
+# Reaction model
 """class ReactionBase(BaseModel):
     emoji_type: int
     amount: int
@@ -202,7 +202,7 @@ class ReactionRead(ReactionBase):
     class Config:
         orm_mode = True
 """
-# Course 模型
+# Course model
 class CourseResponse(BaseModel):
     id:int
     course_name:str
@@ -234,11 +234,11 @@ class UserReactionLogRead(UserReactionLogBase):
     class Config:
         orm_mode = True
 
-# emoji 模型
+# emoji model
 class EmojiBase(BaseModel):
     name: str
 
-# post reaction 模型
+# post reaction model
 class PostReactionBase(BaseModel):
     count: int
 
@@ -250,7 +250,7 @@ class PostReactionCreate(PostReactionBase):
         orm_mode = True
 
 
-#discover challenge 模型
+#discover challenge model
 class ChallengesDiscover(BaseModel):
     id: int
     cover_location: str
@@ -263,7 +263,7 @@ class ChallengesDiscover(BaseModel):
     class Config:
         orm_mode = True
 
-#group challenge member模型
+#group challenge member model
 class GroupChallengesMember(BaseModel):
     user_id: int
     breaking_days_left: int
@@ -275,7 +275,7 @@ class GroupChallengesMember(BaseModel):
 
     class Config:
         orm_mode = True
-# expo push token 模型
+# expo push token model
 class ExpoPushTokenBase(BaseModel):
     expo_push_token: str
     user_id: int

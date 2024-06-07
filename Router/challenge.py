@@ -67,7 +67,7 @@ TIMEZONE_MAPPING = {
     "Perth": ["Australia/Perth"],
     "Brisbane": ["Australia/Brisbane"],
     "Beijing": ["Asia/Shanghai"],
-    # ... 其他映射
+    # ... 其他映射(Other Mappings)
 }
 # update breaking days for specific challenges
 @router.post("/test/update_breaking_days/{timezone}")
