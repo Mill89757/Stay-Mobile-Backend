@@ -678,7 +678,6 @@ def compare_created_time_by_challenge_id(db: Session, challenge_id:int):
         target_challenge_created_time = target_challenge.created_time
         # Compare only the date part of 'created_time' with today's date
         result = target_challenge_created_time.date() == datetime.now(pytz.utc).date()
-        print(result)
         return result
     else:
         print("False")
@@ -725,7 +724,6 @@ def generate_invitation_code(db : Session, challenge_id : int):
     
     else:
         today = datetime.now(pytz.utc)
-        print(today)
         return "Invitation link already exsist or the link has been expired."
 
     

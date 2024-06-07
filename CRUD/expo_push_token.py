@@ -12,7 +12,6 @@ from datetime import datetime as dt
 def create_expo_push_token(db:Session, new_token: schemas.ExpoPushTokenBase):
     """ User may delete their app and reinstall it, so we need to update the token"""
     db_token = db.query(models.ExpoPushToken).filter(models.ExpoPushToken.expo_push_token == new_token.expo_push_token).first()
-    print(db_token)
     if db_token is None:
         print("Creating new token")
         token = models.ExpoPushToken(

@@ -317,7 +317,6 @@ if __name__ == "__main__":
         process_recent_reaction_data()
 
     except Exception as e:
-        print(e)
 
         keys = ['db_len', 'day_index', 'on_clg_info', 'user_contribution', 'post_clg_pair', 'completed_clg']
         for key in keys: r.delete(key)

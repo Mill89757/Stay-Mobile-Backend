@@ -22,7 +22,6 @@ router = APIRouter()
 # create challenge
 @router.post("/CreateChallenge/", response_model=schemas.ChallengeRead, status_code=status.HTTP_201_CREATED)
 async def create_challenge_route(challenge: schemas.ChallengeCreate, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
-    print(current_user)
     return challenge_crud.create_challenge(db=db, challenge=challenge)
 
 # read challenge by id
@@ -40,7 +39,6 @@ async def get_challenge_route(challenge_id: int, db: Session = Depends(get_db), 
         HTTPException: challenge not found
     """
     challenge = challenge_crud.get_challenge(db=db, challenge_id=challenge_id)
-    print(current_user)
     if challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
@@ -60,7 +58,6 @@ async def get_challenge_by_user_and_challenge_route(user_id: int, challenge_id: 
         HTTPException: challenge not found
     """
     challenge = challenge_crud.get_challenge_by_user_id_and_challenge_id(db=db, user_id=user_id,challenge_id=challenge_id)
-    print(current_user)
     if challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
@@ -107,7 +104,6 @@ async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db),
     """
     active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
-    print(current_user)
     return [active_challenges, finished_challenges]
 
 # read last challenge of one user by user id
@@ -125,7 +121,6 @@ async def get_user_last_challenge(user_id: int, db: Session = Depends(get_db),cu
         HTTPException: user not found
     """
     last_challenges = challenge_crud.get_last_challenge_by_user_id(db, user_id)
-    print(current_user)
     return last_challenges
 
 # read active challenges of one user by user id
@@ -143,7 +138,6 @@ async def get_user_active_challenges_route(user_id: int, db: Session = Depends(g
         HTTPException: user not found
     """
     active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
-    print(current_user)
     return active_challenges
 
 # read challenges list by course id
@@ -161,7 +155,6 @@ async def get_challenge_courseID(course_id: int, db: Session = Depends(get_db),c
         HTTPException: Course not found
     """
     CourseID_related_challenges = challenge_crud.get_challenges_by_course_id(db, course_id)
-    print(current_user)
     return CourseID_related_challenges
 
 # read finished challenges list of one user by user id
@@ -179,12 +172,10 @@ async def get_user_finished_challenges_route(user_id: int, db: Session = Depends
         HTTPException: user not found
     """
     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
-    print(current_user)
     return finished_challenges
 
 @router.get("/GetAllChallenges/{user_id}", response_model=list[schemas.ChallengeRead])
 async def get_challenges_route(user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
-    print(current_user)
     blocked_user_list = block_crud.get_blocked_user_list(db=db, blocker_user_id=user_id)
 
     return challenge_crud.get_challenges(db=db,blocked_user_list=blocked_user_list,  skip=skip, limit=limit)
@@ -204,13 +195,11 @@ async def get_challenge_breaking_days_left(user_id: int, challenge_id:int ,db: S
         HTTPException: user not found
         HTTPException: challenge not found
     """
-    print(current_user)
     return challenge_crud.get_challenge_breaking_days_left(db, user_id, challenge_id)
 
 @router.put("/UpdateChallenge/{challenge_id}", response_model=schemas.ChallengeRead)
 async def update_challenge_route(challenge_id: int, challenge: schemas.ChallengeCreate, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     updated_challenge = challenge_crud.update_challenge(db=db, challenge_id=challenge_id, challenge=challenge)
-    print(current_user)
     if updated_challenge is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return updated_challenge
@@ -218,14 +207,12 @@ async def update_challenge_route(challenge_id: int, challenge: schemas.Challenge
 # delete challenges by challenge id
 @router.delete("/DeleteChallenge/{challenge_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_challenge_route(challenge_id: int, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
-    print(current_user)
     if not challenge_crud.delete_challenge(db=db, challenge_id=challenge_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Challenge deleted successfully"})
 
 @router.delete("/DeleteUserAccount/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user_account (user_id: int, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
-    print(current_user)
     if not challenge_crud.delete_user_account(db=db, user_id=user_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "User Account deleted successfully"})
@@ -242,7 +229,6 @@ async def delete_group_challenge_member_route(challenge_id: int, user_id:int, db
     Raises:
         Challenge not found or member not found
     """
-    print(current_user)
     if not challenge_crud.delete_group_challenge_member(db=db, challenge_id=challenge_id, user_id=user_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Challenge or member not found")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Challenge member deleted successfully"})
@@ -258,21 +244,18 @@ async def generate_invitation_code(challenge_id: int, db: Session = Depends(get_
     Returns:
         invitation code
     """
-    print(current_user)
     result = challenge_crud.generate_invitation_code(db=db, challenge_id = challenge_id)
     return result
 
 
 @router.get("/GetChallengeInfoByInvitationCode/{unique_token}")
 async def get_challenge_info_by_invitation_code(unique_token: str, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    print(current_user)
     result = challenge_crud.get_challenge_info_by_code(db=db, unique_token = unique_token)
     return result
 
 
 @router.post("/JoinGroupChallengeByInvite/{user_id}/{token}")
 async def invitation(token: str, user_id:int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    print(current_user)
     result = challenge_crud.join_group_challenge_by_token_and_user_id(db=db, unique_token=token, user_id=user_id)
     return result
 
@@ -280,7 +263,6 @@ async def invitation(token: str, user_id:int, db: Session = Depends(get_db), cur
 # read discover challenges 拿discover challenge
 @router.get("/GetDiscoverChallenges/")
 async def get_discover_challenges(db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    print(current_user)
     """read discover challenges"""
     discover_challenges = challenge_crud.get_discover_challenges(db)
     return discover_challenges
@@ -299,7 +281,6 @@ async def get_challenge_details_first_half(challenge_id: int, db:Session = Depen
     Raises:
         HTTPException: challenge not found
     """
-    print(current_user)
     result = challenge_crud.challenge_details_page_first_half_by_challengeID(db, challenge_id)
     return result
 
@@ -317,7 +298,6 @@ async def get_challenge_details_second_half(challenge_id: int, db:Session = Depe
     Raises:
         HTTPException: challenge not found
     """
-    print(current_user)
     result = challenge_crud.challenge_details_page_second_half_by_challengeID(db, challenge_id)
     return result
 
@@ -335,7 +315,6 @@ def get_challenge_category_distribution(user_id: int, db: Session = Depends(get_
     Raises:
         HTTPException: user not found
     """
-    print(current_user)
     return challenge_crud.get_challenge_category_distribution(db, user_id)
 
 
@@ -352,7 +331,6 @@ async def get_challenge_card(challenge_id: int, db:Session = Depends(get_db), cu
     Raises:
         HTTPException: challenge not found
     """
-    print(current_user)
     result = challenge_crud.challenge_card_by_challengeID(db, challenge_id)
     return result
 
@@ -373,14 +351,12 @@ async def get_group_challenge_members(challenge_id: int, user_id:int, db:Session
   
     result = challenge_crud.get_group_challenge_members(db, challenge_id, blocked_user_list=blocked_user_list)
     
-    print(current_user)
     return result
 
 # check if user is the challenge owner or not
 @router.get("/CheckOwner/{challenge_id}")
 async def check_challenge_owner(challenge_id: int, user_id: int, db: Session=Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
     result = challenge_crud.check_challenge_onwer(challenge_id=challenge_id, user_id=user_id, db=db)
-    print(current_user)
     return result
 
 @router.get("/GetUserChallengesWithToken_Testing/{user_id}", response_model=List[List[schemas.ChallengeWithBreakingDays]])
@@ -415,7 +391,7 @@ async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db))
 #         HTTPException: user not found
 #     """
 
-#     print(current_user)
+
 
 #     active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
 #     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)

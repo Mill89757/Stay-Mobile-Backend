@@ -33,7 +33,6 @@ def get_db():
 @router.get("/avatar/{user_id}")
 def get_user_avatar(user_id: int, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     user = user_crud.read_user_by_id(db, user_id)
-    print(current_user)
     if user and user.avatar_location:
         return user.avatar_location
     raise HTTPException(status_code=404, detail="User or avatar not found")
@@ -85,7 +84,6 @@ def upload_user_avatar(user_id: int, file: UploadFile, db: Session = Depends(get
     bucket = s3.Bucket(S3_BUCKET_NAME)
     bucket.put_object(Key=user_id_as_file_name, Body=compressed_image)
 
-    # print(current_user)
     upload_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{user_id_as_file_name}"
 
     return upload_file_url
@@ -153,7 +151,6 @@ def upload_challenger_cover(challenge_id: int, file: UploadFile, db: Session = D
     bucket.put_object(Key=user_id_as_file_name, Body=compressed_image)
 
     upload_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{user_id_as_file_name}"
-    print(current_user)
 
     return upload_file_url
 
@@ -207,7 +204,6 @@ def upload_course_cover(course_id: int, file: UploadFile, db: Session = Depends(
     bucket.put_object(Key=user_id_as_file_name, Body=compressed_image)
 
     upload_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{user_id_as_file_name}"
-    print(current_user)
 
     return upload_file_url
 
@@ -270,6 +266,5 @@ def upload_post_cover(challenge_id: int, user_id: int, file: UploadFile, db: Ses
     bucket.put_object(Key=post_id_as_file_name, Body=compressed_image)
 
     upload_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{post_id_as_file_name}"
-    print(current_user)
 
     return upload_file_url

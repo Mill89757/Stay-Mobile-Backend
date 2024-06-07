@@ -48,7 +48,6 @@ def get_user_by_firebase_uid(firebase_uid: str, db: Session = Depends(get_db)):
 @router.put("/{id}")
 def update_user(id: int, user: schemas.UsersRequest, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     user = crud.update_user(db, id, user)
-    print(current_user)
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
     return user

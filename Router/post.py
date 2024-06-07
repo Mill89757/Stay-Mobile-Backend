@@ -20,24 +20,6 @@ import os
 # create routes for posts operations and functions
 router = APIRouter()
 
-# # 设置OAuth2的Bearer类型认证模式
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-# # 依赖项: 解析并验证JWT
-# def verify_token(token: str = Depends(oauth2_scheme)):
-#     try:
-#         print(token)
-#         # 验证JWT
-#         payload = auth.verify_id_token(token)
-#         print(payload)
-#         return payload
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_401_UNAUTHORIZED,
-#             detail='Could not validate credentials',
-#             headers={"WWW-Authenticate": "Bearer"},
-#         )
-
 # create post 
 @router.post("/CreatePost/", response_model=schemas.PostRead, status_code=status.HTTP_201_CREATED)
 async def create_post_router(post:schemas.PostCreate, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
@@ -46,7 +28,6 @@ async def create_post_router(post:schemas.PostCreate, db: Session = Depends(get_
     if isinstance(result, str) and "Cannot create post" in result:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result)
     
-    print(current_user)
     return result
 
 # read post by post id
@@ -64,7 +45,6 @@ async def get_post_route(post_id: int, db: Session = Depends(get_db),current_use
         HTTPException: post not found
     """
     post = post_crud.get_post(db=db, post_id=post_id)
-    print(current_user)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
     return post
@@ -85,7 +65,6 @@ async def get_post_route_user_id(user_id: int, db: Session = Depends(get_db),cur
         HTTPException: user not found
     """
     post = post_crud.get_posts_by_user_id(db=db, user_id = user_id)
-    print(current_user)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
     return post
@@ -112,7 +91,6 @@ async def get_post_route_challenge_id(challenge_id: int, user_id:int, db: Sessio
     """
     blocked_user_list = block_crud.get_blocked_user_list(db=db, blocker_user_id=user_id)
     post = post_crud.get_posts_by_challenge_id(db=db, challenge_id = challenge_id, blocked_user_list=blocked_user_list)
-    print(current_user)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
     
@@ -130,7 +108,6 @@ async def get_posts_route(user_id: int, skip: int = 0, limit: int = 100, db: Ses
     Returns:
         list of posts object
     """
-    print(current_user)
     blocked_user_list = block_crud.get_blocked_user_list(db=db, blocker_user_id=user_id)
     return post_crud.get_posts(db=db, blocked_user_list=blocked_user_list, skip=skip, limit=limit)
 
@@ -138,7 +115,6 @@ async def get_posts_route(user_id: int, skip: int = 0, limit: int = 100, db: Ses
 @router.put("/Updatepost/{post_id}", response_model=schemas.PostRead)
 async def update_post_route(post_id: int, post: schemas.PostCreate, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
     updated_post = post_crud.update_post(db=db, post_id=post_id, post=post)
-    print(current_user)
     if updated_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
     return updated_post
@@ -146,7 +122,6 @@ async def update_post_route(post_id: int, post: schemas.PostCreate, db: Session 
 # delete post by post id
 @router.delete("/Deletepost/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_post_route(post_id: int, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
-    print(current_user)
     if not post_crud.delete_post(db=db, post_id=post_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found or has been deleted")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Post deleted successfully"})
@@ -158,7 +133,6 @@ async def get_recent_post_duration(user_id: int, db: Session = Depends(get_db),c
     
     Notes: the challenge id is added for testing otherwise is hard to locate the specific post
     """
-    print(current_user)
     return post_crud.get_recent_post_duration(db, user_id)
 
 def top3categories(user_id:int) -> set:
@@ -246,7 +220,6 @@ async def get_recommended_posts(user_id: int, db: Session = Depends(get_db),curr
 
     raise HTTPException: user not found
     """
-    # print(current_user)
     read_user_by_id(db, user_id)#handle user not found
     recommended_post_ids = get_recommended_post(user_id)
     blocked_user_list = block_crud.get_blocked_user_list(db=db, blocker_user_id=user_id)

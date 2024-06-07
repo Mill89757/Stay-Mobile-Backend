@@ -10,11 +10,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def verify_token(token: str = Depends(oauth2_scheme)):
     try:
-        print(token)
         # 这里是模拟验证JWT的逻辑
         # payload = {"user_id": "some_user_id"}  # 示例载荷
         payload = auth.verify_id_token(token)
-        print(payload)
         return payload
     except Exception as e:
         raise HTTPException(
