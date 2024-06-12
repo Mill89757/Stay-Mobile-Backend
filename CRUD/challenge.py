@@ -170,7 +170,7 @@ def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str)
             elif group_member.breaking_days_left == 0:
                 challenge_to_completed = db.query(models.Challenge).filter_by(id=challenge_id).first()
                 challenge_to_finished = db.query(models.GroupChallengeMembers).filter_by(challenge_id=challenge_id).filter_by(user_id=group_member.user_id).first()
-                if challenge_to_completed and not challenge_to_completed.is_completed:
+                if challenge_to_completed and not challenge_to_completed.is_completed and challenge_to_finished.is_challenge_finished == False:
                     challenge_to_finished.is_challenge_finished = True
                     challenge_to_completed.finished_time = datetime.now()
                     db.commit()
