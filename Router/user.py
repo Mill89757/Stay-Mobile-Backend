@@ -16,6 +16,7 @@ def get_db():
     finally:
         db.close()
 
+#test for url
 # create user
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_users(user: schemas.UsersRequest, db: Session = Depends(get_db)):
