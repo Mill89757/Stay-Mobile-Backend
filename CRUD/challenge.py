@@ -166,8 +166,8 @@ def update_breaking_days_for_specific_challenges(db: Session, timezone_str: str)
                         )
                         db.add(db_post)
                         db.commit()
-            # 如果 breaking_days_left 为0，则标记挑战为完成(If breaking_days_left is 0, mark the challenge as completed)
-            elif group_member.breaking_days_left == 0:
+            # 如果 breaking_days_left 为-1，则标记挑战为完成(If breaking_days_left is -1, mark the challenge as failed)
+            elif group_member.breaking_days_left == -1:
                 challenge_to_completed = db.query(models.Challenge).filter_by(id=challenge_id).first()
                 challenge_to_finished = db.query(models.GroupChallengeMembers).filter_by(challenge_id=challenge_id).filter_by(user_id=group_member.user_id).first()
                 if challenge_to_completed and not challenge_to_completed.is_completed and challenge_to_finished.is_challenge_finished == False:
