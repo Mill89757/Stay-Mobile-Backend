@@ -1,23 +1,20 @@
-from pyexpat import model
-from statistics import mode
-from time import timezone
-from typing import List
-from sqlalchemy.orm import Session
-import models, schemas  
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-import models, schemas
-from datetime import datetime as dt
 
-def create_expo_push_token(db:Session, new_token: schemas.ExpoPushTokenBase):
-    """ User may delete their app and reinstall it, so we need to update the token"""
-    db_token = db.query(models.ExpoPushToken).filter(models.ExpoPushToken.expo_push_token == new_token.expo_push_token).first()
+import models
+import schemas
+
+
+def create_expo_push_token(db: Session, new_token: schemas.ExpoPushTokenBase):
+    """ User may delete their app and reinstall it, so we need to update the token """
+    db_token = db.query(models.ExpoPushToken).filter(
+        models.ExpoPushToken.expo_push_token == new_token.expo_push_token).first()
     if db_token is None:
         print("Creating new token")
         token = models.ExpoPushToken(
-            expo_push_token = new_token.expo_push_token,
-            user_id = new_token.user_id,
-            timestamp = new_token.timestamp
+            expo_push_token=new_token.expo_push_token,
+            user_id=new_token.user_id,
+            timestamp=new_token.timestamp
         )
         db.add(token)
         db.commit()
@@ -28,42 +25,58 @@ def create_expo_push_token(db:Session, new_token: schemas.ExpoPushTokenBase):
         return db_token
 
 
-def get_tokens(db:Session):
+def get_tokens(db: Session):
+    """ Get all expo push tokens """
     expo_tokens = db.query(models.ExpoPushToken).all()
     if expo_tokens is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expo push token not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Expo push token not found")
     return expo_tokens
 
-def get_expo_push_token(db:Session, user_id:int):
+
+def get_expo_push_token(db: Session, user_id: int):
+    """ Get expo push token by user id """
     try:
-        expo_push_token = db.query(models.ExpoPushToken).filter(models.ExpoPushToken.user_id == user_id).first()
+        expo_push_token = db.query(models.ExpoPushToken).filter(
+            models.ExpoPushToken.user_id == user_id).first()
         if expo_push_token is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expo push token not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Expo push token not found")
     except HTTPException as exc:
-        print ("An exception error occured: ", exc )
+        print("An exception error occured: ", exc)
     return expo_push_token
 
-def update_expo_push_token(db:Session, token: str, tokenInfo: schemas.ExpoPushTokenBase):
-    db_token = db.query(models.ExpoPushToken).filter(models.ExpoPushToken.expo_push_token == token).first()
+
+def update_expo_push_token(db: Session, token: str, tokenInfo: schemas.ExpoPushTokenBase):
+    """ Update expo push token """
+    db_token = db.query(models.ExpoPushToken).filter(
+        models.ExpoPushToken.expo_push_token == token).first()
     if db_token.timestamp < tokenInfo.timestamp:
         for key, value in tokenInfo.dict(exclude_unset=True).items():
             setattr(db_token, key, value)
     db.commit()
     return db_token
 
-def delete_token_uid(db:Session, uid:int):
-    db_token = db.query(models.ExpoPushToken).filter(models.ExpoPushToken.user_id == uid).first()
+
+def delete_token_uid(db: Session, uid: int):
+    """ Delete expo push token by user id """
+    db_token = db.query(models.ExpoPushToken).filter(
+        models.ExpoPushToken.user_id == uid).first()
     if db_token is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expo push token not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Expo push token not found")
     db.delete(db_token)
     db.commit()
-    return{"detail": "Expo Push Token has been deleted"}
+    return {"detail": "Expo Push Token has been deleted"}
 
-def delete_token_by_token(db:Session, token:str):
-    db_token = db.query(models.ExpoPushToken).filter(models.ExpoPushToken.expo_push_token==token).first()
+
+def delete_token_by_token(db: Session, token: str):
+    """ Delete expo push token by token """
+    db_token = db.query(models.ExpoPushToken).filter(
+        models.ExpoPushToken.expo_push_token == token).first()
     if db_token is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expo push token not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Expo push token not found")
     db.delete(db_token)
     db.commit()
-    return{"detail": "Expo Push Token has been deleted"}
-
+    return {"detail": "Expo Push Token has been deleted"}
