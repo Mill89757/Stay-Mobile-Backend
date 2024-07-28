@@ -1,72 +1,106 @@
-from inspect import stack
+# pylint: disable=unused-argument
+
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-import schemas
-from database import get_db
-import CRUD.user_reaction_log as crud
-from typing import List, Union
-from fastapi.security import OAuth2PasswordBearer
-from firebase_admin import credentials, auth, initialize_app
-from firebase_setup import firebase_app
-from auth_dependencies import verify_token, conditional_depends
 
-# create routes for user reaction log operations and functions
+import CRUD.user_reaction_log as crud
+import schemas
+from auth_dependencies import conditional_depends, verify_token
+from database import get_db
+
 router = APIRouter(prefix="/user_reaction_log")
 
-# create user reaction log 
+
 @router.post("/Create", response_model=schemas.UserReactionLogCreate, status_code=status.HTTP_201_CREATED)
-async def create_user_reaction_log(log:schemas.UserReactionLogCreate, db:Session=Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
+async def create_user_reaction_log(
+        log: schemas.UserReactionLogCreate, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Create a new user reaction log """
     result = crud.create_user_reaction_log(db=db, log=log)
     if isinstance(result, str):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=result)
     return result
 
-# read all user reaction log
+
 @router.get("", response_model=List[schemas.UserReactionLogRead])
-async def get_all_log(db:Session=Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
+async def get_all_log(
+        db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Get all user reaction logs """
     all_log_data = crud.get_user_reaction_log(db)
     return all_log_data
 
-# read user reaction log by log id
+
 @router.get("/GetByLogId/{log_id}", response_model=List[schemas.UserReactionLogRead])
-async def get_log_by_log_id(log_id:int, db:Session=Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
+async def get_log_by_log_id(
+        log_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Get user reaction log by log id """
     log = crud.get_user_reaction_log_by_log_id(db=db, log_id=log_id)
     return log
 
-# read user reaction log by user id
+
 @router.get("/GetByUserId/{user_id}", response_model=List[schemas.UserReactionLogRead])
-async def get_log_by_user_id(user_id:int, db:Session=Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    user_log_list = crud.get_user_reaction_log_by_user_id(db=db, user_id=user_id)
+async def get_log_by_user_id(
+        user_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Get user reaction log by user id """
+    user_log_list = crud.get_user_reaction_log_by_user_id(
+        db=db, user_id=user_id)
     return user_log_list
 
-# read user reaction log by post id
+
 @router.get("/GetByPostId/{post_id}", response_model=List[schemas.UserReactionLogRead])
-async def get_log_by_post_id(post_id:int, db:Session=Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    post_log_list = crud.get_user_reaction_log_by_post_id(db=db, post_id=post_id)
+async def get_log_by_post_id(
+        post_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Get user reaction log by post id """
+    post_log_list = crud.get_user_reaction_log_by_post_id(
+        db=db, post_id=post_id)
     return post_log_list
 
-# read user reaction log by emoji id
+
 @router.get("/GetByEmoji/{emoji_image}", response_model=List[schemas.UserReactionLogRead])
-async def get_log_by_emoji_image(emoji_image:str, db:Session=Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    emoji_log_list = crud.get_user_reaction_log_by_emoji(db=db, emoji_image=emoji_image)
+async def get_log_by_emoji_image(
+        emoji_image: str, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Get user reaction log by emoji image """
+    emoji_log_list = crud.get_user_reaction_log_by_emoji(
+        db=db, emoji_image=emoji_image)
     return emoji_log_list
 
-# read the most recent user reaction log by user id and post id
+
 @router.get("/GetLatestByUserPost/{post_id}/{user_id}")
-async def get_latest_log_of_user(post_id:int, user_id:int, db:Session=Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    latest_log = crud.get_recent_user_reaction_log_by_user_id(db=db, post_id=post_id, user_id=user_id)
+async def get_latest_log_of_user(
+        post_id: int, user_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Get latest user reaction log by user id and post id """
+    latest_log = crud.get_recent_user_reaction_log_by_user_id(
+        db=db, post_id=post_id, user_id=user_id)
     return latest_log
 
-# update reaction log by log id
-@router.put("/UpdateById/{log_id}",response_model=schemas.UserReactionLogRead)
-async def update_reaction_log(log_id:int, log:schemas.UserReactionLogRead, db:Session=Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    updated_log = crud.update_user_reaction_log(db=db, log_id=log_id,log=log)
+
+@router.put("/UpdateById/{log_id}", response_model=schemas.UserReactionLogRead)
+async def update_reaction_log(
+        log_id: int, log: schemas.UserReactionLogRead, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Update user reaction log by log id """
+    updated_log = crud.update_user_reaction_log(db=db, log_id=log_id, log=log)
     return updated_log
 
-# delete reaction log by log id
+
 @router.delete("/DeleteById/{log_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_log(log_id:int,  db:Session=Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
+async def delete_log(
+        log_id: int,  db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Delete user reaction log by log id """
     if not crud.delete_user_reaction_log(db=db, log_id=log_id):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Log not found")
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Log deleted successfully"})
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Log not found")
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"detail": "Log deleted successfully"})

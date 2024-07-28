@@ -1,33 +1,48 @@
-from fastapi.security import OAuth2PasswordBearer
-from firebase_admin import credentials, auth, initialize_app
-from firebase_setup import firebase_app
-from fastapi.security import OAuth2PasswordBearer
-from fastapi import Depends, HTTPException, status
 import os
 
-# 设置OAuth2的Bearer类型认证模式(Set OAuth2 Bearer authentication mode)
+from firebase_admin import auth
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, status
+
+
+# Set OAuth2 Bearer authentication mode
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+
 def verify_token(token: str = Depends(oauth2_scheme)):
+    """ Verify the token and return the payload """
     try:
-        # 这里是模拟验证JWT的逻辑(Here is the logic to simulate the verification of JWT)
-        # payload = {"user_id": "some_user_id"}  # 示例载荷(Example payload)
+        # Simulate the verification of JWT
+        # Example payload: payload = {"user_id": "some_user_id"}
         payload = auth.verify_id_token(token)
         return payload
-    except Exception as e:
+    except auth.InvalidTokenError as ex:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Could not validate credentials',
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from ex
+    except auth.ExpiredTokenError as ex:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Token has expired',
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from ex
+    except Exception as ex:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Could not validate credentials',
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from ex
+
 
 def conditional_depends(depends=Depends):
+    """ Conditional dependency override """
     def dependency_override():
-        # 检查是否为测试环境(Check if it is a test environment)
+        # Check if it is a test environment
         if os.environ.get('MODE') == 'test':
-            # 测试环境下，跳过实际的依赖项(Test environment, skip actual dependencies)
+            # Test environment, skip actual dependencies
             return lambda: {"user_id": "test_user_id"}
-        else:
-            # 生产环境下，返回实际的依赖项(Production environment, return actual dependencies)
-            return depends
+        # Production environment, return actual dependencies
+        return depends
     return Depends(dependency_override())

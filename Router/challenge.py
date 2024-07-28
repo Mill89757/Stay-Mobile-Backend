@@ -1,37 +1,44 @@
-from cmath import asin
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import JSONResponse, RedirectResponse
-from sqlalchemy.orm import Session
-from models import BlockedUserList
-import schemas
-from database import get_db
-import CRUD.challenge as challenge_crud
-import CRUD.blocked_user_list as block_crud
+# pylint: disable=unused-argument
+
 from typing import List
-from fastapi.security import OAuth2PasswordBearer
-from firebase_admin import credentials, auth, initialize_app
-from firebase_setup import firebase_app
-from auth_dependencies import verify_token, conditional_depends
-import os
+
 from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
+
+import CRUD.blocked_user_list as block_crud
+import CRUD.challenge as challenge_crud
+import schemas
+from auth_dependencies import conditional_depends, verify_token
+from database import get_db
+
 load_dotenv()
 
-# create routes for challenges operations and functions
 router = APIRouter()
 
-# create challenge
+TIMEZONE_MAPPING = {
+    "Sydney": ["Australia/Sydney", "Australia/Melbourne"],
+    "Perth": ["Australia/Perth"],
+    "Brisbane": ["Australia/Brisbane"],
+    "Beijing": ["Asia/Shanghai"],
+}
 
 
-@router.post("/CreateChallenge/", response_model=schemas.ChallengeRead, status_code=status.HTTP_201_CREATED)
-async def create_challenge_route(challenge: schemas.ChallengeCreate, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
+@router.post("/CreateChallenge/", response_model=schemas.ChallengeRead,
+             status_code=status.HTTP_201_CREATED)
+async def create_challenge_route(
+        challenge: schemas.ChallengeCreate, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Create challenge """
     return challenge_crud.create_challenge(db=db, challenge=challenge)
-
-# read challenge by id
 
 
 @router.get("/GetChallenge/{challenge_id}", response_model=schemas.ChallengeRead)
-async def get_challenge_route(challenge_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read challenge by id
+async def get_challenge_route(
+        challenge_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read challenge by id
 
     Args:
         challenge_id: id of challenge
@@ -49,9 +56,12 @@ async def get_challenge_route(challenge_id: int, db: Session = Depends(get_db), 
     return challenge
 
 
-@router.get("/GetChallengeByUserIdAndChallengeId/{user_id}/{challenge_id}", response_model=schemas.ChallengeRead)
-async def get_challenge_by_user_and_challenge_route(user_id: int, challenge_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read challenge by challenge id and user id
+@router.get("/GetChallengeByUserIdAndChallengeId/{user_id}/{challenge_id}",
+            response_model=schemas.ChallengeRead)
+async def get_challenge_by_user_and_challenge_route(
+        user_id: int, challenge_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read challenge by challenge id and user id
 
     Args:
         user_id: id of user
@@ -70,18 +80,10 @@ async def get_challenge_by_user_and_challenge_route(user_id: int, challenge_id: 
             status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return challenge
 
-TIMEZONE_MAPPING = {
-    "Sydney": ["Australia/Sydney", "Australia/Melbourne"],
-    "Perth": ["Australia/Perth"],
-    "Brisbane": ["Australia/Brisbane"],
-    "Beijing": ["Asia/Shanghai"],
-    # ... 其他映射(Other Mappings)
-}
-# update breaking days for specific challenges
-
 
 @router.post("/test/update_breaking_days/{timezone}")
 def test_update_breaking_days(timezone: str, db: Session = Depends(get_db)):
+    """ Update breaking days for all challenges in the database based on the timezone provided """
 
     # Attempt to get the list of timezones from the mapping
     timezones = TIMEZONE_MAPPING.get(timezone)
@@ -98,10 +100,12 @@ def test_update_breaking_days(timezone: str, db: Session = Depends(get_db)):
     return {"message": f"Breaking days updated successfully for timezone {timezone}"}
 
 
-# read all challenges of one user by user id
-@router.get("/GetUserChallenges/{user_id}", response_model=List[List[schemas.ChallengeWithBreakingDays]])
-async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read all challenges of one user by user id
+@router.get("/GetUserChallenges/{user_id}",
+            response_model=List[List[schemas.ChallengeWithBreakingDays]])
+async def get_user_challenges_route(
+        user_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read all challenges of one user by user id
 
     Args:
         user_id: id of user
@@ -118,12 +122,12 @@ async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db),
         db, user_id)
     return [active_challenges, finished_challenges]
 
-# read last challenge of one user by user id
-
 
 @router.get("/GetUserLastChallenges{user_id}", response_model=schemas.ChallengeRead)
-async def get_user_last_challenge(user_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read last challenge of one user by user id
+async def get_user_last_challenge(
+        user_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read last challenge of one user by user id
 
     Args:
         user_id: id of user
@@ -137,12 +141,13 @@ async def get_user_last_challenge(user_id: int, db: Session = Depends(get_db), c
     last_challenges = challenge_crud.get_last_challenge_by_user_id(db, user_id)
     return last_challenges
 
-# read active challenges of one user by user id
 
-
-@router.get("/GetUserActiveChallenges/{user_id}", response_model=List[schemas.ChallengeWithBreakingDays])
-async def get_user_active_challenges_route(user_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read active challenges list of one user by user id
+@router.get("/GetUserActiveChallenges/{user_id}",
+            response_model=List[schemas.ChallengeWithBreakingDays])
+async def get_user_active_challenges_route(
+        user_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read active challenges list of one user by user id
 
     Args:
         user_id: id of user
@@ -157,12 +162,12 @@ async def get_user_active_challenges_route(user_id: int, db: Session = Depends(g
         db, user_id)
     return active_challenges
 
-# read challenges list by course id
-
 
 @router.get("/GetChallengesWithCourseID/{course_id}", response_model=List[schemas.ChallengeRead])
-async def get_challenge_courseID(course_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read challenges list by course id
+async def get_challenge_course_id(
+        course_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read challenges list by course id
 
     Args:
         course_id: id of course
@@ -173,16 +178,17 @@ async def get_challenge_courseID(course_id: int, db: Session = Depends(get_db), 
     Raises:
         HTTPException: Course not found
     """
-    CourseID_related_challenges = challenge_crud.get_challenges_by_course_id(
+    course_id_related_challenges = challenge_crud.get_challenges_by_course_id(
         db, course_id)
-    return CourseID_related_challenges
-
-# read finished challenges list of one user by user id
+    return course_id_related_challenges
 
 
-@router.get("/GetUserFinishedChallenges/{user_id}", response_model=List[schemas.ChallengeWithBreakingDays])
-async def get_user_finished_challenges_route(user_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read finished challenges list of one user by user id
+@router.get("/GetUserFinishedChallenges/{user_id}",
+            response_model=List[schemas.ChallengeWithBreakingDays])
+async def get_user_finished_challenges_route(
+        user_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read finished challenges list of one user by user id
 
     Args:
         user_id: id of user
@@ -199,16 +205,21 @@ async def get_user_finished_challenges_route(user_id: int, db: Session = Depends
 
 
 @router.get("/GetAllChallenges/{user_id}", response_model=list[schemas.ChallengeRead])
-async def get_challenges_route(user_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
+async def get_challenges_route(user_id: int, db: Session = Depends(get_db),
+                               current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read all challenges of one user by user id """
     blocked_user_list = block_crud.get_blocked_user_list(
         db=db, blocker_user_id=user_id)
 
     return challenge_crud.get_challenges(db=db, blocked_user_list=blocked_user_list)
 
 
-@router.get("/GetBreakingDaysLeftByUserIdAndChallengeId/{user_id}/{challenge_id}", response_model=schemas.GroupChallengeMembersRead)
-async def get_challenge_breaking_days_left(user_id: int, challenge_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read challenge breaking days left by user id and challenge id
+@router.get("/GetBreakingDaysLeftByUserIdAndChallengeId/{user_id}/{challenge_id}",
+            response_model=schemas.GroupChallengeMembersRead)
+async def get_challenge_breaking_days_left(
+        user_id: int, challenge_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read challenge breaking days left by user id and challenge id
 
     Args:
         user_id: id of user
@@ -224,8 +235,12 @@ async def get_challenge_breaking_days_left(user_id: int, challenge_id: int, db: 
     return challenge_crud.get_challenge_breaking_days_left(db, user_id, challenge_id)
 
 
-@router.put("/UpdateChallenge/{challenge_id}", response_model=schemas.ChallengeRead)
-async def update_challenge_route(challenge_id: int, challenge: schemas.ChallengeCreate, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
+@router.put("/UpdateChallenge/{challenge_id}",
+            response_model=schemas.ChallengeRead)
+async def update_challenge_route(
+        challenge_id: int, challenge: schemas.ChallengeCreate, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Update challenge by challenge id """
     updated_challenge = challenge_crud.update_challenge(
         db=db, challenge_id=challenge_id, challenge=challenge)
     if updated_challenge is None:
@@ -233,30 +248,39 @@ async def update_challenge_route(challenge_id: int, challenge: schemas.Challenge
             status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
     return updated_challenge
 
-# delete challenges by challenge id
-
 
 @router.delete("/DeleteChallenge/{challenge_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_challenge_route(challenge_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
+async def delete_challenge_route(
+        challenge_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Delete challenge by challenge id """
     if not challenge_crud.delete_challenge(db=db, challenge_id=challenge_id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Challenge not found")
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Challenge deleted successfully"})
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"detail": "Challenge deleted successfully"})
 
 
 @router.delete("/DeleteUserAccount/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user_account(user_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
+async def delete_user_account(
+        user_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Delete user account by user id """
     if not challenge_crud.delete_user_account(db=db, user_id=user_id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "User Account deleted successfully"})
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"detail": "User Account deleted successfully"})
 
-# 中途退出group challenge
 
-
-@router.delete("/DeleteGroupChallengeMember/{challenge_id}/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_group_challenge_member_route(challenge_id: int, user_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """delete group challenge member by challenge id and user id
+@router.delete("/DeleteGroupChallengeMember/{challenge_id}/{user_id}",
+               status_code=status.HTTP_204_NO_CONTENT)
+async def delete_group_challenge_member_route(
+        challenge_id: int, user_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Delete group challenge member by challenge id and user id
 
     Args:
         challenge_id: id of challenge
@@ -265,15 +289,20 @@ async def delete_group_challenge_member_route(challenge_id: int, user_id: int, d
     Raises:
         Challenge not found or member not found
     """
-    if not challenge_crud.delete_group_challenge_member(db=db, challenge_id=challenge_id, user_id=user_id):
+    if not challenge_crud.delete_group_challenge_member(
+            db=db, challenge_id=challenge_id, user_id=user_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Challenge or member not found")
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Challenge member deleted successfully"})
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"detail": "Challenge member deleted successfully"})
 
 
 @router.get("/SetInvitationCodeByChallengeID/{challenge_id}")
-async def generate_invitation_code(challenge_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """generate invitation code by challenge_id
+async def generate_invitation_code(
+        challenge_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Generate invitation code by challenge_id
 
     Args:
         challenge_id: id of challenge
@@ -287,30 +316,39 @@ async def generate_invitation_code(challenge_id: int, db: Session = Depends(get_
 
 
 @router.get("/GetChallengeInfoByInvitationCode/{unique_token}")
-async def get_challenge_info_by_invitation_code(unique_token: str, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
+async def get_challenge_info_by_invitation_code(
+        unique_token: str, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Get challenge information by invitation code """
     result = challenge_crud.get_challenge_info_by_code(
         db=db, unique_token=unique_token)
     return result
 
 
 @router.post("/JoinGroupChallengeByInvite/{user_id}/{token}")
-async def invitation(token: str, user_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
+async def invitation(
+        token: str, user_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Join group challenge by invitation code """
     result = challenge_crud.join_group_challenge_by_token_and_user_id(
         db=db, unique_token=token, user_id=user_id)
     return result
 
 
-# read discover challenges 拿discover challenge
 @router.get("/GetDiscoverChallenges/")
-async def get_discover_challenges(db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read discover challenges"""
+async def get_discover_challenges(
+        db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read discover challenges """
     discover_challenges = challenge_crud.get_discover_challenges(db)
     return discover_challenges
 
 
 @router.get("/GetChallengeDetailsPartA/{challenge_id}")
-async def get_challenge_details_first_half(challenge_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read first half information need by challenge details page by challenge_id
+async def get_challenge_details_first_half(
+        challenge_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read first half information need by challenge details page by challenge_id
 
     Args:
         challenge_id: id of challenge
@@ -327,8 +365,10 @@ async def get_challenge_details_first_half(challenge_id: int, db: Session = Depe
 
 
 @router.get("/GetChallengeDetailsPartB/{challenge_id}")
-async def get_challenge_details_second_half(challenge_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read second half information need by challenge details page by challenge_id
+async def get_challenge_details_second_half(
+        challenge_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read second half information need by challenge details page by challenge_id
 
     Args:
         challenge_id: id of challenge
@@ -345,8 +385,10 @@ async def get_challenge_details_second_half(challenge_id: int, db: Session = Dep
 
 
 @router.get("/getChallengeCategoryDistribution/{user_id}")
-def get_challenge_category_distribution(user_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read challenge category distribution by user id
+def get_challenge_category_distribution(
+        user_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read challenge category distribution by user id
 
     Args:
         user_id: id of user
@@ -361,8 +403,10 @@ def get_challenge_category_distribution(user_id: int, db: Session = Depends(get_
 
 
 @router.get("/GetChallengeCard/{challenge_id}")
-async def get_challenge_card(challenge_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read information need by challenge card by challenge_id
+async def get_challenge_card(
+        challenge_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read information need by challenge card by challenge_id
 
     Args:
         challenge_id: id of challenge
@@ -378,8 +422,10 @@ async def get_challenge_card(challenge_id: int, db: Session = Depends(get_db), c
 
 
 @router.get("/GetGroupChallengeMembers/{challenge_id}/{user_id}")
-async def get_group_challenge_members(challenge_id: int, user_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    """read group challenge members by challenge_id
+async def get_group_challenge_members(
+        challenge_id: int, user_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Read group challenge members by challenge_id
 
     Args:
         challenge_id: id of challenge
@@ -398,19 +444,21 @@ async def get_group_challenge_members(challenge_id: int, user_id: int, db: Sessi
 
     return result
 
-# check if user is the challenge owner or not
-
 
 @router.get("/CheckOwner/{challenge_id}")
-async def check_challenge_owner(challenge_id: int, user_id: int, db: Session = Depends(get_db), current_user: dict = conditional_depends(depends=verify_token)):
-    result = challenge_crud.check_challenge_onwer(
+async def check_challenge_owner(
+        challenge_id: int, user_id: int, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Check if the user is the owner of the challenge """
+    result = challenge_crud.check_challenge_owner(
         challenge_id=challenge_id, user_id=user_id, db=db)
     return result
 
 
-@router.get("/GetUserChallengesWithToken_Testing/{user_id}", response_model=List[List[schemas.ChallengeWithBreakingDays]])
-async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db)):
-    """read all challenges of one user by user id
+@router.get("/GetUserChallengesWithToken_Testing/{user_id}",
+            response_model=List[List[schemas.ChallengeWithBreakingDays]])
+async def get_user_challenges_route_with_token(user_id: int, db: Session = Depends(get_db)):
+    """ Read all challenges of one user by user id
 
     Args:
         user_id: id of user
@@ -426,23 +474,3 @@ async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db))
     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(
         db, user_id)
     return [active_challenges, finished_challenges]
-
-# # read all challenges of one user by user id
-# @router.get("/GetUserChallengesWithtoken_testing/{user_id}", response_model=List[List[schemas.ChallengeWithBreakingDays]])
-# async def get_user_challenges_route(user_id: int, db: Session = Depends(get_db), current_user: dict = Depends(verify_token)):
-#     """read all challenges of one user by user id
-
-#     Args:
-#         user_id: id of user
-
-#     Returns:
-#         list of active challenges and finished challenges
-
-#     Raises:
-#         HTTPException: user not found
-#     """
-
-
-#     active_challenges = challenge_crud.get_active_challenges_by_user_id(db, user_id)
-#     finished_challenges = challenge_crud.get_finished_challenges_by_user_id(db, user_id)
-#     return [active_challenges, finished_challenges]

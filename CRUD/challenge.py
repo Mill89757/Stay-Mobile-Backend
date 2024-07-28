@@ -673,7 +673,7 @@ def get_owner_avatar_by_user_id(db: Session, user_id: int):
 
 def reformat_reaction_count_list(db: Session, post_id: int):
     """ reformat reaction count list """
-    db_reaction = reaction_crud.get_post_reactions_by_postid(db, post_id)
+    db_reaction = reaction_crud.get_post_reactions_by_post_id(db, post_id)
     all_reaction_count = []
     for item in db_reaction:
         each_block = {
@@ -965,7 +965,7 @@ def get_group_challenge_members(db: Session, challenge_id: int, blocked_user_lis
     return group_members_details
 
 
-def check_challenge_onwer(db: Session, challenge_id: int, user_id):
+def check_challenge_owner(db: Session, challenge_id: int, user_id):
     """ Check if the user is the challenge owner or not """
     db_challenge = db.query(models.Challenge).filter(
         models.Challenge.id == challenge_id).first()

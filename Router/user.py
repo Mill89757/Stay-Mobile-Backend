@@ -1,69 +1,76 @@
+# pylint: disable=unused-argument
+
 from typing import List
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, status
-import schemas
-from database import SessionLocal
-import CRUD.user as crud
 from auth_dependencies import verify_token, conditional_depends
 
-# create routes for users' operations and functions
+import schemas
+from database import get_db
+import CRUD.user as crud
+
 router = APIRouter(prefix="/user")
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
-#test for url
-# create user
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_users(user: schemas.UsersRequest, db: Session = Depends(get_db)):
+    """ Create a new user """
     user = crud.create_user(db, user)
     return user
 
-#read all users
+
 @router.get("", response_model=List[schemas.UsersResponse])
 def get_users(db: Session = Depends(get_db)):
+    """ Get all users """
     users = crud.read_users(db)
     return users
 
-#read user by id
+
 @router.get("/{id}")
-def get_user_by_id(id: int, db: Session = Depends(get_db)):
-    user = crud.read_user_by_id(db, id)
+def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
+    """ Get user by id """
+    user = crud.read_user_by_id(db, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
     return user
 
-#read user by firebase_uid
+
 @router.get("/firebase_uid/{firebase_uid}")
 def get_user_by_firebase_uid(firebase_uid: str, db: Session = Depends(get_db)):
+    """ Get user by firebase_uid """
     user = crud.read_user_by_firebase_uid(db, firebase_uid)
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
     return user
 
-#update user
+
 @router.put("/{id}")
-def update_user(id: int, user: schemas.UsersRequest, db: Session = Depends(get_db),current_user: dict = conditional_depends(depends=verify_token)):
-    user = crud.update_user(db, id, user)
+def update_user(
+        user_id: int, user: schemas.UsersRequest, db: Session = Depends(get_db),
+        current_user: dict = conditional_depends(depends=verify_token)):
+    """ Update user """
+    user = crud.update_user(db, user_id, user)
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
     return user
 
-#update user is_completed to true when user complete the profile by firebase_uid
+
 @router.put("/is_completed/{firebase_uid}")
-def update_user_is_complete(firebase_uid: str, user: schemas.UsersRequest, db: Session = Depends(get_db)):
+def update_user_is_complete(
+        firebase_uid: str, user: schemas.UsersRequest, db: Session = Depends(get_db)):
+    """ 
+        Update user is_completed to true when user 
+        complete the profile by firebase_uid 
+    """
     user = crud.update_user_is_complete(db, firebase_uid, user)
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
     return user
 
-#delete user
+
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
-def delete_user(id: int, db: Session = Depends(get_db)):
-    res = crud.delete_user(db, id)
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    """ Delete user by user id """
+    res = crud.delete_user(db, user_id)
     if res is None:
         raise HTTPException(status_code=404, detail="user not found")
